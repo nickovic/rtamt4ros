@@ -1,0 +1,9 @@
+from rtamt_msgs.msg import FloatMessage
+
+// subscribe from system pkg 
+input FloatMessage a
+@ topic(a,rtamt/a)
+output FloatMessage c
+@ topic(c,rtamt/c)
+
+c.value = always (a.value <= 2)

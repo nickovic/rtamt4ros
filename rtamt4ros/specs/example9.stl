@@ -1,0 +1,7 @@
+specification stl_monitor;
+
+input real a;
+input real b;
+output real c;
+
+c = always [0:10] (a <= 2);

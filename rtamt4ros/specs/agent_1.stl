@@ -1,0 +1,16 @@
+specification agent_1_monitor
+
+// comment type 1
+from rtamt_msgs.msg import FloatMessage
+
+
+/*
+ * comment type 2
+*/
+
+FloatMessage a
+@ topic(a,rtamt/a)
+FloatMessage o1
+@ topic(o1,rtamt/o1)
+
+o1.value = (a.value <= 2)

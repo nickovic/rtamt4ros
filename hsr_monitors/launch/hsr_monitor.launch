@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<!-- Launch HSR -->
+	<include file="$(find hsrb_gazebo_launch)/launch/hsrb_megaweb2015_world.launch">
+		<arg name="paused" value="false" />
+	</include>
+
+	<!-- Launch STL monitor (output console) -->
+	<node name="hsr_monitor" pkg="hsr_monitors" type="hsr_monitor.py" output="screen" args="--freq 1">
+	</node>
+
+	<!-- Publish order -->
+	<!-- 
+	$ rostopic pub -r 1 /goal geometry_msgs/PoseStamped  '{header:{stamp: now, frame_id: 'map'}, pose:{position:{x: 4.5, y: 0.0, z: 0.0}, orientation:{z: 0.0, z: 0.0, z: 0.0, w: 1}}}'
+	TODO -1 option is much better, but because of launch timing issue, it does not works in the initial phase.
+	-->
+	<node pkg="rostopic" type="rostopic" name="oder" args="pub -r 1 /goal geometry_msgs/PoseStamped '{header: {stamp: now, frame_id: 'map'}, pose:{position: {x: 4.5, y: 0.0, z: 0.0}, orientation: {z: 0.0, z: 0.0, z: 0.0, w: 1}}}'" output="screen">
+	</node>	
+
+</launch>

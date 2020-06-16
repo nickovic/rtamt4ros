@@ -13,6 +13,7 @@ import copy
 import numpy
 
 #import rtamt
+import rtamt
 from rtamt.spec.stl.specification import STLSpecification
 from rtamt.exception.stl.exception import STLParseException
 from rtamt.spec.io_stl.io_interpretation import IOInterpretation
@@ -22,7 +23,7 @@ from std_msgs.msg import String
 from rtamt_msgs.msg import FloatMessage
 from sensor_msgs.msg import LaserScan
 
-DEBUG = True
+DEBUG = False
 
 class HSR_STL_monitor(object):
 	def __init__(self, iosem_arg):
@@ -30,12 +31,17 @@ class HSR_STL_monitor(object):
                 
                 # STL settings
                 # Load the spec from STL file
-                self.spec = STLSpecification()
+                self.spec = rtamt.STLIOCTSpecification()
                 self.spec.name = 'HandMadeMonitor'
                 self.spec.import_module('rtamt_msgs.msg', 'FloatMessage')
                 self.spec.declare_var('closest_dist', 'float')
-                self.spec.declare_var('c', 'FloatMessage')
-                self.spec.spec = 'c.value = always [0:10] (closest_dist >= 0.2)'
+                #self.spec.declare_var('c', 'FloatMessage')
+                self.spec.declare_var('c', 'float')
+                self.spec.set_var_io_type('closest_dist', 'input')
+                #self.spec.set_var_topic('c', 'rtamt/c')
+                self.spec.set_var_io_type('c', 'output')
+                #self.spec.spec = 'c.value = always [0:10] (closest_dist >= 0.2)'
+                self.spec.spec = 'c = always [0:10] (closest_dist >= 0.2)'
                 self.spec.iosem = iosem
                 try:
                         self.spec.parse()
@@ -62,16 +68,17 @@ class HSR_STL_monitor(object):
                 if DEBUG:
 	                print 'Timer called at ' + str(event.current_real)
 	                print 'closetDist=' + str(closestDist)
-                        
+                
                 # Evaluate the spec
                 time_stamp = rospy.Time.now()
-                robustness_msg  = self.spec.update(time_stamp, [('closest_dist', closestDist)])
-                robustness_msg.header.seq = robustness_msg.header.seq+1
-                robustness_msg.header.stamp = time_stamp
+                rob = self.spec.update(['closest_dist', [(time_stamp.secs, closestDist)]])
+                #robustness_msg = rob
+                #robustness_msg.header.seq = robustness_msg.header.seq+1
+                #robustness_msg.header.stamp = time_stamp
         
                 # Publish the result
-                rospy.loginfo('Robustness: %s', robustness_msg.value)
-                self.stl_publisher.publish(robustness_msg)
+                rospy.loginfo('Robustness online: {}'.format(rob))
+                #self.stl_publisher.publish(robustness_msg)
 
 
 if __name__ == '__main__':

@@ -50,7 +50,6 @@ class HSR_STL_monitor(object):
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 self.stl_publisher = rospy.Publisher('rtamt/c', FloatMessage, queue_size=10)
                 
-                self.time_index = 0;
                 
                 
         def scan_callback(self, data):
@@ -65,10 +64,10 @@ class HSR_STL_monitor(object):
 	                print 'closetDist=' + str(closestDist)
                         
                 # Evaluate the spec
-                robustness_msg  = self.spec.update(self.time_index, [('closest_dist', closestDist)])
-                robustness_msg.header.seq = self.time_index
-                robustness_msg.header.stamp = rospy.Time.now()
-                self.time_index = self.time_index + 1
+                time_stamp = rospy.Time.now()
+                robustness_msg  = self.spec.update(time_stamp, [('closest_dist', closestDist)])
+                robustness_msg.header.seq = robustness_msg.header.seq+1
+                robustness_msg.header.stamp = time_stamp
         
                 # Publish the result
                 rospy.loginfo('Robustness: %s', robustness_msg.value)

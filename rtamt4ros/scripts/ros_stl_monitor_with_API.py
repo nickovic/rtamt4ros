@@ -3,8 +3,12 @@ import rospy
 import sys
 import argparse
 import copy
+
+#import rtamt
+import rtamt
 from rtamt.spec.stl.specification import STLSpecification
 from rtamt.exception.stl.exception import STLParseException
+from rtamt.spec.io_stl.io_interpretation import IOInterpretation
 
 def callback(data, args):
     spec = args[0]
@@ -20,7 +24,7 @@ def monitor(period_arg, unit_arg):
     period = int(period_arg[0])
     unit = unit_arg[0]
 
-    spec = STLSpecification()
+    spec = rtamt.STLIOCTSpecification()
     spec.set_sampling_period(period, unit)
     freq = spec.get_sampling_frequency()
 
@@ -58,25 +62,27 @@ def monitor(period_arg, unit_arg):
     # Set the frequency at which the monitor is evaluated
     rate = rospy.Rate(freq)
 
-    time_index = 0;
+    time_index = 0
 
     while not rospy.is_shutdown():
+        time_stamp = rospy.Time.now()
+        
         var_name_object_list = []
         for var_name in spec.free_vars:
-            var_name_object = (var_name, spec.get_var_object(var_name))
+            var_name_object = (var_name, [time_stamp, spec.get_var_object(var_name)])
             var_name_object_list.append(var_name_object)
 
         # Evaluate the spec
         # spec.update is of the form
         # spec.update(time_index, [('a',aObject), ('b',bObject), ('c',cObject)])
-        robustness_msg = spec.update(time_index, var_name_object_list)
-
-        robustness_msg.header.seq = time_index
-        robustness_msg.header.stamp = rospy.Time.now()
-        time_index = time_index + 1
+        # ros = spec.update(var_name_object_list)
+        rob = spec.update(['a', [(time_stamp.secs, spec.get_var_object('a'))]])
+        robustness_msg = ros
+        robustness_msg.header.seq = robustness_msg.header.seq+1
+        robustness_msg.header.stamp = time_stamp
 
         # Publish the result
-        rospy.loginfo('Robustness: logical time: {0}, value: {1}'.format(robustness_msg.header.seq, robustness_msg.value))
+        rospy.loginfo('Robustness online: {}'.format(rob))
         pub.publish(robustness_msg)
 
         # Wait until next evaluation

@@ -12,8 +12,9 @@ import logging
 import copy
 import numpy
 
-#import mondiro
-import rtamt_stl_pymon
+#import rtamt
+from rtamt.spec.stl.specification import STLSpecification
+from rtamt.exception.stl.exception import STLParseException
 
 #other msg
 from std_msgs.msg import String
@@ -28,7 +29,7 @@ class HSR_STL_monitor(object):
                 
                 # STL settings
                 # Load the spec from STL file
-                self.spec = rtamt_stl_pymon.STLSpecification()
+                self.spec = STLSpecification()
                 self.spec.name = 'HandMadeMonitor'
                 self.spec.import_module('rtamt_msgs.msg', 'FloatMessage')
                 self.spec.declare_var('closest_dist', 'float')
@@ -77,12 +78,12 @@ if __name__ == '__main__':
         # Process arguments
         p = argparse.ArgumentParser(description='rtamt STL Python Monitor')
         p.add_argument('--freq', nargs=1, required=True, help='Sampling frequency in Hz')
-        p.add_argument('--iosem', nargs=1, type=rtamt_stl_pymon.IOInterpretation, required=False, default=[rtamt_stl_pymon.IOInterpretation.STANDARD], choices=list(rtamt_stl_pymon.IOInterpretation), help='IO STL semantics')
-        args = p.parse_args(rospy.myargv()[1:])
+        p.add_argument('--iosem', nargs=1, type=str, required=False, default=['standard'], choices=list('standard'), help='IO STL semantics')
 
+        args = p.parse_args(rospy.myargv()[1:])
         try:
 	        rospy.init_node('hsr_stl_monitor')
-	        hsr_stl_monitor = HSR_STL_monitor(args.iosem)
+                hsr_stl_monitor = HSR_STL_monitor(args.iosem)
 	        rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_callback)
 	        rospy.spin()
         except rospy.ROSInterruptException:

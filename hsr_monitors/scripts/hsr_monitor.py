@@ -15,6 +15,7 @@ import numpy
 #import rtamt
 from rtamt.spec.stl.specification import STLSpecification
 from rtamt.exception.stl.exception import STLParseException
+from rtamt.spec.io_stl.io_interpretation import IOInterpretation
 
 #other msg
 from std_msgs.msg import String
@@ -78,7 +79,7 @@ if __name__ == '__main__':
         # Process arguments
         p = argparse.ArgumentParser(description='rtamt STL Python Monitor')
         p.add_argument('--freq', nargs=1, required=True, help='Sampling frequency in Hz')
-        p.add_argument('--iosem', nargs=1, type=str, required=False, default=['standard'], choices=list('standard'), help='IO STL semantics')
+        p.add_argument('--iosem', nargs=1, type=str, required=False, default=[IOInterpretation.STANDARD], choices=list(IOInterpretation), help='IO STL semantics')
 
         args = p.parse_args(rospy.myargv()[1:])
         try:

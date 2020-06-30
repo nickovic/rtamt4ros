@@ -42,6 +42,22 @@ $ roslaunch rtamt4ros ros_stl_monitor.launch
 $ cd ~/catkin_ws
 $ source devel/setup.sh
 $ roslaunch rtamt4ros ros_stl_monitor_with_API.launch
+
+```
+## API example - STL continuous time - asynchronous input collection, periodic updates
+```
+$ cd ~/catkin_ws
+$ source devel/setup.sh
+$ roslaunch rtamt4ros ros_stl_ct_io_monitor_with_API.launch
+
+```
+## API example - STL continuous time - asynchronous updates
+```
+$ cd ~/catkin_ws
+$ source devel/setup.sh
+$ roslaunch rtamt4ros ros_stl_ct_io_monitor_async_update_with_API.launch
+
+
 ```
 ## distributed example
 ```

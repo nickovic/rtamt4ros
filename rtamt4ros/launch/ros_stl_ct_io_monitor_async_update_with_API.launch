@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <!-- Launch signal generator -->
+	<node pkg="systems" name="signal_generator" type="signal_generator"/>
+
+    <!-- Launch STL monitor (output console)-->
+	<node name="ros_stl_monitor" pkg="rtamt4ros" type="ros_stl_ct_io_monitor_async_update_with_API.py" output="screen" args="--period 1 --unit 1"/>
+
+</launch>

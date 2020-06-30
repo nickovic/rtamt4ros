@@ -19,7 +19,7 @@ def callback(data, args):
 
 def monitor(period_arg, unit_arg):
 
-    period = int(period_arg[0])
+    period = 3*int(period_arg[0])
     freq = 1.0 / period
 
     unit = unit_arg[0]
@@ -63,22 +63,31 @@ def monitor(period_arg, unit_arg):
     # Set the frequency at which the monitor is evaluated
     rate = rospy.Rate(freq)
 
-    time_index = 0;
-
     while not rospy.is_shutdown():
-        var_name_object_list = []
-        for var_name in spec.free_vars:
-            var_list = input_data_dict[var_name]
-            for var in var_list:
-                now = var.header.stamp.to_sec();
-                var_name_object_list.append([var_name, [[now, var]]])
+        # the input has the following form
+        # [
+        #   ['var1', [[t11, v11], [t12, v12], ...] ],
+        #   ['var2', [[t21, v21], [t22, v22], ...],
+        #   ...
+        # ]
+        input_list = []
+        for var in spec.free_vars:
+            input_var_values = input_data_dict[var_name]
+            var_values = []
+            for var_value in input_var_values:
+                now = var_value.header.stamp.to_sec();
+                var_values.append([now, var_value])
+            input_var_list = [var_name, var_values]
+            input_list.append(input_var_list)
             input_data_dict[var_name] = []
 
         # Evaluate the spec
         # spec.update is of the form
         # spec.update(time_index, [('a',aObject), ('b',bObject), ('c',cObject)])
-        if (var_name_object_list):
-            robustness_msgs = spec.update(*var_name_object_list)
+
+
+        if input_list:
+            robustness_msgs = spec.update(*input_list)
             for msg in robustness_msgs:
                 msg[1].header.stamp = rospy.Time.from_sec(msg[0])
                 rospy.loginfo('Robustness: time: {0}, value: {1}'.format(msg[0], msg[1].value))

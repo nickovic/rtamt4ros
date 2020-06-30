@@ -3,7 +3,7 @@
 # $ roscore
 #
 # IF start in manual
-# $ rosrun hsr_monitor hsr_monitor.py
+# $ rosrun hsr_monitor hsr_monitor.py --freq 0.1
 
 import rospy
 import sys
@@ -11,23 +11,16 @@ import argparse
 import logging
 import copy
 import numpy
-
-#import rtamt
 import rtamt
-from rtamt.spec.stl.specification import STLSpecification
-from rtamt.exception.stl.exception import STLParseException
-from rtamt.spec.io_stl.io_interpretation import IOInterpretation
 
 #other msg
 from std_msgs.msg import String
-from rtamt_msgs.msg import FloatMessage
 from sensor_msgs.msg import LaserScan
 
 DEBUG = False
 
 class HSR_STL_monitor(object):
-	def __init__(self, iosem_arg):
-                iosem = iosem_arg[0]
+	def __init__(self):
                 
                 # STL settings
                 # Load the spec from STL file
@@ -35,14 +28,13 @@ class HSR_STL_monitor(object):
                 self.spec.name = 'HandMadeMonitor'
                 self.spec.import_module('rtamt_msgs.msg', 'FloatMessage')
                 self.spec.declare_var('closest_dist', 'float')
-                #self.spec.declare_var('c', 'FloatMessage')
-                self.spec.declare_var('c', 'float')
+                self.spec.declare_var('c', 'FloatMessage')
+                #self.spec.declare_var('c', 'float')
                 self.spec.set_var_io_type('closest_dist', 'input')
-                #self.spec.set_var_topic('c', 'rtamt/c')
-                self.spec.set_var_io_type('c', 'output')
-                #self.spec.spec = 'c.value = always [0:10] (closest_dist >= 0.2)'
-                self.spec.spec = 'c = always [0:10] (closest_dist >= 0.2)'
-                self.spec.iosem = iosem
+                self.spec.set_var_topic('c', 'rtamt/c')
+                #self.spec.set_var_io_type('c', 'output')
+                self.spec.spec = 'c.value = always [0:10.0] (closest_dist >= 0.2)'
+                #self.spec.spec = 'c = always [0:10] (closest_dist >= 0.2)'
                 try:
                         self.spec.parse()
                 except STLParseException as err:
@@ -54,7 +46,8 @@ class HSR_STL_monitor(object):
                 self.laser_message = LaserScan()
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
-                self.stl_publisher = rospy.Publisher('rtamt/c', FloatMessage, queue_size=10)
+                var_object = self.spec.get_var_object(self.spec.out_var)
+                self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
                 
                 
                 
@@ -63,6 +56,12 @@ class HSR_STL_monitor(object):
                 
                 
         def monitor_callback(self, event):
+                # the input has the following form
+                # [
+                #   ['var1', [[t11, v11], [t12, v12], ...] ],
+                #   ['var2', [[t21, v21], [t22, v22], ...],
+                #   ...
+                # ]
                 closestDist = numpy.amin(self.laser_message.ranges)
 
                 if DEBUG:
@@ -71,26 +70,21 @@ class HSR_STL_monitor(object):
                 
                 # Evaluate the spec
                 time_stamp = rospy.Time.now()
-                rob = self.spec.update(['closest_dist', [(time_stamp.secs, closestDist)]])
-                #robustness_msg = rob
-                #robustness_msg.header.seq = robustness_msg.header.seq+1
-                #robustness_msg.header.stamp = time_stamp
-        
-                # Publish the result
-                rospy.loginfo('Robustness online: {}'.format(rob))
-                #self.stl_publisher.publish(robustness_msg)
-
+                robustness_msgs = self.spec.update(['closest_dist', [[time_stamp.secs, closestDist]]])
+                for msg in robustness_msgs:
+                        msg[1].header.stamp = rospy.Time.from_sec(msg[0])
+                        rospy.loginfo('Robustness: time: {0}, value: {1}'.format(msg[0], msg[1].value))
+                        self.stl_publisher.publish(msg[1])
 
 if __name__ == '__main__':
         # Process arguments
         p = argparse.ArgumentParser(description='rtamt STL Python Monitor')
         p.add_argument('--freq', nargs=1, required=True, help='Sampling frequency in Hz')
-        p.add_argument('--iosem', nargs=1, type=str, required=False, default=[IOInterpretation.STANDARD], choices=list(IOInterpretation), help='IO STL semantics')
 
         args = p.parse_args(rospy.myargv()[1:])
         try:
 	        rospy.init_node('hsr_stl_monitor')
-                hsr_stl_monitor = HSR_STL_monitor(args.iosem)
+                hsr_stl_monitor = HSR_STL_monitor()
 	        rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_callback)
 	        rospy.spin()
         except rospy.ROSInterruptException:

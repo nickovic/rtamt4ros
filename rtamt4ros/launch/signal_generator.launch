@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <!-- Launch signal generator A -->
+	<node name="signal_generator_A" pkg="rtamt4ros" type="signal_generator.py" args="--topic rtamt/a --freq 1 --inc 0.001 --reset 1.0"/>
+
+    <!-- Launch signal generator B -->
+	<node name="signal_generator_B" pkg="rtamt4ros" type="signal_generator.py" args="--topic rtamt/b --freq 4 --inc 0.003 --reset 1.0"/>
+
+</launch>

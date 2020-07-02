@@ -36,7 +36,7 @@ def monitor(unit_arg):
     spec.set_var_topic('a', 'rtamt/a')
     spec.set_var_topic('b', 'rtamt/b')
     spec.set_var_topic('c', 'rtamt/c')
-    spec.spec = 'c.value = always(a.value<=0.5 and b.value > 0.2)'
+    spec.spec = 'c.value = a.value<=0.5 and b.value > 0.2'
 
     try:
         spec.parse()

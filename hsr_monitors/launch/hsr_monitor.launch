@@ -8,7 +8,7 @@
 	</include>
 
 	<!-- Launch STL monitor (output console) -->
-	<node name="hsr_monitor" pkg="hsr_monitors" type="hsr_monitor.py" output="screen">
+	<node name="hsr_monitor" pkg="hsr_monitors" type="hsr_monitor.py" output="screen" args="--freg 1">
 	</node>
 
 	<!-- Publish order -->

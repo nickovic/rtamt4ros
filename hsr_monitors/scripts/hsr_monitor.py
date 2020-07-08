@@ -17,6 +17,7 @@ import rtamt
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Pose
 from gazebo_msgs.msg import ModelStates
 
 class HSR_STL_monitor(object):
@@ -41,24 +42,23 @@ class HSR_STL_monitor(object):
 
                 # For each var from the spec, subscribe to its topic
                 self.laser_subscriber = rospy.Subscriber('hsrb/base_scan', LaserScan, self.scan_callback, queue_size=10)
-                self.ground_truth_subscriber = rospy.Subscriber('/gazebo/model_states', ModelStates, self.grand_truth_callback, queue_size=10)
+                self.tOdometry_subscriber = rospy.Subscriber('/gazebo/model_states', ModelStates, self.tOdometry_callback, queue_size=10)
+                self.tOdometry = Pose()
                 self.odometry_subscriber = rospy.Subscriber('/global_pose', PoseStamped, self.odometry_callback, queue_size=10)
+                self.odometry = PoseStamped()
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
                 self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
-                
-                rospy.spin()
-        
+
+
         def odometry_callback(self, PoseStamped_message):
-                pose = PoseStamped_message.pose
-                rospy.loginfo('odometry: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
+                self.odometry = PoseStamped_message
 
 
-        def grand_truth_callback(self, ModelStates_message):
+        def tOdometry_callback(self, ModelStates_message):
                 idx = ModelStates_message.name.index('hsrb')
-                pose = ModelStates_message.pose[idx]
-                rospy.loginfo('grand_truth: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
+                self.tOdometry = ModelStates_message.pose[idx]
 
 
         def scan_callback(self, laser_message):
@@ -73,13 +73,25 @@ class HSR_STL_monitor(object):
                         self.stl_publisher.publish(msg[1])
 
 
+        def monitor_callback(self, event):
+                pose = self.tOdometry
+                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
+                pose = self.odometry.pose
+                rospy.loginfo('odometry: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
+
+
+
 if __name__ == '__main__':
         # Process arguments
         p = argparse.ArgumentParser(description='rtamt STL Python Monitor')
+        p.add_argument('--freq', nargs=1, required=True, help='Sampling frequency in Hz')
         args = p.parse_args(rospy.myargv()[1:])
 
         try:
 	        rospy.init_node('hsr_stl_monitor')
                 hsr_stl_monitor = HSR_STL_monitor()
+                rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_callback)
+                rospy.spin()
+
         except rospy.ROSInterruptException:
                 pass

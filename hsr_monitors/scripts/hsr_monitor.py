@@ -42,6 +42,7 @@ class HSR_STL_monitor(object):
                 # For each var from the spec, subscribe to its topic
                 self.laser_subscriber = rospy.Subscriber('hsrb/base_scan', LaserScan, self.scan_callback, queue_size=10)
                 self.ground_truth_subscriber = rospy.Subscriber('/gazebo/model_states', ModelStates, self.grand_truth_callback, queue_size=10)
+                self.odometry_subscriber = rospy.Subscriber('/global_pose', PoseStamped, self.odometry_callback, queue_size=10)
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
@@ -49,7 +50,11 @@ class HSR_STL_monitor(object):
                 
                 rospy.spin()
         
-        
+        def odometry_callback(self, PoseStamped_message):
+                pose = PoseStamped_message.pose
+                rospy.loginfo('odometry: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
+
+
         def grand_truth_callback(self, ModelStates_message):
                 idx = ModelStates_message.name.index('hsrb')
                 pose = ModelStates_message.pose[idx]

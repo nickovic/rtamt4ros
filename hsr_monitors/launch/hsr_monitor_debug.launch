@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<!-- Launch STL monitor (output console) -->
+	<node name="hsr_monitor" pkg="hsr_monitors" type="hsr_monitor.py" output="screen">
+	</node>
+
+</launch>

@@ -16,8 +16,8 @@ import rtamt
 #other msg
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
-
-DEBUG = False
+from geometry_msgs.msg import PoseStamped
+from gazebo_msgs.msg import ModelStates
 
 class HSR_STL_monitor(object):
 	def __init__(self):
@@ -41,15 +41,21 @@ class HSR_STL_monitor(object):
 
                 # For each var from the spec, subscribe to its topic
                 self.laser_subscriber = rospy.Subscriber('hsrb/base_scan', LaserScan, self.scan_callback, queue_size=10)
-                self.laser_message = LaserScan()
+                self.ground_truth_subscriber = rospy.Subscriber('/gazebo/model_states', ModelStates, self.grand_truth_callback, queue_size=10)
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
                 self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
                 
                 rospy.spin()
-                
-                
+        
+        
+        def grand_truth_callback(self, ModelStates_message):
+                idx = ModelStates_message.name.index('hsrb')
+                pose = ModelStates_message.pose[idx]
+                rospy.loginfo('grand_truth: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
+
+
         def scan_callback(self, laser_message):
                 closestDist = numpy.amin(laser_message.ranges)
 

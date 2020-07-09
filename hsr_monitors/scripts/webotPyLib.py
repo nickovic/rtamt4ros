@@ -10,7 +10,7 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-from webotPlotLib import *
+#from webotPlotLib import *
 
 class xythCoord:
     x = []

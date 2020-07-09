@@ -13,6 +13,8 @@ import copy
 import numpy
 import rtamt
 
+from webotPyLib import *
+
 #other msg
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
@@ -74,11 +76,12 @@ class HSR_STL_monitor(object):
 
 
         def monitor_callback(self, event):
-                pose = self.tOdometry
-                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
+                tPose = self.tOdometry
+                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
                 pose = self.odometry.pose
                 rospy.loginfo('odometry: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
-
+                eOdom = distP2P(tPose.position.x, tPose.position.y, pose.position.x, pose.position.y)
+                rospy.loginfo('eOdometry: {0}'.format(eOdom))
 
 
 if __name__ == '__main__':

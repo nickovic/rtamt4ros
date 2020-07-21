@@ -18,8 +18,12 @@ from webotPyLib import *
 #other msg
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import Point
+
+from geometry_msgs.msg import PoseStamped
 from gazebo_msgs.msg import ModelStates
 
 class HSR_STL_monitor(object):
@@ -44,23 +48,22 @@ class HSR_STL_monitor(object):
 
                 # For each var from the spec, subscribe to its topic
                 self.laser_subscriber = rospy.Subscriber('hsrb/base_scan', LaserScan, self.scan_callback, queue_size=10)
-                self.tOdometry_subscriber = rospy.Subscriber('/gazebo/model_states', ModelStates, self.tOdometry_callback, queue_size=10)
-                self.tOdometry = Pose()
-                self.odometry_subscriber = rospy.Subscriber('/global_pose', PoseStamped, self.odometry_callback, queue_size=10)
-                self.odometry = PoseStamped()
+                self.tOdometry_subscriber = rospy.Subscriber('/hsrb/odom', Odometry, self.tOdometry_callback, queue_size=10)
+                self.tOdometry = Odometry()
+                self.odometry_subscriber = rospy.Subscriber('/hsrb/odom_ground_truth', Odometry, self.odometry_callback, queue_size=10)
+                self.odometry = Odometry()
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
                 self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
 
 
-        def odometry_callback(self, PoseStamped_message):
-                self.odometry = PoseStamped_message
+        def odometry_callback(self, Odometry_message):
+                self.odometry = Odometry_message
 
 
-        def tOdometry_callback(self, ModelStates_message):
-                idx = ModelStates_message.name.index('hsrb')
-                self.tOdometry = ModelStates_message.pose[idx]
+        def tOdometry_callback(self, Odometry_message):
+                self.tOdometry = Odometry_message
 
 
         def scan_callback(self, laser_message):
@@ -76,11 +79,11 @@ class HSR_STL_monitor(object):
 
 
         def monitor_callback(self, event):
-                tPose = self.tOdometry
-                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
-                pose = self.odometry.pose
-                rospy.loginfo('odometry: x: {0}, y: {1}'.format(pose.position.x, pose.position.y))
-                eOdom = distP2P(tPose.position.x, tPose.position.y, pose.position.x, pose.position.y)
+                tOdometry = self.tOdometry
+                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tOdometry.pose.pose.position.x, tOdometry.pose.pose.position.y))
+                odometry = self.odometry
+                rospy.loginfo('odometry: x: {0}, y: {1}'.format(odometry.pose.pose.position.x, odometry.pose.pose.position.y))
+                eOdom = distP2P(tOdometry.pose.pose.position.x, tOdometry.pose.pose.position.y, odometry.pose.pose.position.x, odometry.pose.pose.position.y)
                 rospy.loginfo('eOdometry: {0}'.format(eOdom))
 
 

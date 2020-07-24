@@ -13,13 +13,20 @@ import copy
 import numpy
 import rtamt
 
+import matplotlib.pyplot as plt
+
 from webotPyLib import *
 
 #other msg
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
+from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
+
+def OccupancyGridPlot():
+        pass
+
 
 class HSR_STL_monitor(object):
 	def __init__(self):
@@ -47,11 +54,18 @@ class HSR_STL_monitor(object):
                 self.poseStamped = PoseStamped()
                 self.odometry_subscriber = rospy.Subscriber('/hsrb/odom_ground_truth', Odometry, self.odometry_callback, queue_size=10)
                 self.odometry = Odometry()
+                self.map_subscriber = rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.map_callback, queue_size=10)
+                self.occupancyGrid = OccupancyGrid()
+
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
                 self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
 
+        # it is not colled ctrl+Z
+        def __del__(self):
+                plt.close()
+        
 
         def odometry_callback(self, Odometry_message):
                 self.odometry = Odometry_message
@@ -59,6 +73,22 @@ class HSR_STL_monitor(object):
 
         def tOdometry_callback(self, PoseStamped_message):
                 self.poseStamped = PoseStamped_message
+
+        # this will be called just one time.
+        def map_callback(self, OccupancyGrid_message):
+                rospy.loginfo('get map data')
+
+                occupancyGrid = OccupancyGrid_message
+                mapFig = plt.figure(figsize = (12,12))
+                ax = mapFig.add_subplot(1, 1, 1)
+
+                data = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
+                extent = [0 , occupancyGrid.info.width*occupancyGrid.info.resolution, 0, occupancyGrid.info.height*occupancyGrid.info.resolution]
+                ax.imshow(data, cmap=plt.cm.gray, extent=extent)
+                ax.set_xlabel('y [m]')
+                ax.set_ylabel('x [m]')
+                #plt.tight_layout()
+                plt.show()
 
 
         def scan_callback(self, laser_message):

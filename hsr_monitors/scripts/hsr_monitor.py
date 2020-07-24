@@ -81,12 +81,26 @@ class HSR_STL_monitor(object):
                 occupancyGrid = OccupancyGrid_message
                 mapFig = plt.figure(figsize = (12,12))
                 ax = mapFig.add_subplot(1, 1, 1)
+                ax.invert_yaxis()
 
-                data = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
-                extent = [0 , occupancyGrid.info.width*occupancyGrid.info.resolution, 0, occupancyGrid.info.height*occupancyGrid.info.resolution]
-                ax.imshow(data, cmap=plt.cm.gray, extent=extent)
+                staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
+                extent = [0 , occupancyGrid.info.width*occupancyGrid.info.resolution, occupancyGrid.info.height*occupancyGrid.info.resolution, 0]
+                ax.imshow(staticMap, cmap=plt.cm.gray, extent=extent)
+                obsIds = numpy.transpose(numpy.nonzero(staticMap))
+                minId = obsIds.min(axis=0)
+                maxId = obsIds.max(axis=0)
+                min = minId*occupancyGrid.info.resolution
+                max = maxId*occupancyGrid.info.resolution
+                space = 1.0
+                left = min[0]-space
+                bottom = min[1]-space
+                right = max[0]+space
+                top = max[1]+space
+                ax.set_xlim([left, right])
+                ax.set_ylim([top, bottom])
                 ax.set_xlabel('y [m]')
                 ax.set_ylabel('x [m]')
+                ax.set_aspect('equal', adjustable='box')
                 #plt.tight_layout()
                 plt.show()
 

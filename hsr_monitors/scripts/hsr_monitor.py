@@ -19,12 +19,7 @@ from webotPyLib import *
 from std_msgs.msg import String
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import PoseWithCovariance
-from geometry_msgs.msg import Point
-
 from geometry_msgs.msg import PoseStamped
-from gazebo_msgs.msg import ModelStates
 
 class HSR_STL_monitor(object):
 	def __init__(self):
@@ -48,8 +43,8 @@ class HSR_STL_monitor(object):
 
                 # For each var from the spec, subscribe to its topic
                 self.laser_subscriber = rospy.Subscriber('hsrb/base_scan', LaserScan, self.scan_callback, queue_size=10)
-                self.tOdometry_subscriber = rospy.Subscriber('/hsrb/odom', Odometry, self.tOdometry_callback, queue_size=10)
-                self.tOdometry = Odometry()
+                self.tOdometry_subscriber = rospy.Subscriber('/global_pose', PoseStamped, self.tOdometry_callback, queue_size=10)
+                self.poseStamped = PoseStamped()
                 self.odometry_subscriber = rospy.Subscriber('/hsrb/odom_ground_truth', Odometry, self.odometry_callback, queue_size=10)
                 self.odometry = Odometry()
 
@@ -62,8 +57,8 @@ class HSR_STL_monitor(object):
                 self.odometry = Odometry_message
 
 
-        def tOdometry_callback(self, Odometry_message):
-                self.tOdometry = Odometry_message
+        def tOdometry_callback(self, PoseStamped_message):
+                self.poseStamped = PoseStamped_message
 
 
         def scan_callback(self, laser_message):
@@ -79,11 +74,11 @@ class HSR_STL_monitor(object):
 
 
         def monitor_callback(self, event):
-                tOdometry = self.tOdometry
-                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tOdometry.pose.pose.position.x, tOdometry.pose.pose.position.y))
-                odometry = self.odometry
-                rospy.loginfo('odometry: x: {0}, y: {1}'.format(odometry.pose.pose.position.x, odometry.pose.pose.position.y))
-                eOdom = distP2P(tOdometry.pose.pose.position.x, tOdometry.pose.pose.position.y, odometry.pose.pose.position.x, odometry.pose.pose.position.y)
+                tPose = self.poseStamped.pose
+                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
+                cPose = self.odometry.pose.pose
+                rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
+                eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
                 rospy.loginfo('eOdometry: {0}'.format(eOdom))
 
 

@@ -43,7 +43,15 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
 
 def distPoints2Position(points, position):
         # just thinking 2D (x,y)
-        pass
+        if points.shape == (2,):        #for 1 id case
+                points = numpy.array([points])
+        dists = points - numpy.array([position.x, position.y])
+        dists = numpy.square(dists)
+        dists = numpy.sum(dists,axis=1)
+        dists = numpy.sqrt(dists)
+        if dists.shape == (1,1):     #for 1 id case
+                dists = dists[0]
+        return dists
         
 
 def OccupancyGridPlot(ax, occupancyGrid):
@@ -71,7 +79,6 @@ def OccupancyGridPlot(ax, occupancyGrid):
 
 class HSR_STL_monitor(object):
 	def __init__(self):
-                
                 # STL settings
                 # Load the spec from STL file
                 self.spec = rtamt.STLIOCTSpecification()
@@ -151,7 +158,10 @@ class HSR_STL_monitor(object):
                 # error odom
                 eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
                 rospy.loginfo('eOdometry: {0}'.format(eOdom))
-                # dist obstacle and odom #TODO odom->tOdom
+                dists = distPoints2Position(self.obss, cPose.position)
+                dist = numpy.min(dists)
+                rospy.loginfo('dist ego obs: {0}'.format(dist))
+
                 #poseOGcd =  mapids2mapCoordination(cPose.position, self.occupancyGrid)
                 #rospy.loginfo(poseOGcd)
 

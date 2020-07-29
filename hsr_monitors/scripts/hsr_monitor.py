@@ -162,11 +162,6 @@ class HSR_STL_monitor(object):
                 dist = numpy.min(dists)
                 rospy.loginfo('dist ego obs: {0}'.format(dist))
 
-                #poseOGcd =  mapids2mapCoordination(cPose.position, self.occupancyGrid)
-                #rospy.loginfo(poseOGcd)
-
-                #distEgoObs = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
-
 
 if __name__ == '__main__':
         # Process arguments

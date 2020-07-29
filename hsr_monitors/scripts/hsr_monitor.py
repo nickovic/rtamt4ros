@@ -24,8 +24,24 @@ from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
 
-def OccupancyGridPlot():
-        pass
+def OccupancyGridPlot(ax, occupancyGrid):
+        staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
+        extent = [0 , occupancyGrid.info.width*occupancyGrid.info.resolution, 0, occupancyGrid.info.height*occupancyGrid.info.resolution]
+        ax.imshow(staticMap, cmap=plt.cm.gray, extent=extent)
+        obsIds = numpy.transpose(numpy.nonzero(staticMap))
+        minId = obsIds.min(axis=0)
+        maxId = obsIds.max(axis=0)
+        space = 1.0
+        left = (minId[0]*occupancyGrid.info.resolution)-space
+        bottom = (occupancyGrid.info.height-maxId[1])*occupancyGrid.info.resolution-space
+        right = (maxId[0]*occupancyGrid.info.resolution)+space
+        top = (occupancyGrid.info.height-minId[1])*occupancyGrid.info.resolution+space
+        ax.set_xlim([left, right])
+        ax.set_ylim([bottom, top])
+        ax.set_xlabel('y [m]')
+        ax.set_ylabel('x [m]')
+        #ax.set_aspect('equal', adjustable='box')
+        #plt.tight_layout()
 
 
 class HSR_STL_monitor(object):
@@ -62,6 +78,7 @@ class HSR_STL_monitor(object):
                 var_object = self.spec.get_var_object(self.spec.out_var)
                 self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
 
+
         # it is not colled ctrl+Z
         def __del__(self):
                 plt.close()
@@ -69,36 +86,19 @@ class HSR_STL_monitor(object):
 
         def odometry_callback(self, Odometry_message):
                 self.odometry = Odometry_message
-
+        
 
         def tOdometry_callback(self, PoseStamped_message):
                 self.poseStamped = PoseStamped_message
 
-        # this will be called just one time.
-        def map_callback(self, OccupancyGrid_message):
-                rospy.loginfo('get map data')
 
-                occupancyGrid = OccupancyGrid_message
+        # this will be called just one time.
+        def map_callback(self, occupancyGrid):
+                self.occupancyGrid = occupancyGrid
+
                 mapFig = plt.figure(figsize = (12,12))
                 ax = mapFig.add_subplot(1, 1, 1)
-
-                staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
-                extent = [0 , occupancyGrid.info.width*occupancyGrid.info.resolution, 0, occupancyGrid.info.height*occupancyGrid.info.resolution]
-                ax.imshow(staticMap, cmap=plt.cm.gray, extent=extent)
-                obsIds = numpy.transpose(numpy.nonzero(staticMap))
-                minId = obsIds.min(axis=0)
-                maxId = obsIds.max(axis=0)
-                space = 1.0
-                left = (minId[0]*occupancyGrid.info.resolution)-space
-                bottom = (occupancyGrid.info.height-maxId[1])*occupancyGrid.info.resolution-space
-                right = (maxId[0]*occupancyGrid.info.resolution)+space
-                top = (occupancyGrid.info.height-minId[1])*occupancyGrid.info.resolution+space
-                ax.set_xlim([left, right])
-                ax.set_ylim([bottom, top])
-                ax.set_xlabel('y [m]')
-                ax.set_ylabel('x [m]')
-                #ax.set_aspect('equal', adjustable='box')
-                #plt.tight_layout()
+                OccupancyGridPlot(ax, occupancyGrid)
                 plt.show()
 
 
@@ -121,6 +121,11 @@ class HSR_STL_monitor(object):
                 rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
                 eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
                 rospy.loginfo('eOdometry: {0}'.format(eOdom))
+
+                #OccupancyGridPlot(self.ax, self.occupancyGrid)
+                #plt.draw()
+                #plt.pause(0.05)
+
 
 
 if __name__ == '__main__':

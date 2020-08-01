@@ -7,6 +7,11 @@
 		<arg name="paused" value="false" />
 	</include>
 
+	<!-- Launch Agent -->
+	<include file="$(find hsrb_gazebo_launch)/launch/agent.launch">
+		<arg name="paused" value="false" />
+	</include>
+
 	<!-- Launch STL monitor (output console) -->
 	<node name="hsr_monitor" pkg="hsr_monitors" type="hsr_monitor.py" output="screen" args="--freg 1">
 	</node>

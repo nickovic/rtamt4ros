@@ -16,7 +16,7 @@ class Agent(object):
         self.set_model_srv = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 
         self.model = GetModelStateRequest()
-        self.model.model_name='unit_cylinder'
+        self.model.model_name='agent'
 
     def control_callback(self, event):
         result = self.get_model_srv(self.model)

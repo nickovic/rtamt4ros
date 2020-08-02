@@ -6,12 +6,11 @@
 	<!-- 
 	$ rosrun gazebo_ros spawn_model -file src/rtamt4ros/hsr_monitors/model_editor_models/agent/model.sdf -sdf -model agent -y -7.0 -x -6.0 -z 0.5
 	-->
-	<node pkg="gazebo_ros" type="spawn_model" name="spawn" args="-file $(find hsr_monitors)/model_editor_models/agent/model.sdf -sdf -model agent -y -7.0 -x -6.0 -z 0.5" >
+	<node pkg="gazebo_ros" type="spawn_model" name="spawn" args="-file $(find hsr_monitors)/model_editor_models/turtlebot/model.sdf -sdf -model agent -y -7.0 -x -6.0 -z 0.8" >
 	</node>
 
 	<!-- agent order -->
 	<node pkg="hsr_monitors" type="agent.py" name="agent">
 	</node>
-
 
 </launch>

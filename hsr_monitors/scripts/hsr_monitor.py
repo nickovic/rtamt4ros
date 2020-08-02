@@ -44,11 +44,11 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
         return pointsGridCoordinations
 
 
-def distPoints2Position(points, position):
+def distPoints2pose(points, pose):
         # just thinking 2D (x,y)
         if points.shape == (2,):        #for 1 id case
                 points = numpy.array([points])
-        dists = points - numpy.array([position.x, position.y])
+        dists = points - numpy.array([pose.position.x, pose.position.y])
         dists = numpy.square(dists)
         dists = numpy.sum(dists,axis=1)
         dists = numpy.sqrt(dists)
@@ -57,12 +57,12 @@ def distPoints2Position(points, position):
         return dists
 
 
-def distPoints2Path(points, poses):
+def distPoints2poses(points, poses):
         # just thinking 2D (x,y)
         # TODO all numpy!
         pathDists = []
         for pose in poses:
-                dists = distPoints2Position(points, pose.pose.position)
+                dists = distPoints2pose(points, pose.pose)
                 dist = numpy.min(dists)
                 pathDists.append(dist)
         pathDists = numpy.array(pathDists)
@@ -169,7 +169,7 @@ class HSR_STL_monitor(object):
 
 
         def motion_path_callback(self, pathWithGoal):
-                pathDist = distPoints2Path(self.obss, pathWithGoal.poses)
+                pathDist = distPoints2poses(self.obss, pathWithGoal.poses)
                 rospy.loginfo('path dist: {0}'.format(pathDist))
 
 
@@ -183,7 +183,7 @@ class HSR_STL_monitor(object):
                 # error odom
                 eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
                 rospy.loginfo('eOdometry: {0}'.format(eOdom))
-                dists = distPoints2Position(self.obss, cPose.position)
+                dists = distPoints2pose(self.obss, cPose)
                 dist = numpy.min(dists)
                 rospy.loginfo('dist ego obs: {0}'.format(dist))
 

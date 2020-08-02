@@ -24,6 +24,7 @@ from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Pose
+from tmc_navigation_msgs.msg import PathWithGoal
 
 DEBUG = False
 
@@ -54,7 +55,20 @@ def distPoints2Position(points, position):
         if dists.shape == (1,1):     #for 1 id case
                 dists = dists[0]
         return dists
-        
+
+
+def distPoints2Path(points, poses):
+        # just thinking 2D (x,y)
+        # TODO all numpy!
+        pathDists = []
+        for pose in poses:
+                dists = distPoints2Position(points, pose.pose.position)
+                dist = numpy.min(dists)
+                pathDists.append(dist)
+        pathDists = numpy.array(pathDists)
+        pathDist = numpy.min(pathDists)
+        return pathDist
+
 
 def occupancyGridPlot(ax, occupancyGrid):
         staticMap = occupancyGridData2staticMap(occupancyGrid)
@@ -106,6 +120,9 @@ class HSR_STL_monitor(object):
                 self.odometry = Odometry()
                 self.map_subscriber = rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.map_callback, queue_size=10)
                 self.occupancyGrid = OccupancyGrid()
+                self.motion_path_subscriber = rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.motion_path_callback, queue_size=10)
+                self.pathWithGoal = PathWithGoal()
+
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
@@ -149,6 +166,11 @@ class HSR_STL_monitor(object):
                         msg[1].header.stamp = rospy.Time.from_sec(msg[0])
                         rospy.loginfo('Robustness: time: {0}, value: {1}'.format(msg[0], msg[1].value))
                         self.stl_publisher.publish(msg[1])
+
+
+        def motion_path_callback(self, pathWithGoal):
+                pathDist = distPoints2Path(self.obss, pathWithGoal.poses)
+                rospy.loginfo('path dist: {0}'.format(pathDist))
 
 
         def monitor_callback(self, event):

@@ -25,6 +25,8 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Pose
 
+DEBUG = False
+
 def occupancyGridData2staticMap(occupancyGrid):
         staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
         return staticMap
@@ -54,7 +56,7 @@ def distPoints2Position(points, position):
         return dists
         
 
-def OccupancyGridPlot(ax, occupancyGrid):
+def occupancyGridPlot(ax, occupancyGrid):
         staticMap = occupancyGridData2staticMap(occupancyGrid)
         extent = [occupancyGrid.info.origin.position.x, occupancyGrid.info.width*occupancyGrid.info.resolution  + occupancyGrid.info.origin.position.x,
                   occupancyGrid.info.origin.position.y, occupancyGrid.info.height*occupancyGrid.info.resolution + occupancyGrid.info.origin.position.y]
@@ -130,10 +132,11 @@ class HSR_STL_monitor(object):
                 obsIds = numpy.transpose(numpy.nonzero(staticMap))
                 self.obss = mapids2mapCoordination(obsIds, occupancyGrid)
 
-                mapFig = plt.figure(figsize = (12,12))
-                ax = mapFig.add_subplot(1, 1, 1)
-                OccupancyGridPlot(ax, occupancyGrid)
-                plt.show()
+                if DEBUG:
+                        mapFig = plt.figure(figsize = (12,12))
+                        ax = mapFig.add_subplot(1, 1, 1)
+                        occupancyGridPlot(ax, occupancyGrid)
+                        plt.show()
 
 
         def scan_callback(self, laser_message):

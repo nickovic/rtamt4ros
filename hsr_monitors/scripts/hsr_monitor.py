@@ -131,7 +131,8 @@ class HSR_STL_monitor(object):
 
         # it is not colled ctrl+Z
         def __del__(self):
-                plt.close()
+                if DEBUG:
+                        plt.close()
 
 
         def odometry_callback(self, poseStamped):

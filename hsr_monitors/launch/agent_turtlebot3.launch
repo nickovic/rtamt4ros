@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<!-- spawn agent -->
+	<include file="$(find hsr_monitor)/launch/spawn_turtlebot3.launch">
+    </include>
+
+	<!-- Publish order -->
+	<!-- 
+	$ rostopic pub -r 1 /turtleBot3/cmd_vel geometry_msgs/Twist '{linear:{x: 0.2, y: 0.0, z: 0.0}, angular:{x: 0.0, y: 0.0, z: 0.0}}'
+	TODO -1 option is much better, but because of launch timing issue, it does not works in the initial phase.
+	-->
+	<node pkg="rostopic" type="rostopic" name="oder" args="pub -r 1 /turtleBot3/cmd_vel geometry_msgs/Twist '{linear:{x: 0.2, y: 0.0, z: 0.0}, angular:{x: 0.0, y: 0.0, z: 0.0}}'" output="screen">
+	</node>	
+
+</launch>

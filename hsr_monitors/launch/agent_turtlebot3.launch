@@ -3,7 +3,7 @@
 <launch>
 
 	<!-- spawn agent -->
-	<include file="$(find hsr_monitor)/launch/spawn_turtlebot3.launch">
+	<include file="$(find hsr_monitors)/launch/spawn_turtlebot3.launch">
     </include>
 
 	<!-- Publish order -->

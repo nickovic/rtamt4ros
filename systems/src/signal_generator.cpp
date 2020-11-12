@@ -13,6 +13,8 @@
 
 #include <ros/ros.h>
 #include <rtamt_msgs/FloatMessage.h>
+
+
 /*
  * 
  */
@@ -26,6 +28,7 @@ ros::init(argc, argv, "minimal_publisher_with_timer");
     
     rtamt_msgs::FloatMessage message1;
     rtamt_msgs::FloatMessage message2;
+
     
     // Create a 1Hz timer
     ros::Rate naptime(1.0);
@@ -52,6 +55,8 @@ ros::init(argc, argv, "minimal_publisher_with_timer");
         
         publisher_a.publish(message1);
         publisher_b.publish(message2);
+
+
              
         // sleep 1 second
         naptime.sleep();

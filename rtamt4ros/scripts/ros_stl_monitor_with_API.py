@@ -5,6 +5,9 @@ import argparse
 import copy
 import rtamt
 
+#other msg
+from rtamt_msgs.msg import FloatMessage
+
 
 def callback(data, args):
     spec = args[0]
@@ -25,12 +28,9 @@ def monitor(period_arg, unit_arg):
     freq = spec.get_sampling_frequency()
 
     spec.name = 'HandMadeMonitor'
-    spec.import_module('rtamt_msgs.msg', 'FloatMessage')
-    spec.declare_var('a', 'FloatMessage')
-    spec.declare_var('c', 'FloatMessage')
-    spec.set_var_topic('a', 'rtamt/a')
-    spec.set_var_topic('c', 'rtamt/c')
-    spec.spec = 'c.value = always(a.value<=2)'
+    spec.declare_var('a', 'float')
+    spec.declare_var('c', 'float')
+    spec.spec = 'c = always(a<=2)'
 
     try:
         spec.parse()
@@ -42,23 +42,16 @@ def monitor(period_arg, unit_arg):
     rospy.init_node(spec.name, anonymous=True)
     rospy.loginfo('Initialized the node STLMonitor')
 
-    # Advertise the node as a publisher to the topic defined by the out var of the spec
-    var_object = spec.get_var_object(spec.out_var)
-    topic = spec.var_topic_dict[spec.out_var]
-    rospy.loginfo('Registering as publisher to topic {}'.format(topic))
-    pub = rospy.Publisher(topic, var_object.__class__, queue_size=10)
-
-    # For each var from the spec, subscribe to its topic
-    for var_name in spec.free_vars:
-        var_object = spec.get_var_object(var_name)
-        topic = spec.var_topic_dict[var_name]
-        rospy.loginfo('Subscribing to topic ' + topic)
-        rospy.Subscriber(topic, var_object.__class__, callback, [spec, var_name])
+    # Init subscriber
+    var_object = spec.get_var_object(var_name)
+    topic = spec.var_topic_dict[var_name]
+    rospy.loginfo('Subscribing to topic ' + topic)
+    rospy.Subscriber('rtamt/a', 'FloatMessage', callback, [spec, 'a'])
 
     # Set the frequency at which the monitor is evaluated
     rate = rospy.Rate(freq)
 
-    time_index = 0;
+    time_index = 0
 
     while not rospy.is_shutdown():
         var_name_object_list = []

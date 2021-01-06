@@ -3,8 +3,8 @@ import rospy
 import sys
 import argparse
 import copy
-from rtamt.spec.stl.specification import STLSpecification
-from rtamt.exception.stl.exception import STLParseException
+import rtamt
+
 
 def callback(data, args):
     spec = args[0]
@@ -20,7 +20,7 @@ def monitor(period_arg, unit_arg):
     period = int(period_arg[0])
     unit = unit_arg[0]
 
-    spec = STLSpecification()
+    spec = rtamt.STLDenseTimeSpecification()
     spec.set_sampling_period(period, unit)
     freq = spec.get_sampling_frequency()
 

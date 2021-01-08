@@ -15,21 +15,23 @@ from rtamt_msgs.msg import FloatMessage
 
 DEBUG = False
 
+
 class Monitor(object):
 	def __init__(self):
                 # STL settings
                 # Load the spec from STL file
                 self.spec = rtamt.STLDenseTimeSpecification()
                 self.spec.name = 'HandMadeMonitor'
-                self.spec.declare_var('a', 'float')
+                self.spec.import_module('rtamt_msgs.msg', 'FloatMessage')
+                self.spec.declare_var('a', 'FloatMessage')
                 self.spec.declare_var('c', 'float')
-                self.spec.spec = 'c=a>=2'
-                #self.spec.spec = 'c = always[0,5](a<=2)'
+                #self.spec.spec = 'c= a.value >= 2'
+                self.spec.spec = 'c = always[0,5](a.value<=2)'
 
                 try:
                         self.spec.parse()
                         self.spec.pastify()
-                except STLParseException as err:
+                except Exception as err:
                         print('STL Parse Exception: {}'.format(err))
                         sys.exit()
 
@@ -47,12 +49,13 @@ class Monitor(object):
 
         def monitor_callback(self, event):
                 # a
-                value = self.a.value
-                stamp  = self.a.header.stamp
-                rospy.loginfo('a: time:{0} value:{1}'.format(stamp, value))
+                # value = self.a.value
+                value = self.a
+                stamp  = self.a.header.stamp.to_nsec()
+                # rospy.loginfo('a: time:{0} value:{1}'.format(stamp, value))
                 a_data = [(stamp, value)]
                 rob = self.spec.update(['a', a_data])
-                rospy.loginfo(str(rob))
+                rospy.loginfo('Robustness: ' + str(rob))
 
 
 if __name__ == '__main__':

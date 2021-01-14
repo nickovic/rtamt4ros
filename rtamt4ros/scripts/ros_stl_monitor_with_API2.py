@@ -8,6 +8,8 @@
 import rospy
 import sys
 import argparse
+import queue
+
 import rtamt
 
 #other msg
@@ -43,15 +45,19 @@ class Monitor(object):
                 var_object = self.spec.get_var_object(self.spec.out_var)
                 self.c_publisher = rospy.Publisher('rtamt/c', FloatMessage, queue_size=10)
 
+                # queue for rob
+                self.rob_q = queue.Queue()
+
 
         def a_callback(self, floatMessage):
-                self.a = floatMessage
+                a = floatMessage
+                a_data = [[a.header.stamp.to_nsec(), a.value]]
+                rob = self.spec.update(['a', a_data])
+                self.rob_q.put(rob)
+                
 
         def monitor_callback(self, event):
-                # a
-                a_data = [[self.a.header.stamp.to_nsec(), self.a.value]]
-                rob = self.spec.update(['a', a_data])
-                rospy.loginfo('Robustness: ' + str(rob))
+                rospy.loginfo('Robustness: ' + str(self.rob_q.get()))
 
 
 if __name__ == '__main__':

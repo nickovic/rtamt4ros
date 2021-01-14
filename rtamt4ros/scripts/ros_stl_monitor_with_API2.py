@@ -25,10 +25,12 @@ class Monitor(object):
                 self.spec = rtamt.STLDenseTimeSpecification()
                 self.spec.name = 'HandMadeMonitor'
                 self.spec.declare_var('a', 'float')
+                self.spec.declare_var('b', 'float')
                 self.spec.declare_var('c', 'float')
                 self.spec.set_var_io_type('a', 'input')
+                self.spec.set_var_io_type('b', 'input')
                 self.spec.set_var_io_type('c', 'output')
-                self.spec.spec = 'c = always[0,5](a<=2)'
+                self.spec.spec = 'c = always[0,5]( (a<=2) and (b >= 3) )'
 
                 try:
                         self.spec.parse()
@@ -39,7 +41,7 @@ class Monitor(object):
 
                 # For each var from the spec, subscribe to its topic
                 self.a_subscriber = rospy.Subscriber('rtamt/a', FloatMessage, self.a_callback, queue_size=10)
-                self.a = FloatMessage
+                self.b_subscriber = rospy.Subscriber('rtamt/b', FloatMessage, self.b_callback, queue_size=10)
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
@@ -55,6 +57,13 @@ class Monitor(object):
                 rob = self.spec.update(['a', a_data])
                 self.rob_q.put(rob)
                 
+
+        def b_callback(self, floatMessage):
+                b = floatMessage
+                b_data = [[b.header.stamp.to_nsec(), b.value]]
+                rob = self.spec.update(['b', b_data])
+                self.rob_q.put(rob)
+
 
         def monitor_callback(self, event):
                 rospy.loginfo('Robustness: ' + str(self.rob_q.get()))

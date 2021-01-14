@@ -212,7 +212,7 @@ class HSR_STL_monitor(object):
                         rospy.loginfo('dist ego obs: {0}'.format(dist))
 
                 # evaluate
-                time = max(self.poseStamped.header.stamp.to_sec(), self.odometry.header.stamp.to_sec())
+                time = min(self.poseStamped.header.stamp.to_sec(), self.odometry.header.stamp.to_sec())
                 data = [[time, dist]]
                 rob = self.spec_odomErr.update(['odomErr', data])
 

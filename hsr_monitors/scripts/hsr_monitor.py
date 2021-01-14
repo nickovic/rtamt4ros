@@ -99,17 +99,33 @@ class HSR_STL_monitor(object):
 	def __init__(self):
                 # STL settings
                 # Load the spec from STL file
-                self.spec = rtamt.STLDenseTimeSpecification()
-                self.spec.name = 'HandMadeMonitor'
-                self.spec.declare_var('closest_dist', 'float')
-                self.spec.declare_var('c', 'float')
-                self.spec.set_var_io_type('closest_dist', 'input')
-                self.spec.set_var_io_type('c', 'output')
-                self.spec.spec = 'c = always [0,10.0] (closest_dist >= 0.2)'
+                self.spec_odomErr = rtamt.STLDenseTimeSpecification()
+                self.spec_odomErr.name = 'odomErr'
+                self.spec_odomErr.declare_var('odomErr', 'float')
+                self.spec_odomErr.set_var_io_type('odomErr', 'input')
+                self.spec_odomErr.spec = 'always [0,10] (odomErr >= 0.1)'
+
+                self.spec_scanDist = rtamt.STLDenseTimeSpecification()
+                self.spec_scanDist.name = 'scanDist'
+                self.spec_scanDist.declare_var('scanDist', 'float')
+                self.spec_scanDist.set_var_io_type('scanDist', 'input')
+                self.spec_scanDist.spec = 'always [0,10] (scanDist >= 0.2)'
+                self.rob_scanDist_q = queue.Queue()
+
+                self.spec_motionPathDist = rtamt.STLDenseTimeSpecification()
+                self.spec_motionPathDist.name = 'motionPathDist'
+                self.spec_motionPathDist.declare_var('motionPathDist', 'float')
+                self.spec_motionPathDist.set_var_io_type('motionPathDist', 'input')
+                self.spec_motionPathDist.spec = 'always [0,10] (motionPathDist >= 0.2)'
+                self.rob_motionPathDist_q = queue.Queue()
 
                 try:
-                        self.spec.parse()
-                        self.spec.pastify()
+                        self.spec_odomErr.parse()
+                        self.spec_odomErr.pastify()
+                        self.spec_scanDist.parse()
+                        self.spec_scanDist.pastify()
+                        self.spec_motionPathDist.parse()
+                        self.spec_motionPathDist.pastify()
                 except STLParseException as err:
                         print('STL Parse Exception: {}'.format(err))
                         sys.exit()
@@ -160,35 +176,52 @@ class HSR_STL_monitor(object):
 
 
         def scan_callback(self, laser_message):
-                closestDist = numpy.amin(laser_message.ranges)
+                scanDist = numpy.amin(laser_message.ranges)
 
                 # Evaluate the spec
-                data = [[laser_message.header.stamp.to_sec(), closestDist]]
-                robustness_msgs = self.spec.update(['closest_dist', data])
-                #for msg in robustness_msgs:
-                        #msg[1].header.stamp = rospy.Time.from_sec(msg[0])
-                        #rospy.loginfo('Robustness: time: {0}, value: {1}'.format(msg[0], msg[1].value))
-                        #self.stl_publisher.publish(msg[1])
+                data = [[laser_message.header.stamp.to_sec(), scanDist]]
+                rob = self.spec_scanDist.update(['scanDist', data])
+                self.rob_scanDist_q.put(rob)
 
 
         def motion_path_callback(self, pathWithGoal):
                 pathDist = distPoints2poses(self.obss, pathWithGoal.poses)
-                rospy.loginfo('path dist: {0}'.format(pathDist))
+
+                # Evaluate the spec
+                data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
+                rob = self.spec_motionPathDist.update(['motionPathDist', data])
+                self.rob_motionPathDist_q.put(rob)
 
 
         def monitor_callback(self, event):
                 # odom
                 cPose = self.poseStamped.pose
-                rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
+                if DEBUG:
+                        rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
                 # true odom
                 tPose = self.odometry.pose.pose
-                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
+                if DEBUG:
+                        rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
                 # error odom
                 eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
-                rospy.loginfo('eOdometry: {0}'.format(eOdom))
+                if DEBUG:
+                        rospy.loginfo('eOdometry: {0}'.format(eOdom))
                 dists = distPoints2pose(self.obss, cPose)
                 dist = numpy.min(dists)
-                rospy.loginfo('dist ego obs: {0}'.format(dist))
+                if DEBUG:
+                        rospy.loginfo('dist ego obs: {0}'.format(dist))
+
+                # evaluate
+                time = max(self.poseStamped.header.stamp.to_sec(), self.odometry.header.stamp.to_sec())
+                data = [[time, dist]]
+                rob = self.spec_odomErr.update(['odomErr', data])
+
+                # print robs
+                rospy.loginfo('rob {0}: {1}'.format(self.spec_odomErr.name, rob))
+                if not self.rob_scanDist_q.empty():
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec_scanDist.name, self.rob_scanDist_q.get()))
+                if not self.rob_motionPathDist_q.empty():
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec_motionPathDist.name, self.rob_motionPathDist_q.get()))
 
 
 if __name__ == '__main__':

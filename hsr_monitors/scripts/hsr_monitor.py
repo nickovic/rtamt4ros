@@ -3,7 +3,7 @@
 # $ roscore
 #
 # IF start in manual
-# $ rosrun hsr_monitor hsr_monitor.py --freq 0.1
+# $ rosrun hsr_monitors hsr_monitor.py --freq 0.1
 
 import rospy
 import sys
@@ -11,6 +11,8 @@ import argparse
 import logging
 import copy
 import numpy
+import queue
+
 import rtamt
 
 import matplotlib.pyplot as plt
@@ -97,17 +99,17 @@ class HSR_STL_monitor(object):
 	def __init__(self):
                 # STL settings
                 # Load the spec from STL file
-                self.spec = rtamt.STLIOCTSpecification()
+                self.spec = rtamt.STLDenseTimeSpecification()
                 self.spec.name = 'HandMadeMonitor'
-                self.spec.import_module('rtamt_msgs.msg', 'FloatMessage')
                 self.spec.declare_var('closest_dist', 'float')
-                self.spec.declare_var('c', 'FloatMessage')
+                self.spec.declare_var('c', 'float')
                 self.spec.set_var_io_type('closest_dist', 'input')
-                self.spec.set_var_topic('c', 'rtamt/c')
-                self.spec.spec = 'c.value = always [0:10.0] (closest_dist >= 0.2)'
+                self.spec.set_var_io_type('c', 'output')
+                self.spec.spec = 'c = always [0,10.0] (closest_dist >= 0.2)'
 
                 try:
                         self.spec.parse()
+                        self.spec.pastify()
                 except STLParseException as err:
                         print('STL Parse Exception: {}'.format(err))
                         sys.exit()
@@ -125,8 +127,8 @@ class HSR_STL_monitor(object):
 
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
-                var_object = self.spec.get_var_object(self.spec.out_var)
-                self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
+                #var_object = self.spec.get_var_object(self.spec.out_var)
+                #self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
 
 
         # it is not colled ctrl+Z
@@ -161,12 +163,12 @@ class HSR_STL_monitor(object):
                 closestDist = numpy.amin(laser_message.ranges)
 
                 # Evaluate the spec
-                time_stamp = rospy.Time.now()
-                robustness_msgs = self.spec.update(['closest_dist', [[time_stamp.secs, closestDist]]])
-                for msg in robustness_msgs:
-                        msg[1].header.stamp = rospy.Time.from_sec(msg[0])
-                        rospy.loginfo('Robustness: time: {0}, value: {1}'.format(msg[0], msg[1].value))
-                        self.stl_publisher.publish(msg[1])
+                data = [[laser_message.header.stamp.to_sec(), closestDist]]
+                robustness_msgs = self.spec.update(['closest_dist', data])
+                #for msg in robustness_msgs:
+                        #msg[1].header.stamp = rospy.Time.from_sec(msg[0])
+                        #rospy.loginfo('Robustness: time: {0}, value: {1}'.format(msg[0], msg[1].value))
+                        #self.stl_publisher.publish(msg[1])
 
 
         def motion_path_callback(self, pathWithGoal):

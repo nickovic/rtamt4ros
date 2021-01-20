@@ -11,7 +11,7 @@ import argparse
 import logging
 import copy
 import numpy
-import queue
+import Queue
 
 import rtamt
 
@@ -110,14 +110,14 @@ class HSR_STL_monitor(object):
                 self.spec_scanDist.declare_var('scanDist', 'float')
                 self.spec_scanDist.set_var_io_type('scanDist', 'input')
                 self.spec_scanDist.spec = 'always [0,10] (scanDist >= 0.2)'
-                self.rob_scanDist_q = queue.Queue()
+                self.rob_scanDist_q = Queue.Queue()
 
                 self.spec_motionPathDist = rtamt.STLDenseTimeSpecification()
                 self.spec_motionPathDist.name = 'motionPathDist'
                 self.spec_motionPathDist.declare_var('motionPathDist', 'float')
                 self.spec_motionPathDist.set_var_io_type('motionPathDist', 'input')
                 self.spec_motionPathDist.spec = 'always [0,10] (motionPathDist >= 0.2)'
-                self.rob_motionPathDist_q = queue.Queue()
+                self.rob_motionPathDist_q = Queue.Queue()
 
                 try:
                         self.spec_odomErr.parse()

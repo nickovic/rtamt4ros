@@ -8,7 +8,7 @@
 import rospy
 import sys
 import argparse
-import queue
+import Queue
 
 import rtamt
 
@@ -48,7 +48,7 @@ class Monitor(object):
                 self.c_publisher = rospy.Publisher('rtamt/c', FloatMessage, queue_size=10)
 
                 # queue for rob
-                self.rob_q = queue.Queue()
+                self.rob_q = Queue.Queue()
 
 
         def a_callback(self, floatMessage):

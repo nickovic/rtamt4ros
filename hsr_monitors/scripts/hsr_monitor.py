@@ -17,7 +17,7 @@ import rtamt
 
 import matplotlib.pyplot as plt
 
-from webotPyLib import *
+from xythLib import *
 
 #other msg
 from std_msgs.msg import String

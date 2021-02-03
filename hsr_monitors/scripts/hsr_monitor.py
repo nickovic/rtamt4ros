@@ -16,7 +16,7 @@ import rtamt
 
 import matplotlib.pyplot as plt
 
-from rosDistLib import *
+from ros_distance_libs.rosDistLib import *
 
 #other msg
 from std_msgs.msg import String

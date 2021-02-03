@@ -3,7 +3,7 @@
 # $ roscore
 #
 # IF start in manual
-# $ rosrun hsr_monitors hsr_monitor.py --freq 0.1
+# $ rosrun hsr_monitors hsr_monitor.py --freq 10
 
 import rospy
 import sys
@@ -141,7 +141,7 @@ class HSR_STL_monitor(object):
                 self.motion_path_subscriber = rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.motion_path_callback, queue_size=10)
                 self.pathWithGoal = PathWithGoal()
 
-
+                self.obss = []
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 #var_object = self.spec.get_var_object(self.spec.out_var)
                 #self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
@@ -206,18 +206,20 @@ class HSR_STL_monitor(object):
                 eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
                 if DEBUG:
                         rospy.loginfo('eOdometry: {0}'.format(eOdom))
-                dists = distPoints2pose(self.obss, cPose)
-                dist = numpy.min(dists)
-                if DEBUG:
-                        rospy.loginfo('dist ego obs: {0}'.format(dist))
+                if self.obss != []:
+                        dists = distPoints2pose(self.obss, cPose)
+                        dist = numpy.min(dists)
+                        if DEBUG:
+                                rospy.loginfo('dist ego obs: {0}'.format(dist))
 
-                # evaluate
-                time = min(self.poseStamped.header.stamp.to_sec(), self.odometry.header.stamp.to_sec())
-                data = [[time, dist]]
-                rob = self.spec_odomErr.update(['odomErr', data])
+                        # evaluate
+                        time = min(self.poseStamped.header.stamp.to_sec(), self.odometry.header.stamp.to_sec())
+                        data = [[time, dist]]
+                        rob = self.spec_odomErr.update(['odomErr', data])
+        
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec_odomErr.name, rob))
 
                 # print robs
-                rospy.loginfo('rob {0}: {1}'.format(self.spec_odomErr.name, rob))
                 if not self.rob_scanDist_q.empty():
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_scanDist.name, self.rob_scanDist_q.get()))
                 if not self.rob_motionPathDist_q.empty():

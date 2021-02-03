@@ -76,7 +76,11 @@ class HSR_STL_monitor(object):
                 self.motion_path_subscriber = rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.motion_path_callback, queue_size=10)
                 self.pathWithGoal = PathWithGoal()
 
+                # data init
                 self.obss = []
+                self.poseStamped = []
+                self.odometry = []
+
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 #var_object = self.spec.get_var_object(self.spec.out_var)
                 #self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
@@ -129,19 +133,22 @@ class HSR_STL_monitor(object):
 
 
         def monitor_callback(self, event):
-                # odom
-                cPose = self.poseStamped.pose
-                if DEBUG:
-                        rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
-                # true odom
-                tPose = self.odometry.pose.pose
-                if DEBUG:
-                        rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
-                # error odom
-                eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
-                if DEBUG:
-                        rospy.loginfo('eOdometry: {0}'.format(eOdom))
-                if self.obss != []:
+                # data check
+                if self.obss != [] and self.poseStamped != [] and self.odometry != []:
+                        # odom
+                        cPose = self.poseStamped.pose
+                        if DEBUG:
+                                rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
+                        # true odom
+                        tPose = self.odometry.pose.pose
+                        if DEBUG:
+                                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
+                        # error odom
+                        eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
+                        if DEBUG:
+                                rospy.loginfo('eOdometry: {0}'.format(eOdom))
+                
+                        # collision
                         dists = distPoints2pose(self.obss, cPose)
                         dist = numpy.min(dists)
                         if DEBUG:

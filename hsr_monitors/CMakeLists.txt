@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tmc_navigation_msgs
-  ros_distance_libs
+#  ros_distance_libs
 )
 
 ## System dependencies are found with CMake's conventions

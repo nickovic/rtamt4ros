@@ -4,6 +4,9 @@
 #
 # IF start in manual
 # $ rosrun hsr_monitors hsr_monitor.py --freq 10
+# TODO:
+# 1) add more propeties.
+# 2) monitor with publisher and rtp polot.
 
 import rospy
 import sys
@@ -34,12 +37,8 @@ class HSR_STL_monitor(object):
 	def __init__(self):
                 # STL settings
                 # Load the spec from STL file
-                self.spec_odomErr = rtamt.STLDenseTimeSpecification()
-                self.spec_odomErr.name = 'odomErr'
-                self.spec_odomErr.declare_var('odomErr', 'float')
-                self.spec_odomErr.set_var_io_type('odomErr', 'input')
-                self.spec_odomErr.spec = 'always [0,10] (odomErr >= 0.1)'
 
+                # 1) system
                 self.spec_scanDist = rtamt.STLDenseTimeSpecification()
                 self.spec_scanDist.name = 'scanDist'
                 self.spec_scanDist.declare_var('scanDist', 'float')
@@ -47,12 +46,23 @@ class HSR_STL_monitor(object):
                 self.spec_scanDist.spec = 'always [0,10] (scanDist >= 0.2)'
                 self.rob_scanDist_q = Queue.Queue()
 
+                # 2) perception
+                self.spec_odomErr = rtamt.STLDenseTimeSpecification()
+                self.spec_odomErr.name = 'odomErr'
+                self.spec_odomErr.declare_var('odomErr', 'float')
+                self.spec_odomErr.set_var_io_type('odomErr', 'input')
+                self.spec_odomErr.spec = 'always [0,10] (odomErr >= 0.1)'
+
+                # 3) planner
                 self.spec_motionPathDist = rtamt.STLDenseTimeSpecification()
                 self.spec_motionPathDist.name = 'motionPathDist'
                 self.spec_motionPathDist.declare_var('motionPathDist', 'float')
                 self.spec_motionPathDist.set_var_io_type('motionPathDist', 'input')
                 self.spec_motionPathDist.spec = 'always [0,10] (motionPathDist >= 0.2)'
                 self.rob_motionPathDist_q = Queue.Queue()
+
+                # 4) controller
+
 
                 try:
                         self.spec_odomErr.parse()

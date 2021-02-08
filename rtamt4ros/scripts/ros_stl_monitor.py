@@ -3,8 +3,7 @@ import rospy
 import sys
 import argparse
 import copy
-from rtamt.spec.stl.specification import STLSpecification
-from rtamt.exception.stl.exception import STLParseException
+import rtamt
 
 def callback(data, args):
     spec = args[0]
@@ -23,7 +22,7 @@ def monitor(stl_arg, period_arg, unit_arg):
 
     filename = stl_arg[0]
 
-    spec = STLSpecification()
+    spec = rtamt.STLDiscreteTimeSpecification()
     spec.set_sampling_period(period, unit)
     freq = spec.get_sampling_frequency()
 
@@ -31,7 +30,7 @@ def monitor(stl_arg, period_arg, unit_arg):
 
     try:
         spec.parse()
-    except STLParseException as err:
+    except rtamt.STLParseException as err:
         print('STL Parse Exception: {}'.format(err))
         sys.exit()
 

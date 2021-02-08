@@ -3,8 +3,7 @@ import rospy
 import sys
 import argparse
 import copy
-from rtamt.spec.stl.specification import STLSpecification
-from rtamt.exception.stl.exception import STLParseException
+import rtamt
 
 def callback(data, args):
     spec = args[0]
@@ -20,7 +19,7 @@ def monitor(period_arg, unit_arg):
     period = int(period_arg[0])
     unit = unit_arg[0]
 
-    spec = STLSpecification()
+    spec = rtamt.STLDiscreteTimeSpecification()
     spec.set_sampling_period(period, unit)
     freq = spec.get_sampling_frequency()
 
@@ -30,11 +29,11 @@ def monitor(period_arg, unit_arg):
     spec.declare_var('c', 'FloatMessage')
     spec.set_var_topic('a', 'rtamt/a')
     spec.set_var_topic('c', 'rtamt/c')
-    spec.spec = 'c.value = always(a.value<=2)'
+    spec.spec = 'c.value = a.value<=2'
 
     try:
         spec.parse()
-    except STLParseException as err:
+    except rtamt.STLParseException as err:
         print('STL Parse Exception: {}'.format(err))
         sys.exit()
 

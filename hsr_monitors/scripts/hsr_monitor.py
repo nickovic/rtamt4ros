@@ -5,7 +5,7 @@
 # IF start in manual
 # $ rosrun hsr_monitors hsr_monitor.py --freq 10
 # TODO:
-# 1) add more propeties.
+# 1) Other agent senario
 # 2) monitor with publisher and rtp polot.
 
 import rospy
@@ -37,8 +37,38 @@ class HSR_STL_monitor(object):
 	def __init__(self):
                 # STL settings
                 # Load the spec from STL file
+                # 1) system -----
+                # collision with obstacle (Grand Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
 
-                # 1) system
+
+                # reach goal (Grabd Truth): /hsrb/odom_ground_truth <goal>
+
+
+
+                # 2) perception -----
+                # localization error (Grand Truth): /hsrb/odom_ground_truth /global_pose
+                self.spec_odomErr = rtamt.STLDenseTimeSpecification()
+                self.spec_odomErr.name = 'odomErr'
+                self.spec_odomErr.declare_var('odomErr', 'float')
+                self.spec_odomErr.set_var_io_type('odomErr', 'input')
+                self.spec_odomErr.spec = 'always [0,10] (odomErr >= 0.1)'
+
+                # odometer error (Grand Truth): /hsrb/odom_ground_truth <odometer>
+
+                # localization error LiDAR (Grand Truth): /hsrb/odom_ground_truth <LiDAR localizer>
+
+                # LiDAR error (Grand Truth): hsrb/base_scan /static_obstacle_map_ref
+
+                # StereoCamera error (Grand Truth): <Setereo_RGBD> <Gazebo3dshape>
+
+                # Bumper error (Grand Truth): <Bumper> /static_obstacle_map_ref
+
+
+
+                # 3) planner -----
+                # collision with obstacle map: /global_pose /static_obstacle_map_ref
+                
+                # collision with obstacle LiDAR: hsrb/base_scan
                 self.spec_scanDist = rtamt.STLDenseTimeSpecification()
                 self.spec_scanDist.name = 'scanDist'
                 self.spec_scanDist.declare_var('scanDist', 'float')
@@ -46,14 +76,11 @@ class HSR_STL_monitor(object):
                 self.spec_scanDist.spec = 'always [0,10] (scanDist >= 0.2)'
                 self.rob_scanDist_q = Queue.Queue()
 
-                # 2) perception
-                self.spec_odomErr = rtamt.STLDenseTimeSpecification()
-                self.spec_odomErr.name = 'odomErr'
-                self.spec_odomErr.declare_var('odomErr', 'float')
-                self.spec_odomErr.set_var_io_type('odomErr', 'input')
-                self.spec_odomErr.spec = 'always [0,10] (odomErr >= 0.1)'
+                # collision with obstacle StereoCamera: <Setereo_RGBD>
 
-                # 3) planner
+                # collision with obstacle Bumper: <Bumper>
+
+                # collision with obstacle GlobalPath: /base_path_with_goal /static_obstacle_map_ref
                 self.spec_motionPathDist = rtamt.STLDenseTimeSpecification()
                 self.spec_motionPathDist.name = 'motionPathDist'
                 self.spec_motionPathDist.declare_var('motionPathDist', 'float')
@@ -61,7 +88,24 @@ class HSR_STL_monitor(object):
                 self.spec_motionPathDist.spec = 'always [0,10] (motionPathDist >= 0.2)'
                 self.rob_motionPathDist_q = Queue.Queue()
 
-                # 4) controller
+                # reach goal GlobalPath: /base_path_with_goal <goal>
+
+                # reach goal: /global_pose  <goal>
+
+
+
+                # 4) controller -----
+                # ref body control: <ref VW> <VW>
+
+                # ref wheel motor control: <ref rpm> <rpm>
+
+
+
+                # 5) others (intermidiate variables) -----
+                # virtualBumper
+                # saftyMoveFlag
+
+
 
 
                 try:

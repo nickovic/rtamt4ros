@@ -41,11 +41,12 @@ class HSR_STL_monitor(object):
                 # collision with obstacle (Grand Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
 
 
-                # reach goal (Grabd Truth): /hsrb/odom_ground_truth <goal>
+                # reach goal (Grabd Truth): /hsrb/odom_ground_truth /goal
 
 
 
                 # 2) perception -----
+                # localization error (Grand Truth): /hk0/gazebo_pose /hk0/global_pose
                 # localization error (Grand Truth): /hsrb/odom_ground_truth /global_pose
                 self.spec_odomErr = rtamt.STLDenseTimeSpecification()
                 self.spec_odomErr.name = 'odomErr'
@@ -53,7 +54,7 @@ class HSR_STL_monitor(object):
                 self.spec_odomErr.set_var_io_type('odomErr', 'input')
                 self.spec_odomErr.spec = 'always [0,10] (odomErr >= 0.1)'
 
-                # odometer error (Grand Truth): /hsrb/odom_ground_truth <odometer>
+                # odometer error (Grand Truth): /hsrb/odom_ground_truth /hsrb/odom
 
                 # localization error LiDAR (Grand Truth): /hsrb/odom_ground_truth <LiDAR localizer>
 
@@ -88,23 +89,23 @@ class HSR_STL_monitor(object):
                 self.spec_motionPathDist.spec = 'always [0,10] (motionPathDist >= 0.2)'
                 self.rob_motionPathDist_q = Queue.Queue()
 
-                # reach goal GlobalPath: /base_path_with_goal <goal>
+                # reach goal GlobalPath: /base_path_with_goal /goal
 
-                # reach goal: /global_pose  <goal>
+                # reach goal: /global_pose /goal
 
 
 
                 # 4) controller -----
-                # ref body control: <ref VW> <VW>
+                # ref body control: /hsrb/command_velocity /base_velocity
 
                 # ref wheel motor control: <ref rpm> <rpm>
 
 
 
                 # 5) others (intermidiate variables) -----
-                # virtualBumper
-                # saftyMoveFlag
-
+                # virtualBumper /hk0/zero_velocity :this one HSRB does not have.
+                # local path generation status hk0/local_path_status_sim :perhaps /path_follow_action/status in HSRB
+                # saftyMoveFlag /hk0/is_safety_move :this one HSRB does not have.
 
 
 

@@ -39,67 +39,144 @@ class HSR_STL_monitor(object):
                 # Load the spec from STL file
                 # 1) system -----
                 # collision with obstacle (Grand Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
-
+                self.spec_collEgoObs_gt = rtamt.STLDenseTimeSpecification()
+                self.spec_collEgoObs_gt.name = 'collEgoObs_gt'
+                self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
+                self.spec_collEgoObs_gt.set_var_io_type('distEgoObs_gt', 'input')
+                self.spec_collEgoObs_gt.spec = 'always [0,10] (distEgoObs_gt >= 0.1)'
 
                 # reach goal (Grabd Truth): /hsrb/odom_ground_truth /goal
+                self.spec_reachEgoGoal_gt = rtamt.STLDenseTimeSpecification()
+                self.spec_reachEgoGoal_gt.name = 'reachEgoGoal_gt'
+                self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
+                self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
+                self.spec_reachEgoGoal_gt.spec = 'eventually [0,10] (distEgoGoal_gt <= 0.1)'
 
+                try:
+                        self.spec_collEgoObs_gt.parse()
+                        self.spec_collEgoObs_gt.pastify()
+                        self.spec_reachEgoGoal_gt.parse()
+                        self.spec_reachEgoGoal_gt.pastify()
+                except rtamt.STLParseException as err:
+                        print('STL Parse Exception: {}'.format(err))
+                        sys.exit()
 
 
                 # 2) perception -----
-                # localization error (Grand Truth): /hk0/gazebo_pose /hk0/global_pose
                 # localization error (Grand Truth): /hsrb/odom_ground_truth /global_pose
+                # (localization error (Grand Truth): /hk0/gazebo_pose /hk0/global_pose)
+                self.spec_locErr = rtamt.STLDenseTimeSpecification()
+                self.spec_locErr.name = 'locErr'
+                self.spec_locErr.declare_var('locErr', 'float')
+                self.spec_locErr.set_var_io_type('locErr', 'input')
+                self.spec_locErr.spec = 'always [0,10] (locErr >= 0.1)'
+
+                # odometer error (Grand Truth): /hsrb/odom_ground_truth /hsrb/odom
                 self.spec_odomErr = rtamt.STLDenseTimeSpecification()
                 self.spec_odomErr.name = 'odomErr'
                 self.spec_odomErr.declare_var('odomErr', 'float')
                 self.spec_odomErr.set_var_io_type('odomErr', 'input')
                 self.spec_odomErr.spec = 'always [0,10] (odomErr >= 0.1)'
 
-                # odometer error (Grand Truth): /hsrb/odom_ground_truth /hsrb/odom
-
                 # localization error LiDAR (Grand Truth): /hsrb/odom_ground_truth <LiDAR localizer>
 
                 # LiDAR error (Grand Truth): hsrb/base_scan /static_obstacle_map_ref
+                self.spec_lidarErr = rtamt.STLDenseTimeSpecification()
+                self.spec_lidarErr.name = 'lidarErr'
+                self.spec_lidarErr.declare_var('lidarObsErr', 'float')
+                self.spec_lidarErr.set_var_io_type('lidarObsErr', 'input')
+                self.spec_lidarErr.spec = 'always [0,10] (lidarObsErr >= 0.1)'
 
                 # StereoCamera error (Grand Truth): <Setereo_RGBD> <Gazebo3dshape>
 
                 # Bumper error (Grand Truth): <Bumper> /static_obstacle_map_ref
 
+                try:
+                        self.spec_locErr.parse()
+                        self.spec_locErr.pastify()
+                        self.spec_odomErr.parse()
+                        self.spec_odomErr.pastify()
+                        self.spec_lidarErr.parse()
+                        self.spec_lidarErr.pastify()
+                except STLParseException as err:
+                        print('STL Parse Exception: {}'.format(err))
+                        sys.exit()
 
 
                 # 3) planner -----
                 # collision with obstacle map: /global_pose /static_obstacle_map_ref
-                
+                self.spec_collEgoObs = rtamt.STLDenseTimeSpecification()
+                self.spec_collEgoObs.name = 'collEgoObs'
+                self.spec_collEgoObs.declare_var('distEgoObs', 'float')
+                self.spec_collEgoObs.set_var_io_type('distEgoObs', 'input')
+                self.spec_collEgoObs.spec = 'always [0,10] (distEgoObs >= 0.1)'
+
                 # collision with obstacle LiDAR: hsrb/base_scan
-                self.spec_scanDist = rtamt.STLDenseTimeSpecification()
-                self.spec_scanDist.name = 'scanDist'
-                self.spec_scanDist.declare_var('scanDist', 'float')
-                self.spec_scanDist.set_var_io_type('scanDist', 'input')
-                self.spec_scanDist.spec = 'always [0,10] (scanDist >= 0.2)'
-                self.rob_scanDist_q = Queue.Queue()
+                self.spec_collLidar = rtamt.STLDenseTimeSpecification()
+                self.spec_collLidar.name = 'collLidar'
+                self.spec_collLidar.declare_var('distLidar', 'float')
+                self.spec_collLidar.set_var_io_type('distLidar', 'input')
+                self.spec_collLidar.spec = 'always [0,10] (distLidar >= 0.2)'
+                self.rob_collLidar_q = Queue.Queue()
 
                 # collision with obstacle StereoCamera: <Setereo_RGBD>
 
                 # collision with obstacle Bumper: <Bumper>
 
                 # collision with obstacle GlobalPath: /base_path_with_goal /static_obstacle_map_ref
-                self.spec_motionPathDist = rtamt.STLDenseTimeSpecification()
-                self.spec_motionPathDist.name = 'motionPathDist'
-                self.spec_motionPathDist.declare_var('motionPathDist', 'float')
-                self.spec_motionPathDist.set_var_io_type('motionPathDist', 'input')
-                self.spec_motionPathDist.spec = 'always [0,10] (motionPathDist >= 0.2)'
-                self.rob_motionPathDist_q = Queue.Queue()
+                self.spec_collMotionPathObs = rtamt.STLDenseTimeSpecification()
+                self.spec_collMotionPathObs.name = 'distMotionPathObs'
+                self.spec_collMotionPathObs.declare_var('distMotionPathObs', 'float')
+                self.spec_collMotionPathObs.set_var_io_type('distMotionPathObs', 'input')
+                self.spec_collMotionPathObs.spec = 'always [0,10] (distMotionPathObs >= 0.2)'
+                self.rob_collMotionPathObs_q = Queue.Queue()
 
                 # reach goal GlobalPath: /base_path_with_goal /goal
+                self.spec_reachGlobalPathGoal = rtamt.STLDenseTimeSpecification()
+                self.spec_reachGlobalPathGoal.name = 'reachGlobalPathGoal'
+                self.spec_reachGlobalPathGoal.declare_var('distGlobalPathGoal', 'float')
+                self.spec_reachGlobalPathGoal.set_var_io_type('distGlobalPathGoal', 'input')
+                self.spec_reachGlobalPathGoal.spec = 'eventually [0,10] (distGlobalPathGoal <= 0.1)'
 
                 # reach goal: /global_pose /goal
+                self.spec_reachEgoGoal = rtamt.STLDenseTimeSpecification()
+                self.spec_reachEgoGoal.name = 'reachEgoGoal'
+                self.spec_reachEgoGoal.declare_var('distEgoGoal', 'float')
+                self.spec_reachEgoGoal.set_var_io_type('distEgoGoal', 'input')
+                self.spec_reachEgoGoal.spec = 'eventually [0,10] (distEgoGoal <= 0.1)'
 
+                try:
+                        self.spec_collEgoObs.parse()
+                        self.spec_collEgoObs.pastify()
+                        self.spec_collLidar.parse()
+                        self.spec_collLidar.pastify()
+                        self.spec_collMotionPathObs.parse()
+                        self.spec_collMotionPathObs.pastify()
+                        self.spec_reachGlobalPathGoal.parse()
+                        self.spec_reachGlobalPathGoal.pastify()
+                        self.spec_reachEgoGoal.parse()
+                        self.spec_reachEgoGoal.pastify()
+                except rtamt.STLParseException as err:
+                        print('STL Parse Exception: {}'.format(err))
+                        sys.exit()
 
 
                 # 4) controller -----
                 # ref body control: /hsrb/command_velocity /base_velocity
+                self.spec_referrBodyVel = rtamt.STLDenseTimeSpecification()
+                self.spec_referrBodyVel.name = 'referrBodyVel'
+                self.spec_referrBodyVel.declare_var('referrBodyVel', 'float')
+                self.spec_referrBodyVel.set_var_io_type('referrBodyVel', 'input')
+                self.spec_referrBodyVel.spec = 'always [0,10] (referrBodyVel <= 0.1)'
 
                 # ref wheel motor control: <ref rpm> <rpm>
 
+                try:
+                        self.spec_referrBodyVel.parse()
+                        self.spec_referrBodyVel.pastify()
+                except rtamt.STLParseException as err:
+                        print('STL Parse Exception: {}'.format(err))
+                        sys.exit()
 
 
                 # 5) others (intermidiate variables) -----
@@ -107,18 +184,6 @@ class HSR_STL_monitor(object):
                 # local path generation status hk0/local_path_status_sim :perhaps /path_follow_action/status in HSRB
                 # saftyMoveFlag /hk0/is_safety_move :this one HSRB does not have.
 
-
-
-                try:
-                        self.spec_odomErr.parse()
-                        self.spec_odomErr.pastify()
-                        self.spec_scanDist.parse()
-                        self.spec_scanDist.pastify()
-                        self.spec_motionPathDist.parse()
-                        self.spec_motionPathDist.pastify()
-                except STLParseException as err:
-                        print('STL Parse Exception: {}'.format(err))
-                        sys.exit()
 
                 # For each var from the spec, subscribe to its topic
                 self.laser_subscriber = rospy.Subscriber('hsrb/base_scan', LaserScan, self.scan_callback, queue_size=10)
@@ -149,7 +214,7 @@ class HSR_STL_monitor(object):
 
         def odometry_callback(self, poseStamped):
                 self.poseStamped = poseStamped
-        
+
 
         def tOdometry_callback(self, odometry):
                 self.odometry = odometry
@@ -174,8 +239,8 @@ class HSR_STL_monitor(object):
 
                 # Evaluate the spec
                 data = [[laser_message.header.stamp.to_sec(), scanDist]]
-                rob = self.spec_scanDist.update(['scanDist', data])
-                self.rob_scanDist_q.put(rob)
+                rob = self.spec_collLidar.update(['distLidar', data])
+                self.rob_collLidar_q.put(rob)
 
 
         def motion_path_callback(self, pathWithGoal):
@@ -183,8 +248,8 @@ class HSR_STL_monitor(object):
 
                 # Evaluate the spec
                 data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
-                rob = self.spec_motionPathDist.update(['motionPathDist', data])
-                self.rob_motionPathDist_q.put(rob)
+                rob = self.spec_collMotionPathObs.update(['distMotionPathObs', data])
+                self.rob_collMotionPathObs_q.put(rob)
 
 
         def monitor_callback(self, event):
@@ -202,7 +267,7 @@ class HSR_STL_monitor(object):
                         eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
                         if DEBUG:
                                 rospy.loginfo('eOdometry: {0}'.format(eOdom))
-                
+
                         # collision
                         dists = distPoints2pose(self.obss, cPose)
                         dist = numpy.min(dists)
@@ -212,15 +277,15 @@ class HSR_STL_monitor(object):
                         # evaluate
                         time = min(self.poseStamped.header.stamp.to_sec(), self.odometry.header.stamp.to_sec())
                         data = [[time, dist]]
-                        rob = self.spec_odomErr.update(['odomErr', data])
-        
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec_odomErr.name, rob))
+                        rob = self.spec_locErr.update(['locErr', data])
+
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec_locErr.name, rob))
 
                 # print robs
-                if not self.rob_scanDist_q.empty():
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec_scanDist.name, self.rob_scanDist_q.get()))
-                if not self.rob_motionPathDist_q.empty():
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec_motionPathDist.name, self.rob_motionPathDist_q.get()))
+                if not self.rob_collLidar_q.empty():
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec_collLidar.name, self.rob_collLidar_q.get()))
+                if not self.rob_collMotionPathObs_q.empty():
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec__collMotionPathObs.name, self.rob_collMotionPathObs_q.get()))
 
 
 if __name__ == '__main__':

@@ -98,7 +98,7 @@ class HSR_STL_monitor(object):
                         self.spec_odomErr.pastify()
                         self.spec_lidarErr.parse()
                         self.spec_lidarErr.pastify()
-                except STLParseException as err:
+                except rtamt.STLParseException as err:
                         print('STL Parse Exception: {}'.format(err))
                         sys.exit()
 
@@ -285,7 +285,7 @@ class HSR_STL_monitor(object):
                 if not self.rob_collLidar_q.empty():
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_collLidar.name, self.rob_collLidar_q.get()))
                 if not self.rob_collMotionPathObs_q.empty():
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec__collMotionPathObs.name, self.rob_collMotionPathObs_q.get()))
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec_collMotionPathObs.name, self.rob_collMotionPathObs_q.get()))
 
 
 if __name__ == '__main__':

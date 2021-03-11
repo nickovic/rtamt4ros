@@ -141,7 +141,7 @@ class HSR_STL_monitor(object):
                 self.spec_collMotionPathObs.declare_var('distMotionPathObs', 'float')
                 self.spec_collMotionPathObs.set_var_io_type('distMotionPathObs', 'input')
                 self.spec_collMotionPathObs.spec = 'always [0,10] (distMotionPathObs >= 0.2)'
-                self.rob_collMotionPathObs_q = Queue.Queue()
+                self.robQue_collMotionPathObs = Queue.Queue()
 
                 # reach goal GlobalPath: /base_path_with_goal /goal
                 self.spec_reachGlobalPathGoal = rtamt.STLDenseTimeSpecification()
@@ -284,7 +284,7 @@ class HSR_STL_monitor(object):
                 # Evaluate the spec
                 data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
                 rob = self.spec_collMotionPathObs.update(['distMotionPathObs', data])
-                self.rob_collMotionPathObs_q.put(rob)
+                self.robQue_collMotionPathObs.put(rob)
 
 
         def monitor_callback(self, event):
@@ -308,11 +308,6 @@ class HSR_STL_monitor(object):
                         dist = numpy.min(dists)
                         if DEBUG:
                                 rospy.loginfo('dist ego obs: {0}'.format(dist))
-
-
-                # print robs
-                print_robQue(self.rob_collMotionPathObs_q, self.spec_collMotionPathObs)
-
 
                 # 1) system -----
                 #TODO
@@ -339,6 +334,7 @@ class HSR_STL_monitor(object):
                 # 3) planner -----
                 #self.spec_collEgoObs.update()
                 print_robQue(self.robQue_collLidar, self.spec_collLidar)
+                print_robQue(self.robQue_collMotionPathObs, self.spec_collMotionPathObs)
                 #self.spec_collMotionPathObs
                 #self.spec_reachGlobalPathGoal
                 #self.spec_reachEgoGoal

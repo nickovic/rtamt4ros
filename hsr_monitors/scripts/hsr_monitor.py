@@ -78,10 +78,10 @@ class HSR_STL_monitor(object):
                 # localization error (Grand Truth): /hsrb/odom_ground_truth /global_pose
                 # (localization error (Grand Truth): /hk0/gazebo_pose /hk0/global_pose)
                 self.spec_errLoc = rtamt.STLDenseTimeSpecification()
-                self.spec_errLoc.name = 'locErr'
-                self.spec_errLoc.declare_var('locErr', 'float')
-                self.spec_errLoc.set_var_io_type('locErr', 'input')
-                self.spec_errLoc.spec = 'always [0,10] (locErr >= 0.1)'
+                self.spec_errLoc.name = 'errLoc'
+                self.spec_errLoc.declare_var('errLoc', 'float')
+                self.spec_errLoc.set_var_io_type('errLoc', 'input')
+                self.spec_errLoc.spec = 'always [0,10] (errLoc >= 0.1)'
 
                 # odometer error (Grand Truth): /hsrb/odom_ground_truth /hsrb/odom
                 self.spec_errOdom = rtamt.STLDenseTimeSpecification()
@@ -94,10 +94,10 @@ class HSR_STL_monitor(object):
 
                 # LiDAR error (Grand Truth): hsrb/base_scan /static_obstacle_map_ref
                 self.spec_errLidar = rtamt.STLDenseTimeSpecification()
-                self.spec_errLidar.name = 'eerLidar'
-                self.spec_errLidar.declare_var('eerLidar', 'float')
-                self.spec_errLidar.set_var_io_type('eerLidar', 'input')
-                self.spec_errLidar.spec = 'always [0,10] (eerLidar >= 0.1)'
+                self.spec_errLidar.name = 'errLidar'
+                self.spec_errLidar.declare_var('errLidar', 'float')
+                self.spec_errLidar.set_var_io_type('errLidar', 'input')
+                self.spec_errLidar.spec = 'always [0,10] (errLidar >= 0.1)'
 
                 # StereoCamera error (Grand Truth): <Setereo_RGBD> <Gazebo3dshape>
 

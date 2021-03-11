@@ -50,7 +50,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachEgoGoal_gt.name = 'reachEgoGoal_gt'
                 self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
                 self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
-                self.spec_reachEgoGoal_gt.spec = 'eventually [0,1] (distEgoGoal_gt <= 0.1)'
+                self.spec_reachEgoGoal_gt.spec = 'eventually [0,10] (distEgoGoal_gt <= 0.1)'
                 self.robQue_reachEgoGoal = Queue.Queue()
 
                 try:
@@ -225,12 +225,10 @@ class HSR_STL_monitor(object):
 
 
         def odom_gt_callback(self, odometry):
-                self.loc_gt = odometry.pose.pose
+                self.loc_gt = odometry
 
                 if self.goal != []:
-                        distEgoGoal_gt = distP2P(self.loc_gt.position.x, self.loc_gt.position.y, self.goal.pose.position.x, self.goal.pose.position.y)
-
-                        time = max(odometry.header.stamp.to_sec(), self.goal.header.stamp.to_sec())
+                        distEgoGoal_gt, time = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
                         data = [[time, distEgoGoal_gt]]
                         rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
                         if rob != []:

@@ -211,6 +211,8 @@ class HSR_STL_monitor(object):
                 # system sensor
                 rospy.Subscriber('/global_pose', PoseStamped, self.loc_callback, queue_size=10)
                 self.loc = []
+                rospy.Subscriber('/hsrb/odom', Odometry, self.wheelOdom_callback, queue_size=10)
+                self.wheelOdom = []
                 rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
 
                 # system intermidiate data
@@ -244,6 +246,10 @@ class HSR_STL_monitor(object):
                         rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
                         if rob != []:
                                 self.robQue_reachEgoGoal.put(rob)
+
+
+        def wheelOdom_callback(self, odometry):
+                self.wheelOdom = odometry
 
 
         def goal_callback(self, poseStamped):
@@ -303,8 +309,6 @@ class HSR_STL_monitor(object):
                         if DEBUG:
                                 rospy.loginfo('dist ego obs: {0}'.format(dist))
 
-
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec_locErr.name, rob))
 
                 # print robs
                 print_robQue(self.rob_collLidar_q, self.spec_collLidar)

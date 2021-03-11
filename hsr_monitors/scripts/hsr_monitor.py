@@ -32,10 +32,15 @@ from tmc_navigation_msgs.msg import PathWithGoal
 
 DEBUG = False
 
+def print_rob(rob, spec):
+        if rob != []:
+                rospy.loginfo('rob {0}: {1}'.format(spec.name, rob))
+        return
+
 
 def print_robQue(robQue, spec):
         if not robQue.empty():
-                rospy.loginfo('rob {0}: {1}'.format(spec.name, robQue.get()))
+                print_rob(robQue.get(), spec)
         return
 
 
@@ -306,7 +311,6 @@ class HSR_STL_monitor(object):
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_locErr.name, rob))
 
                 # print robs
-                print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
                 print_robQue(self.rob_collLidar_q, self.spec_collLidar)
                 print_robQue(self.rob_collMotionPathObs_q, self.spec_collMotionPathObs)
 
@@ -316,6 +320,14 @@ class HSR_STL_monitor(object):
                 #if self.odom_gt = [] and self.loc != [] and self.odom_gt != []:
                 #        data = [[time, dist]]
                 #        rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt', data])
+                print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
+
+                # 2) perception -----
+                if self.loc_gt != [] and self.loc != []:
+                        locErr, time = distPoseStamped2Odometry(self.loc, self.loc_gt)
+                        data = [[time, locErr]]
+                        rob = self.spec_locErr.update(['locErr', data])
+                        print_rob(rob, self.spec_locErr)
 
 
 if __name__ == '__main__':

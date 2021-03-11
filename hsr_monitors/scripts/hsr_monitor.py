@@ -311,7 +311,6 @@ class HSR_STL_monitor(object):
 
 
                 # print robs
-                print_robQue(self.rob_collLidar_q, self.spec_collLidar)
                 print_robQue(self.rob_collMotionPathObs_q, self.spec_collMotionPathObs)
 
 
@@ -334,6 +333,15 @@ class HSR_STL_monitor(object):
                         data = [[time, errOdom]]
                         rob = self.spec_errOdom.update(['errOdom', data])
                         print_rob(rob, self.spec_errOdom)
+
+                #self.spec_errLidar
+
+                # 3) planner -----
+                #self.spec_collEgoObs.update()
+                print_robQue(self.rob_collLidar_q, self.spec_collLidar)
+                #self.spec_collMotionPathObs
+                #self.spec_reachGlobalPathGoal
+                #self.spec_reachEgoGoal
 
 
 if __name__ == '__main__':

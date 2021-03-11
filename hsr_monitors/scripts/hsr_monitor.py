@@ -50,7 +50,8 @@ class HSR_STL_monitor(object):
                 self.spec_reachEgoGoal_gt.name = 'reachEgoGoal_gt'
                 self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
                 self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
-                self.spec_reachEgoGoal_gt.spec = 'eventually [0,10] (distEgoGoal_gt <= 0.1)'
+                self.spec_reachEgoGoal_gt.spec = 'eventually [0,1] (distEgoGoal_gt <= 0.1)'
+                self.robQue_reachEgoGoal = Queue.Queue()
 
                 try:
                         self.spec_collEgoObs_gt.parse()
@@ -188,7 +189,7 @@ class HSR_STL_monitor(object):
                 # For each var from the spec, subscribe to its topic
                 # system ground truth
                 rospy.Subscriber('/hsrb/odom_ground_truth', Odometry, self.odom_gt_callback, queue_size=10)
-                self.odom_gt = []
+                self.loc_gt = []
                 rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.map_callback, queue_size=10)
                 self.map = []
 
@@ -224,7 +225,16 @@ class HSR_STL_monitor(object):
 
 
         def odom_gt_callback(self, odometry):
-                self.odom_gt = odometry
+                self.loc_gt = odometry.pose.pose
+
+                if self.goal != []:
+                        distEgoGoal_gt = distP2P(self.loc_gt.position.x, self.loc_gt.position.y, self.goal.pose.position.x, self.goal.pose.position.y)
+
+                        time = max(odometry.header.stamp.to_sec(), self.goal.header.stamp.to_sec())
+                        data = [[time, distEgoGoal_gt]]
+                        rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
+                        if rob != []:
+                                self.robQue_reachEgoGoal.put(rob)
 
 
         def goal_callback(self, poseStamped):
@@ -233,10 +243,9 @@ class HSR_STL_monitor(object):
 
         # this will be called just one time.
         def map_callback(self, occupancyGrid):
-                self.map = occupancyGrid
                 staticMap = occupancyGridData2staticMap(occupancyGrid)
                 obsIds = numpy.transpose(numpy.nonzero(staticMap))
-                self.obss = mapids2mapCoordination(obsIds, occupancyGrid)
+                self.map = mapids2mapCoordination(obsIds, occupancyGrid)
 
                 if DEBUG:
                         mapFig = plt.figure(figsize = (12,12))
@@ -293,10 +302,19 @@ class HSR_STL_monitor(object):
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_locErr.name, rob))
 
                 # print robs
+                if not self.robQue_reachEgoGoal.empty():
+                        rospy.loginfo('rob {0}: {1}'.format(self.spec_reachEgoGoal.name, self.robQue_reachEgoGoal.get()))
                 if not self.rob_collLidar_q.empty():
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_collLidar.name, self.rob_collLidar_q.get()))
                 if not self.rob_collMotionPathObs_q.empty():
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_collMotionPathObs.name, self.rob_collMotionPathObs_q.get()))
+
+
+                # 1) system -----
+                #TODO
+                #if self.odom_gt = [] and self.loc != [] and self.odom_gt != []:
+                #        data = [[time, dist]]
+                #        rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt', data])
 
 
 if __name__ == '__main__':

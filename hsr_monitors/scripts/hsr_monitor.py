@@ -303,10 +303,6 @@ class HSR_STL_monitor(object):
                         if DEBUG:
                                 rospy.loginfo('dist ego obs: {0}'.format(dist))
 
-                        # evaluate
-                        time = min(self.loc.header.stamp.to_sec(), self.odom_gt.header.stamp.to_sec())
-                        data = [[time, dist]]
-                        rob = self.spec_locErr.update(['locErr', data])
 
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_locErr.name, rob))
 

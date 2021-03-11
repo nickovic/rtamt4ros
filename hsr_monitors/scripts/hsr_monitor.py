@@ -327,13 +327,11 @@ class HSR_STL_monitor(object):
                         data = [[time, errLoc]]
                         rob = self.spec_errLoc.update(['errLoc', data])
                         print_rob(rob, self.spec_errLoc)
-
                 if self.wheelOdom != [] and self.loc_gt != []:
                         errOdom, time = distOdometry2Odometry(self.wheelOdom, self.loc_gt)
                         data = [[time, errOdom]]
                         rob = self.spec_errOdom.update(['errOdom', data])
                         print_rob(rob, self.spec_errOdom)
-
                 #self.spec_errLidar
 
                 # 3) planner -----
@@ -342,6 +340,11 @@ class HSR_STL_monitor(object):
                 print_robQue(self.robQue_collMotionPathObs, self.spec_collMotionPathObs)
                 #self.spec_reachGlobalPathGoal
                 print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
+
+                # 4) controller -----
+                #self.spec_referrBodyVel.update()
+
+                # 5) others (intermidiate variables) -----
 
 
 if __name__ == '__main__':

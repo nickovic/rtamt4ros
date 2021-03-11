@@ -129,7 +129,7 @@ class HSR_STL_monitor(object):
                 self.spec_collLidar.declare_var('distLidar', 'float')
                 self.spec_collLidar.set_var_io_type('distLidar', 'input')
                 self.spec_collLidar.spec = 'always [0,10] (distLidar >= 0.2)'
-                self.rob_collLidar_q = Queue.Queue()
+                self.robQue_collLidar = Queue.Queue()
 
                 # collision with obstacle StereoCamera: <Setereo_RGBD>
 
@@ -275,7 +275,7 @@ class HSR_STL_monitor(object):
                 # Evaluate the spec
                 data = [[laser_message.header.stamp.to_sec(), scanDist]]
                 rob = self.spec_collLidar.update(['distLidar', data])
-                self.rob_collLidar_q.put(rob)
+                self.robQue_collLidar.put(rob)
 
 
         def globalMotionPath_callback(self, pathWithGoal):
@@ -338,7 +338,7 @@ class HSR_STL_monitor(object):
 
                 # 3) planner -----
                 #self.spec_collEgoObs.update()
-                print_robQue(self.rob_collLidar_q, self.spec_collLidar)
+                print_robQue(self.robQue_collLidar, self.spec_collLidar)
                 #self.spec_collMotionPathObs
                 #self.spec_reachGlobalPathGoal
                 #self.spec_reachEgoGoal

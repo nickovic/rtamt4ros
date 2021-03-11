@@ -9,15 +9,15 @@ class xythCoord:
     y = []
     th = []
     time = []
-    
-    
+
+
     def __init__(self, x, y, th, time):
         self.x = x
         self.y = y
         self.th = th
         self.time = time
-    
-    
+
+
     def __sub__(self, other):
         subX = self.x - other.x
         subY = self.y - other.y
@@ -32,8 +32,8 @@ class xythCoord:
         subTh = self.th + other.th
         subTime = self.time + other.time
         return xythCoord(subX, subY, subTh, subTime)
-        
-    
+
+
 def posSizeRect2poly(rectPos, rectSize):
     rectSizeH = numpy.array(rectSize)/2.0
     polyRect = Polygon([(rectPos[0]+rectSizeH[0], rectPos[1]+rectSizeH[1]),
@@ -98,7 +98,7 @@ def distLineStr2Po(poly, line):
 #        dist = poly.exterior.distance(line.interpolate(0.0001))
     return dist
 
-    
+
 def distLineStr2R(rectPos, rectSize, line):
     polyRect = posSizeRect2poly(rectPos, rectSize)
     dist = polyRect.exterior.distance(line)
@@ -106,7 +106,6 @@ def distLineStr2R(rectPos, rectSize, line):
 
 
 def closetLineOfWaypoits(tPoint, wayPoints):
-    
     lines = []
     dists = []
     for i in range(1, len(wayPoints.coords)):
@@ -115,11 +114,11 @@ def closetLineOfWaypoits(tPoint, wayPoints):
         line = LineString([sPoint, ePoint])
         #print(list(line.coords))
         lines.append(line)
-        
+
         dist = line.distance(tPoint)
         #print(str(dist))
         dists.append(dist)
-    
+
     mi = numpy.argmin(numpy.array(dists))
     cDist = dists[mi]
     cLine = lines[mi]

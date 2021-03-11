@@ -186,20 +186,27 @@ class HSR_STL_monitor(object):
 
 
                 # For each var from the spec, subscribe to its topic
-                self.laser_subscriber = rospy.Subscriber('hsrb/base_scan', LaserScan, self.scan_callback, queue_size=10)
-                self.odometry_subscriber = rospy.Subscriber('/global_pose', PoseStamped, self.odometry_callback, queue_size=10)
-                self.poseStamped = PoseStamped()
-                self.tOdometry_subscriber = rospy.Subscriber('/hsrb/odom_ground_truth', Odometry, self.tOdometry_callback, queue_size=10)
-                self.odometry = Odometry()
-                self.map_subscriber = rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.map_callback, queue_size=10)
-                self.occupancyGrid = OccupancyGrid()
-                self.motion_path_subscriber = rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.motion_path_callback, queue_size=10)
-                self.pathWithGoal = PathWithGoal()
+                # system ground truth
+                rospy.Subscriber('/hsrb/odom_ground_truth', Odometry, self.odom_gt_callback, queue_size=10)
+                self.odom_gt = []
+                rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.map_callback, queue_size=10)
+                self.map = []
+
+                # system order
+                rospy.Subscriber('/goal', PoseStamped, self.goal_callback, queue_size=10)
+                self.goal =[]
+
+                # system sensor
+                rospy.Subscriber('/global_pose', PoseStamped, self.loc_callback, queue_size=10)
+                self.loc = []
+                rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
+
+                # system intermidiate data
+                rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalMotionPath_callback, queue_size=10)
+                self.globalMotionPath = PathWithGoal()
 
                 # data init
                 self.obss = []
-                self.poseStamped = []
-                self.odometry = []
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 #var_object = self.spec.get_var_object(self.spec.out_var)
@@ -212,17 +219,21 @@ class HSR_STL_monitor(object):
                         plt.close()
 
 
-        def odometry_callback(self, poseStamped):
-                self.poseStamped = poseStamped
+        def loc_callback(self, poseStamped):
+                self.loc = poseStamped
 
 
-        def tOdometry_callback(self, odometry):
-                self.odometry = odometry
+        def odom_gt_callback(self, odometry):
+                self.odom_gt = odometry
+
+
+        def goal_callback(self, poseStamped):
+                self.goal = poseStamped
 
 
         # this will be called just one time.
         def map_callback(self, occupancyGrid):
-                self.occupancyGrid = occupancyGrid
+                self.map = occupancyGrid
                 staticMap = occupancyGridData2staticMap(occupancyGrid)
                 obsIds = numpy.transpose(numpy.nonzero(staticMap))
                 self.obss = mapids2mapCoordination(obsIds, occupancyGrid)
@@ -234,7 +245,7 @@ class HSR_STL_monitor(object):
                         plt.show()
 
 
-        def scan_callback(self, laser_message):
+        def lidar_callback(self, laser_message):
                 scanDist = numpy.amin(laser_message.ranges)
 
                 # Evaluate the spec
@@ -243,7 +254,7 @@ class HSR_STL_monitor(object):
                 self.rob_collLidar_q.put(rob)
 
 
-        def motion_path_callback(self, pathWithGoal):
+        def globalMotionPath_callback(self, pathWithGoal):
                 pathDist = distPoints2poses(self.obss, pathWithGoal.poses)
 
                 # Evaluate the spec
@@ -254,13 +265,13 @@ class HSR_STL_monitor(object):
 
         def monitor_callback(self, event):
                 # data check
-                if self.obss != [] and self.poseStamped != [] and self.odometry != []:
+                if self.obss != [] and self.loc != [] and self.odom_gt != []:
                         # odom
-                        cPose = self.poseStamped.pose
+                        cPose = self.loc.pose
                         if DEBUG:
                                 rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
                         # true odom
-                        tPose = self.odometry.pose.pose
+                        tPose = self.odom_gt.pose.pose
                         if DEBUG:
                                 rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
                         # error odom
@@ -275,7 +286,7 @@ class HSR_STL_monitor(object):
                                 rospy.loginfo('dist ego obs: {0}'.format(dist))
 
                         # evaluate
-                        time = min(self.poseStamped.header.stamp.to_sec(), self.odometry.header.stamp.to_sec())
+                        time = min(self.loc.header.stamp.to_sec(), self.odom_gt.header.stamp.to_sec())
                         data = [[time, dist]]
                         rob = self.spec_locErr.update(['locErr', data])
 

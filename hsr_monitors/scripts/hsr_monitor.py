@@ -323,11 +323,17 @@ class HSR_STL_monitor(object):
                 print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
 
                 # 2) perception -----
-                if self.loc_gt != [] and self.loc != []:
+                if self.loc != [] and self.loc_gt != []:
                         errLoc, time = distPoseStamped2Odometry(self.loc, self.loc_gt)
                         data = [[time, errLoc]]
                         rob = self.spec_errLoc.update(['errLoc', data])
                         print_rob(rob, self.spec_errLoc)
+
+                if self.wheelOdom != [] and self.loc_gt != []:
+                        errOdom, time = distOdometry2Odometry(self.wheelOdom, self.loc_gt)
+                        data = [[time, errOdom]]
+                        rob = self.spec_errOdom.update(['errOdom', data])
+                        print_rob(rob, self.spec_errOdom)
 
 
 if __name__ == '__main__':

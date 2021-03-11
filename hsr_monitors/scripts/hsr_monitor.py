@@ -62,7 +62,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
                 self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
                 self.spec_reachEgoGoal_gt.spec = 'eventually [0,10] (distEgoGoal_gt <= 0.1)'
-                self.robQue_reachEgoGoal = Queue.Queue()
+                self.robQue_reachEgoGoal_gt = Queue.Queue()
 
                 try:
                         self.spec_collEgoObs_gt.parse()
@@ -149,6 +149,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachGlobalPathGoal.declare_var('distGlobalPathGoal', 'float')
                 self.spec_reachGlobalPathGoal.set_var_io_type('distGlobalPathGoal', 'input')
                 self.spec_reachGlobalPathGoal.spec = 'eventually [0,10] (distGlobalPathGoal <= 0.1)'
+                self.robQue_reachEgoGoal = Queue.Queue()
 
                 # reach goal: /global_pose /goal
                 self.spec_reachEgoGoal = rtamt.STLDenseTimeSpecification()
@@ -236,6 +237,13 @@ class HSR_STL_monitor(object):
         def loc_callback(self, poseStamped):
                 self.loc = poseStamped
 
+                if self.goal != []:
+                        distEgoGoal, time = distPoseStamped2PoseStamped(self.goal, self.loc, True)
+                        data = [[time, distEgoGoal]]
+                        rob = self.spec_reachEgoGoal.update(['distEgoGoal', data])
+                        if rob != []:
+                                self.robQue_reachEgoGoal.put(rob)
+
 
         def odom_gt_callback(self, odometry):
                 self.loc_gt = odometry
@@ -245,7 +253,7 @@ class HSR_STL_monitor(object):
                         data = [[time, distEgoGoal_gt]]
                         rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
                         if rob != []:
-                                self.robQue_reachEgoGoal.put(rob)
+                                self.robQue_reachEgoGoal_gt.put(rob)
 
 
         def wheelOdom_callback(self, odometry):
@@ -310,11 +318,8 @@ class HSR_STL_monitor(object):
                                 rospy.loginfo('dist ego obs: {0}'.format(dist))
 
                 # 1) system -----
-                #TODO
-                #if self.odom_gt = [] and self.loc != [] and self.odom_gt != []:
-                #        data = [[time, dist]]
-                #        rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt', data])
-                print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
+                #spec_collEgoObs_gt.update(['distEgoObs_gt', data])
+                print_robQue(self.robQue_reachEgoGoal_gt, self.spec_reachEgoGoal_gt)
 
                 # 2) perception -----
                 if self.loc != [] and self.loc_gt != []:
@@ -335,9 +340,8 @@ class HSR_STL_monitor(object):
                 #self.spec_collEgoObs.update()
                 print_robQue(self.robQue_collLidar, self.spec_collLidar)
                 print_robQue(self.robQue_collMotionPathObs, self.spec_collMotionPathObs)
-                #self.spec_collMotionPathObs
                 #self.spec_reachGlobalPathGoal
-                #self.spec_reachEgoGoal
+                print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
 
 
 if __name__ == '__main__':

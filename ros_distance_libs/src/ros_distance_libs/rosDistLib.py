@@ -30,12 +30,24 @@ def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False)
         return dist, time
 
 
+def odometry2PoseStamped(odometry):
+        poseStamped = PoseStamped()
+        poseStamped.header = odometry.header
+        poseStamped.pose = odometry.pose.pose
+        return poseStamped
+
+
 def distPoseStamped2Odometry(poseStamped, odometry, extrapolation=False):
         # just thinking 2D (x,y)
-        poseStamped_odometry = PoseStamped()
-        poseStamped_odometry.header = odometry.header
-        poseStamped_odometry.pose = odometry.pose.pose
+        poseStamped_odometry = odometry2PoseStamped(odometry)
         dist, time = distPoseStamped2PoseStamped(poseStamped, poseStamped_odometry, extrapolation)
+        return dist, time
+
+
+def distOdometry2Odometry(odometry0, odometry1, extrapolation=False):
+        poseStamped0 = odometry2PoseStamped(odometry0)
+        poseStamped1 = odometry2PoseStamped(odometry1)
+        dist, time = distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation)
         return dist, time
 
 

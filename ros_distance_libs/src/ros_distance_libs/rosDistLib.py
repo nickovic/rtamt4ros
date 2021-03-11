@@ -1,5 +1,8 @@
 import numpy
 
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
+
 from xythLib import *
 
 def occupancyGridData2staticMap(occupancyGrid):
@@ -18,7 +21,26 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
         return pointsGridCoordinations
 
 
+def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False):
+        dist = distP2P(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
+        if extrapolation:
+                time = max(poseStamped0.header.stamp.to_sec(), poseStamped1.header.stamp.to_sec())
+        else:
+                time = min(poseStamped0.header.stamp.to_sec(), poseStamped1.header.stamp.to_sec())
+        return dist, time
+
+
+def distPoseStamped2Odometry(poseStamped, odometry, extrapolation=False):
+        # just thinking 2D (x,y)
+        poseStamped_odometry = PoseStamped()
+        poseStamped_odometry.header = odometry.header
+        poseStamped_odometry.pose = odometry.pose.pose
+        dist, time = distPoseStamped2PoseStamped(poseStamped, poseStamped_odometry, extrapolation)
+        return dist, time
+
+
 def distPoints2pose(points, pose):
+        # TODO abolish
         # just thinking 2D (x,y)
         if points.shape == (2,):        #for 1 id case
                 points = numpy.array([points])
@@ -33,6 +55,7 @@ def distPoints2pose(points, pose):
 
 def distPoints2poses(points, poses):
         # just thinking 2D (x,y)
+        # TODO abolish
         # TODO all numpy!
         pathDists = []
         for pose in poses:

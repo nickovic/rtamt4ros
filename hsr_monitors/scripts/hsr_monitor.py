@@ -33,6 +33,12 @@ from tmc_navigation_msgs.msg import PathWithGoal
 DEBUG = False
 
 
+def print_robQue(robQue, spec):
+        if not robQue.empty():
+                rospy.loginfo('rob {0}: {1}'.format(spec.name, robQue.get()))
+        return
+
+
 class HSR_STL_monitor(object):
 	def __init__(self):
                 # STL settings
@@ -300,12 +306,9 @@ class HSR_STL_monitor(object):
                         rospy.loginfo('rob {0}: {1}'.format(self.spec_locErr.name, rob))
 
                 # print robs
-                if not self.robQue_reachEgoGoal.empty():
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec_reachEgoGoal.name, self.robQue_reachEgoGoal.get()))
-                if not self.rob_collLidar_q.empty():
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec_collLidar.name, self.rob_collLidar_q.get()))
-                if not self.rob_collMotionPathObs_q.empty():
-                        rospy.loginfo('rob {0}: {1}'.format(self.spec_collMotionPathObs.name, self.rob_collMotionPathObs_q.get()))
+                print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
+                print_robQue(self.rob_collLidar_q, self.spec_collLidar)
+                print_robQue(self.rob_collMotionPathObs_q, self.spec_collMotionPathObs)
 
 
                 # 1) system -----

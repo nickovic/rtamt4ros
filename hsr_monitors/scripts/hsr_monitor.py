@@ -326,7 +326,7 @@ class HSR_STL_monitor(object):
                 if self.loc_gt != [] and self.loc != []:
                         locErr, time = distPoseStamped2Odometry(self.loc, self.loc_gt)
                         data = [[time, locErr]]
-                        rob = self.spec_errLoc.update(['locErr', data])
+                        rob = self.spec_errLoc.update(['errLoc', data])
                         print_rob(rob, self.spec_errLoc)
 
 

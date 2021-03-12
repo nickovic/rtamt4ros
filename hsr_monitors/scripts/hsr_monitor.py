@@ -321,20 +321,7 @@ class HSR_STL_monitor(object):
 
         def monitor_callback(self, event):
                 # data check
-                if self.obss != [] and self.loc != [] and self.odom_gt != []:
-                        # odom
-                        cPose = self.loc.pose
-                        if DEBUG:
-                                rospy.loginfo('odometry: x: {0}, y: {1}'.format(cPose.position.x, cPose.position.y))
-                        # true odom
-                        tPose = self.odom_gt.pose.pose
-                        if DEBUG:
-                                rospy.loginfo('tOdometry: x: {0}, y: {1}'.format(tPose.position.x, tPose.position.y))
-                        # error odom
-                        eOdom = distP2P(tPose.position.x, tPose.position.y, cPose.position.x, cPose.position.y)
-                        if DEBUG:
-                                rospy.loginfo('eOdometry: {0}'.format(eOdom))
-
+                if self.obss != []:
                         # collision
                         dists = distPoints2pose(self.obss, cPose)
                         dist = numpy.min(dists)

@@ -28,6 +28,7 @@ from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Twist
 from tmc_navigation_msgs.msg import PathWithGoal
 
 DEBUG = False
@@ -208,6 +209,8 @@ class HSR_STL_monitor(object):
                 # system order
                 rospy.Subscriber('/goal', PoseStamped, self.goal_callback, queue_size=10)
                 self.goal =[]
+                rospy.Subscriber('/hsrb/command_velocity', Twist, self.baseVel_ref_callback, queue_size=10)
+                self.baseVel_ref = []
 
                 # system sensor
                 rospy.Subscriber('/global_pose', PoseStamped, self.loc_callback, queue_size=10)
@@ -215,6 +218,8 @@ class HSR_STL_monitor(object):
                 rospy.Subscriber('/hsrb/odom', Odometry, self.wheelOdom_callback, queue_size=10)
                 self.wheelOdom = []
                 rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
+                rospy.Subscriber('/base_velocity', Twist, self.baseVel_callback, queue_size=10)
+                self.baseVel = []
 
                 # system intermidiate data
                 rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalMotionPath_callback, queue_size=10)
@@ -293,6 +298,14 @@ class HSR_STL_monitor(object):
                 data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
                 rob = self.spec_collMotionPathObs.update(['distMotionPathObs', data])
                 self.robQue_collMotionPathObs.put(rob)
+
+
+        def baseVel_ref_callback(self, twist):
+                self.baseVel_ref = twist
+
+
+        def baseVel_callback(self, twist):
+                self.baseVel = twist
 
 
         def monitor_callback(self, event):

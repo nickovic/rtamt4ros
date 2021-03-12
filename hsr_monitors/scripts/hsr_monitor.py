@@ -289,7 +289,8 @@ class HSR_STL_monitor(object):
                 # Evaluate the spec
                 data = [[laser_message.header.stamp.to_sec(), scanDist]]
                 rob = self.spec_collLidar.update(['distLidar', data])
-                self.robQue_collLidar.put(rob)
+                if rob != []:
+                        self.robQue_collLidar.put(rob)
 
 
         def globalMotionPath_callback(self, pathWithGoal):
@@ -298,7 +299,8 @@ class HSR_STL_monitor(object):
                 # Evaluate the spec
                 data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
                 rob = self.spec_collMotionPathObs.update(['distMotionPathObs', data])
-                self.robQue_collMotionPathObs.put(rob)
+                if rob != []:
+                        self.robQue_collMotionPathObs.put(rob)
 
 
         def baseVel_ref_callback(self, twist):

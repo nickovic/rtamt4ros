@@ -182,6 +182,7 @@ class HSR_STL_monitor(object):
                 self.spec_referrBodyVel.declare_var('referrBodyVel', 'float')
                 self.spec_referrBodyVel.set_var_io_type('referrBodyVel', 'input')
                 self.spec_referrBodyVel.spec = 'always [0,10] (referrBodyVel <= 0.1)'
+                self.robQue_referrBodyVel = Queue.Queue()
 
                 # ref wheel motor control: <ref rpm> <rpm>
 
@@ -307,6 +308,14 @@ class HSR_STL_monitor(object):
         def baseVel_callback(self, twist):
                 self.baseVel = twist
 
+                if self.baseVel_ref != []:
+                        referrBodyVel = distTwist2Twist(self.baseVel, self.baseVel_ref)
+                        now = rospy.get_rostime()
+                        data = [[now.to_sec(), referrBodyVel]]
+                        rob = self.spec_referrBodyVel.update(['referrBodyVel', data])
+                        if rob != []:
+                                self.robQue_referrBodyVel.put(rob)
+
 
         def monitor_callback(self, event):
                 # data check
@@ -355,7 +364,7 @@ class HSR_STL_monitor(object):
                 print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
 
                 # 4) controller -----
-                #self.spec_referrBodyVel.update()
+                print_robQue(self.robQue_referrBodyVel, self.spec_referrBodyVel)
 
                 # 5) others (intermidiate variables) -----
 

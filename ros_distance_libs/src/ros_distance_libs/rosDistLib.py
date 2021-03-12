@@ -1,7 +1,11 @@
 import numpy
 
+from std_msgs.msg import String
 from nav_msgs.msg import Odometry
+from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Twist
 
 from xythLib import *
 
@@ -19,6 +23,11 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
         if pointsGridCoordinations.shape == (1,2):     #for 1 id case
                 pointsGridCoordinations = pointsGridCoordinations[0]
         return pointsGridCoordinations
+
+
+def distTwist2Twist(twist0, twist1):
+        linear_dist = distP2P(twist0.linear.x, twist0.linear.y, twist1.linear.x, twist1.linear.y)
+        return linear_dist
 
 
 def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False):

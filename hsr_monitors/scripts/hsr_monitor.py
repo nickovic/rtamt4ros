@@ -8,23 +8,25 @@
 # 1) Other agent senario
 # 2) monitor with publisher and rtp polot.
 
-import rospy
-import tf
 import sys
 import argparse
 import logging
 import copy
 import Queue
+import matplotlib.pyplot as plt
+
+import rospy
+import tf
+import laser_geometry.laser_geometry
+import sensor_msgs.point_cloud2
 
 import rtamt
-
-import matplotlib.pyplot as plt
 
 from ros_distance_libs.rosDistLib import *
 
 #other msg
 from std_msgs.msg import String
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
@@ -50,6 +52,8 @@ class HSR_STL_monitor(object):
 	def __init__(self):
                 # listener of tf.
                 self.tfListener = tf.TransformListener()
+                # laser projection
+                self.lp = laser_geometry.laser_geometry.LaserProjection()
 
                 # STL settings
                 # Load the spec from STL file

@@ -1,3 +1,4 @@
+import rospy
 import numpy
 
 from std_msgs.msg import String
@@ -31,6 +32,9 @@ def distTwist2Twist(twist0, twist1):
 
 
 def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False):
+        if poseStamped0.header.frame_id != poseStamped1.header.frame_id:
+                rospy.logwarn("frame id missmatch {0}!={1}".format(poseStamped0.header.frame_id, poseStamped1.header.frame_id))
+
         dist = distP2P(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
         if extrapolation:
                 time = max(poseStamped0.header.stamp.to_sec(), poseStamped1.header.stamp.to_sec())

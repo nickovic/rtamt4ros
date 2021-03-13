@@ -292,9 +292,10 @@ class HSR_STL_monitor(object):
 
 
         def lidar_callback(self, laser_message):
-                scanDist = numpy.amin(laser_message.ranges)
+                lidarPointCloud2 = self.lp.projectLaser(laser_message)
 
                 # Evaluate the spec
+                scanDist = numpy.amin(laser_message.ranges)
                 data = [[laser_message.header.stamp.to_sec(), scanDist]]
                 rob = self.spec_collLidar.update(['distLidar', data])
                 if rob != []:

@@ -9,6 +9,7 @@
 # 2) monitor with publisher and rtp polot.
 
 import rospy
+import tf
 import sys
 import argparse
 import logging
@@ -47,6 +48,9 @@ def print_robQue(robQue, spec):
 
 class HSR_STL_monitor(object):
 	def __init__(self):
+                # listener of tf.
+                self.tfListener = tf.TransformListener()
+
                 # STL settings
                 # Load the spec from STL file
                 # 1) system -----

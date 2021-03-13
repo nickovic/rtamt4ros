@@ -23,6 +23,7 @@ def orientation2angular(orientation):
         )
         return angular
 
+
 def occupancyGridData2staticMap(occupancyGrid):
         staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
         return staticMap

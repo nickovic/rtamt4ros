@@ -10,6 +10,19 @@ from geometry_msgs.msg import Twist
 
 from xythLib import *
 
+def orientation2angular(orientation):
+        quaternion = (  orientation.x,
+                        orientation.y,
+                        orientation.z,
+                        orientation.w)
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        angular = Vector3(
+                euler[0],
+                euler[1],
+                euler[2]
+        )
+        return angular
+
 def occupancyGridData2staticMap(occupancyGrid):
         staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
         return staticMap

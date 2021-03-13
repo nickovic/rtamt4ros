@@ -17,8 +17,11 @@ import matplotlib.pyplot as plt
 
 import rospy
 import tf
+import tf2_ros
+import pcl_ros
 import laser_geometry.laser_geometry
 import sensor_msgs.point_cloud2
+from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 
 import rtamt
 
@@ -50,8 +53,11 @@ def print_robQue(robQue, spec):
 
 class HSR_STL_monitor(object):
 	def __init__(self):
-                # listener of tf.
+                # listener of tf
                 self.tfListener = tf.TransformListener()
+                self.tf2Buffer = tf2_ros.Buffer()
+                self.tf2listener = tf2_ros.TransformListener(self.tf2Buffer)
+
                 # laser projection
                 self.lp = laser_geometry.laser_geometry.LaserProjection()
 
@@ -295,6 +301,14 @@ class HSR_STL_monitor(object):
 
         def lidar_callback(self, laser_message):
                 lidarPointCloud2 = self.lp.projectLaser(laser_message)
+
+                if self.loc_gt != []:
+                        while not rospy.is_shutdown():
+                                try:
+                                        trans = self.tf2Buffer.lookup_transform(self.loc_gt.header.frame_id, lidarPointCloud2.header.frame_id, lidarPointCloud2.header.stamp)
+                                except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                                        continue
+                        lidarPointCloud2_frameOdom = do_transform_cloud(lidarPointCloud2, trans)
 
                 # Evaluate the spec
                 scanDist = numpy.amin(laser_message.ranges)

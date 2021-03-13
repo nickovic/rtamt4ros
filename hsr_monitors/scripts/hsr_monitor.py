@@ -280,8 +280,9 @@ class HSR_STL_monitor(object):
 
         # this will be called just one time.
         def map_callback(self, occupancyGrid):
-                self.map = occupancyGridData2staticMap(occupancyGrid)
-                obsIds = numpy.transpose(numpy.nonzero(self.map))
+                self.map = occupancyGrid
+                staticMap = occupancyGridData2staticMap(occupancyGrid)
+                obsIds = numpy.transpose(numpy.nonzero(staticMap))
                 mapCoordination = mapids2mapCoordination(obsIds, occupancyGrid)
 
                 # debug for the occupancyGrid data

@@ -343,7 +343,15 @@ class HSR_STL_monitor(object):
                         rob = self.spec_errLoc.update(['errLoc', data])
                         print_rob(rob, self.spec_errLoc)
                 if self.wheelOdom != [] and self.loc_gt != []:
-                        errOdom, time = distOdometry2Odometry(self.wheelOdom, self.loc_gt)
+                        wheelOdom_poseStamped = odometry2PoseStamped(self.wheelOdom)
+                        loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
+                        while not rospy.is_shutdown():
+                                try:
+                                        loc_gt_pose_frameOdom = self.tfListener.transformPose(wheelOdom_poseStamped.header.frame_id, loc_gt_poseStamped)
+                                        break
+                                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                                        continue
+                        errOdom, time = distPoseStamped2PoseStamped(wheelOdom_poseStamped, loc_gt_pose_frameOdom)
                         data = [[time, errOdom]]
                         rob = self.spec_errOdom.update(['errOdom', data])
                         print_rob(rob, self.spec_errOdom)

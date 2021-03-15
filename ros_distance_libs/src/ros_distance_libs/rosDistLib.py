@@ -110,13 +110,13 @@ def distPoseStamped2pointCloud2(poseStamped, pointCloud2, extrapolation=False):
         return dists, time
 
 
-def distPoints2poses(points, poses):
+def distPoints2path(points, path):
         # just thinking 2D (x,y)
         # TODO abolish
         # TODO all numpy!
         pathDists = []
-        for pose in poses:
-                dists = distPoints2pose(points, pose.pose)
+        for poseStamped in path.poses:
+                dists = distPoints2pose(points, poseStamped.pose)
                 dist = numpy.min(dists)
                 pathDists.append(dist)
         pathDists = numpy.array(pathDists)

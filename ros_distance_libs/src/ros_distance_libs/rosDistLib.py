@@ -27,6 +27,13 @@ def orientation2angular(orientation):
         return angular
 
 
+def checkFrameId(data0, data1):
+        check = (data0.header.frame_id == data1.header.frame_id)
+        if not check:
+                rospy.logwarn('frame id missmatch {0}!={1}'.format(data0.header.frame_id, data1.header.frame_id))
+        return check
+
+
 def occupancyGridData2staticMap(occupancyGrid):
         staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
         return staticMap
@@ -50,8 +57,7 @@ def distTwist2Twist(twist0, twist1):
 
 
 def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False):
-        if poseStamped0.header.frame_id != poseStamped1.header.frame_id:
-                rospy.logwarn('frame id missmatch {0}!={1}'.format(poseStamped0.header.frame_id, poseStamped1.header.frame_id))
+        check = checkFrameId(poseStamped0, poseStamped1)
 
         dist = distP2P(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
         if extrapolation:
@@ -97,8 +103,8 @@ def distPoints2pose(points, pose):
 
 
 def distPoseStamped2pointCloud2(poseStamped, pointCloud2, extrapolation=False):
-        if poseStamped.header.frame_id != pointCloud2.header.frame_id:
-                rospy.logwarn('frame id missmatch {0}!={1}'.format(poseStamped.header.frame_id, pointCloud2.header.frame_id))
+        check = checkFrameId(poseStamped, pointCloud2)
+
         points = sensor_msgs.point_cloud2.read_points(pointCloud2)
         # TODO just thinkin 2D
         points_list = numpy.array([(i[0],i[1] )for i in points])
@@ -125,8 +131,8 @@ def distPoints2path(points, path):
 
 
 def distPath2occupancyGrid(path, occupancyGrid, extrapolation=False):
-        if path.header.frame_id != occupancyGrid.header.frame_id:
-                rospy.logwarn('frame id missmatch {0}!={1}'.format(path.header.frame_id, occupancyGrid.header.frame_id))
+        check = checkFrameId(path, occupancyGrid)
+
         staticMap = occupancyGridData2staticMap(occupancyGrid)
         obsIds = numpy.transpose(numpy.nonzero(staticMap))
         mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)

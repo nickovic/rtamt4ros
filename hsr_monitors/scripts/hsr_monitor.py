@@ -149,13 +149,13 @@ class HSR_STL_monitor(object):
 
                 # collision with obstacle Bumper: <Bumper>
 
-                # collision with obstacle GlobalPath: /base_path_with_goal /static_obstacle_map_ref
-                self.spec_collMotionPathObs = rtamt.STLDenseTimeSpecification()
-                self.spec_collMotionPathObs.name = 'distMotionPathObs'
-                self.spec_collMotionPathObs.declare_var('distMotionPathObs', 'float')
-                self.spec_collMotionPathObs.set_var_io_type('distMotionPathObs', 'input')
-                self.spec_collMotionPathObs.spec = 'always [0,10] (distMotionPathObs >= 0.2)'
-                self.robQue_collMotionPathObs = Queue.Queue()
+                # collision with obstacle GlobalPath: /base_local_path (/base_path_with_goal) /static_obstacle_map_ref
+                self.spec_collGlobalPathObs = rtamt.STLDenseTimeSpecification()
+                self.spec_collGlobalPathObs.name = 'distMotionPathObs'
+                self.spec_collGlobalPathObs.declare_var('distMotionPathObs', 'float')
+                self.spec_collGlobalPathObs.set_var_io_type('distMotionPathObs', 'input')
+                self.spec_collGlobalPathObs.spec = '(distMotionPathObs >= 0.2)'
+                self.robQue_collGlobalPathObs = Queue.Queue()
 
                 # reach goal GlobalPath: /base_local_path(/base_path_with_goal) /goal
                 self.spec_reachGlobalPathGoal = rtamt.STLDenseTimeSpecification()
@@ -178,8 +178,8 @@ class HSR_STL_monitor(object):
                         self.spec_collEgoObs.pastify()
                         self.spec_collLidar.parse()
                         self.spec_collLidar.pastify()
-                        self.spec_collMotionPathObs.parse()
-                        self.spec_collMotionPathObs.pastify()
+                        self.spec_collGlobalPathObs.parse()
+                        self.spec_collGlobalPathObs.pastify()
                         self.spec_reachGlobalPathGoal.parse()
                         self.spec_reachGlobalPathGoal.pastify()
                         self.spec_reachEgoGoal.parse()
@@ -237,8 +237,7 @@ class HSR_STL_monitor(object):
                 self.baseVel = []
 
                 # system intermidiate data
-                #rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalPath_callback, queue_size=10)
-                rospy.Subscriber('/base_local_path', Path, self.globalPath_callback, queue_size=10)
+                rospy.Subscriber('/base_local_path', Path, self.globalPath_callback, queue_size=10) #rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalPath_callback, queue_size=10)
                 self.globalPath = []
 
                 # data init
@@ -344,17 +343,25 @@ class HSR_STL_monitor(object):
                 self.globalPath = path
 
                 if self.goal !=[]:
-                        goalPoseStamped = path.poses[-1]
+                        goalPoseStamped = self.globalPath.poses[-1]
                         distGlobalPathGoal, time = distPoseStamped2PoseStamped(self.goal, goalPoseStamped, True)
                         data = [[time, distGlobalPathGoal]]
                         rob = self.spec_reachGlobalPathGoal.update(['distGlobalPathGoal', data])
                         if rob != []:
                                 self.robQue_reachGlobalPathGoal.put(rob)
 
-                #data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
-                #rob = self.spec_collMotionPathObs.update(['distMotionPathObs', data])
-                #if rob != []:
-                #        self.robQue_collMotionPathObs.put(rob)
+                if self.map != []:
+                        staticMap = occupancyGridData2staticMap(self.map)
+                        obsIds = numpy.transpose(numpy.nonzero(staticMap))
+                        mapCoordination = mapids2mapCoordination(obsIds, self.map)
+
+                        dists = distPoints2path(mapCoordination, self.globalPath)
+                        distGlobalPathObs = numpy.min(dists)
+                        time = max(self.map.header.stamp.to_sec(), self.globalPath.header.stamp.to_sec())
+                        data = [[time, distGlobalPathObs]]
+                        rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+                        if rob != []:
+                                self.robQue_collGlobalPathObs.put(rob)
 
 
         def baseVel_ref_callback(self, twist):
@@ -402,7 +409,7 @@ class HSR_STL_monitor(object):
                 # 3) planner -----
                 print_robQue(self.robQue_collEgoObs, self.spec_collEgoObs)
                 print_robQue(self.robQue_collLidar, self.spec_collLidar)
-                #print_robQue(self.robQue_collMotionPathObs, self.spec_collMotionPathObs)
+                print_robQue(self.robQue_collGlobalPathObs, self.spec_collGlobalPathObs)
                 print_robQue(self.robQue_reachGlobalPathGoal, self.spec_reachGlobalPathGoal)
                 print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
 

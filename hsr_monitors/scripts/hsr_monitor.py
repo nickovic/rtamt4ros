@@ -311,11 +311,9 @@ class HSR_STL_monitor(object):
                                         break
                                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                                         continue
-                        points = sensor_msgs.point_cloud2.read_points(lidarPointCloud2)
-                        points_list = numpy.array([(i[0],i[1] )for i in points])
-                        dists = distPoints2pose(points_list, loc_gt_poseStamped.pose)
+                        dists, time = distPoseStamped2pointCloud2(loc_gt_pose_frame_base_rage_sensor_link, lidarPointCloud2, True)
                         distEgoObs_gt = min(dists)
-                        data = [[lidarPointCloud2.header.stamp.to_sec(),distEgoObs_gt]]
+                        data = [[time, distEgoObs_gt]]
                         rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
                         if rob != []:
                                 self.robQue_collEgoObs_gt.put(rob)

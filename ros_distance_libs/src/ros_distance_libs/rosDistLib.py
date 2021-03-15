@@ -1,7 +1,10 @@
 import rospy
 import numpy
+import sensor_msgs.point_cloud2
 
 from std_msgs.msg import String
+from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
+from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped
@@ -48,7 +51,7 @@ def distTwist2Twist(twist0, twist1):
 
 def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False):
         if poseStamped0.header.frame_id != poseStamped1.header.frame_id:
-                rospy.logwarn("frame id missmatch {0}!={1}".format(poseStamped0.header.frame_id, poseStamped1.header.frame_id))
+                rospy.logwarn('frame id missmatch {0}!={1}'.format(poseStamped0.header.frame_id, poseStamped1.header.frame_id))
 
         dist = distP2P(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
         if extrapolation:
@@ -91,6 +94,20 @@ def distPoints2pose(points, pose):
         if dists.shape == (1,1):     #for 1 id case
                 dists = dists[0]
         return dists
+
+
+def distPoseStamped2pointCloud2(poseStamped, pointCloud2, extrapolation=False):
+        if poseStamped.header.frame_id != pointCloud2.header.frame_id:
+                rospy.logwarn('frame id missmatch {0}!={1}'.format(poseStamped.header.frame_id, pointCloud2.header.frame_id))
+        points = sensor_msgs.point_cloud2.read_points(pointCloud2)
+        # TODO just thinkin 2D
+        points_list = numpy.array([(i[0],i[1] )for i in points])
+        dists = distPoints2pose(points_list, poseStamped.pose)
+        if extrapolation:
+                time = max(poseStamped.header.stamp.to_sec(), pointCloud2.header.stamp.to_sec())
+        else:
+                time = min(poseStamped.header.stamp.to_sec(), pointCloud2.header.stamp.to_sec())
+        return dists, time
 
 
 def distPoints2poses(points, poses):

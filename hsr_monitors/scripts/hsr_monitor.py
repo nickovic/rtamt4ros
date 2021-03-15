@@ -30,11 +30,8 @@ from ros_distance_libs.rosDistLib import *
 from std_msgs.msg import String
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
-from nav_msgs.msg import Odometry
-from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry, OccupancyGrid, Path
+from geometry_msgs.msg import PoseStamped, Pose, Twist
 from tmc_navigation_msgs.msg import PathWithGoal
 
 DEBUG = False
@@ -160,13 +157,13 @@ class HSR_STL_monitor(object):
                 self.spec_collMotionPathObs.spec = 'always [0,10] (distMotionPathObs >= 0.2)'
                 self.robQue_collMotionPathObs = Queue.Queue()
 
-                # reach goal GlobalPath: /base_path_with_goal /goal
+                # reach goal GlobalPath: /base_local_path(/base_path_with_goal) /goal
                 self.spec_reachGlobalPathGoal = rtamt.STLDenseTimeSpecification()
                 self.spec_reachGlobalPathGoal.name = 'reachGlobalPathGoal'
                 self.spec_reachGlobalPathGoal.declare_var('distGlobalPathGoal', 'float')
                 self.spec_reachGlobalPathGoal.set_var_io_type('distGlobalPathGoal', 'input')
                 self.spec_reachGlobalPathGoal.spec = 'eventually [0,10] (distGlobalPathGoal <= 0.1)'
-                self.robQue_reachEgoGoal = Queue.Queue()
+                self.robQue_reachGlobalPathGoal = Queue.Queue()
 
                 # reach goal: /global_pose /goal
                 self.spec_reachEgoGoal = rtamt.STLDenseTimeSpecification()
@@ -240,8 +237,9 @@ class HSR_STL_monitor(object):
                 self.baseVel = []
 
                 # system intermidiate data
-                rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalMotionPath_callback, queue_size=10)
-                self.globalMotionPath = PathWithGoal()
+                #rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalPath_callback, queue_size=10)
+                rospy.Subscriber('/base_local_path', Path, self.globalPath_callback, queue_size=10)
+                self.globalPath = []
 
                 # data init
                 self.obss = []
@@ -342,14 +340,21 @@ class HSR_STL_monitor(object):
                         self.robQue_collLidar.put(rob)
 
 
-        def globalMotionPath_callback(self, pathWithGoal):
-                pathDist = distPoints2poses(self.obss, pathWithGoal.poses)
+        def globalPath_callback(self, path):
+                self.globalPath = path
 
-                # Evaluate the spec
-                data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
-                rob = self.spec_collMotionPathObs.update(['distMotionPathObs', data])
-                if rob != []:
-                        self.robQue_collMotionPathObs.put(rob)
+                if self.goal !=[]:
+                        goalPoseStamped = path.poses[-1]
+                        distGlobalPathGoal, time = distPoseStamped2PoseStamped(self.goal, goalPoseStamped, True)
+                        data = [[time, distGlobalPathGoal]]
+                        rob = self.spec_reachGlobalPathGoal.update(['distGlobalPathGoal', data])
+                        if rob != []:
+                                self.robQue_reachGlobalPathGoal.put(rob)
+
+                #data = [[pathWithGoal.header.stamp.to_sec(), pathDist]]
+                #rob = self.spec_collMotionPathObs.update(['distMotionPathObs', data])
+                #if rob != []:
+                #        self.robQue_collMotionPathObs.put(rob)
 
 
         def baseVel_ref_callback(self, twist):
@@ -397,8 +402,8 @@ class HSR_STL_monitor(object):
                 # 3) planner -----
                 print_robQue(self.robQue_collEgoObs, self.spec_collEgoObs)
                 print_robQue(self.robQue_collLidar, self.spec_collLidar)
-                print_robQue(self.robQue_collMotionPathObs, self.spec_collMotionPathObs)
-                #self.spec_reachGlobalPathGoal
+                #print_robQue(self.robQue_collMotionPathObs, self.spec_collMotionPathObs)
+                print_robQue(self.robQue_reachGlobalPathGoal, self.spec_reachGlobalPathGoal)
                 print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
 
                 # 4) controller -----

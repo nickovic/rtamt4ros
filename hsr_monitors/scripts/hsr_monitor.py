@@ -368,14 +368,6 @@ class HSR_STL_monitor(object):
 
 
         def monitor_callback(self, event):
-                # data check
-                if self.obss != []:
-                        # collision
-                        dists = distPoints2pose(self.obss, cPose)
-                        dist = numpy.min(dists)
-                        if DEBUG:
-                                rospy.loginfo('dist ego obs: {0}'.format(dist))
-
                 # 1) system -----
                 print_robQue(self.robQue_collEgoObs_gt, self.spec_collEgoObs_gt)
                 print_robQue(self.robQue_reachEgoGoal_gt, self.spec_reachEgoGoal_gt)

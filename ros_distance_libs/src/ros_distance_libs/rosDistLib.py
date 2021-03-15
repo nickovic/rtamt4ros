@@ -124,6 +124,20 @@ def distPoints2path(points, path):
         return pathDist
 
 
+def distPath2occupancyGrid(path, occupancyGrid, extrapolation=False):
+        if path.header.frame_id != occupancyGrid.header.frame_id:
+                rospy.logwarn('frame id missmatch {0}!={1}'.format(path.header.frame_id, occupancyGrid.header.frame_id))
+        staticMap = occupancyGridData2staticMap(occupancyGrid)
+        obsIds = numpy.transpose(numpy.nonzero(staticMap))
+        mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
+        dists = distPoints2path(mapPoints, path)
+        if extrapolation:
+                time = max(path.header.stamp.to_sec(), occupancyGrid.header.stamp.to_sec())
+        else:
+                time = min(path.header.stamp.to_sec(), occupancyGrid.header.stamp.to_sec())
+        return dists, time
+
+
 def occupancyGridPlot(ax, occupancyGrid):
         staticMap = occupancyGridData2staticMap(occupancyGrid)
         extent = [occupancyGrid.info.origin.position.x, occupancyGrid.info.width*occupancyGrid.info.resolution  + occupancyGrid.info.origin.position.x,

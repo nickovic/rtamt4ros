@@ -287,9 +287,6 @@ class HSR_STL_monitor(object):
         # this will be called just one time.
         def map_callback(self, occupancyGrid):
                 self.map = occupancyGrid
-                staticMap = occupancyGridData2staticMap(occupancyGrid)
-                obsIds = numpy.transpose(numpy.nonzero(staticMap))
-                mapCoordination = mapids2mapCoordination(obsIds, occupancyGrid)
 
                 # debug for the occupancyGrid data
                 if DEBUG:
@@ -351,13 +348,8 @@ class HSR_STL_monitor(object):
                                 self.robQue_reachGlobalPathGoal.put(rob)
 
                 if self.map != []:
-                        staticMap = occupancyGridData2staticMap(self.map)
-                        obsIds = numpy.transpose(numpy.nonzero(staticMap))
-                        mapCoordination = mapids2mapCoordination(obsIds, self.map)
-
-                        dists = distPoints2path(mapCoordination, self.globalPath)
+                        dists, time = distPath2occupancyGrid(self.globalPath, self.map, True)
                         distGlobalPathObs = numpy.min(dists)
-                        time = max(self.map.header.stamp.to_sec(), self.globalPath.header.stamp.to_sec())
                         data = [[time, distGlobalPathObs]]
                         rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
                         if rob != []:

@@ -41,6 +41,7 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
 
 
 def distTwist2Twist(twist0, twist1):
+        # TODO abolish
         linear_dist = distP2P(twist0.linear.x, twist0.linear.y, twist1.linear.x, twist1.linear.y)
         return linear_dist
 

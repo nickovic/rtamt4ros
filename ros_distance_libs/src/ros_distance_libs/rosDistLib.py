@@ -34,6 +34,20 @@ def checkFrameId(stampedData0, stampedData1):
         return check
 
 
+def stampSlector(stampedData0, stampedData1, extrapolation=False):
+        if extrapolation:
+                if stampedData0.header.stamp > stampedData1.header.stamp:
+                        stamp = stampedData0.header.stamp
+                else:
+                        stamp = stampedData1.header.stamp
+        else:
+                if stampedData0.header.stamp < stampedData1.header.stamp:
+                        stamp = stampedData0.header.stamp
+                else:
+                        stamp = stampedData1.header.stamp
+        return stamp
+
+
 def occupancyGridData2staticMap(occupancyGrid):
         staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
         return staticMap
@@ -60,11 +74,10 @@ def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False)
         check = checkFrameId(poseStamped0, poseStamped1)
 
         dist = distP2P(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
-        if extrapolation:
-                time = max(poseStamped0.header.stamp.to_sec(), poseStamped1.header.stamp.to_sec())
-        else:
-                time = min(poseStamped0.header.stamp.to_sec(), poseStamped1.header.stamp.to_sec())
-        return dist, time
+
+        stamp = stampSlector(poseStamped0, poseStamped1, extrapolation)
+
+        return dist, stamp
 
 
 def odometry2PoseStamped(odometry):
@@ -77,15 +90,15 @@ def odometry2PoseStamped(odometry):
 def distPoseStamped2Odometry(poseStamped, odometry, extrapolation=False):
         # just thinking 2D (x,y)
         poseStamped_odometry = odometry2PoseStamped(odometry)
-        dist, time = distPoseStamped2PoseStamped(poseStamped, poseStamped_odometry, extrapolation)
-        return dist, time
+        dist, stamp = distPoseStamped2PoseStamped(poseStamped, poseStamped_odometry, extrapolation)
+        return dist, stamp
 
 
 def distOdometry2Odometry(odometry0, odometry1, extrapolation=False):
         poseStamped0 = odometry2PoseStamped(odometry0)
         poseStamped1 = odometry2PoseStamped(odometry1)
-        dist, time = distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation)
-        return dist, time
+        dist, stamp = distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation)
+        return dist, stamp
 
 
 def distPoints2pose(points, pose):
@@ -109,11 +122,9 @@ def distPoseStamped2pointCloud2(poseStamped, pointCloud2, extrapolation=False):
         # TODO just thinkin 2D
         points_list = numpy.array([(i[0],i[1] )for i in points])
         dists = distPoints2pose(points_list, poseStamped.pose)
-        if extrapolation:
-                time = max(poseStamped.header.stamp.to_sec(), pointCloud2.header.stamp.to_sec())
-        else:
-                time = min(poseStamped.header.stamp.to_sec(), pointCloud2.header.stamp.to_sec())
-        return dists, time
+
+        stamp = stampSlector(poseStamped, pointCloud2, extrapolation)
+        return dists, stamp
 
 
 def distPoints2path(points, path):
@@ -137,11 +148,9 @@ def distPath2occupancyGrid(path, occupancyGrid, extrapolation=False):
         obsIds = numpy.transpose(numpy.nonzero(staticMap))
         mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
         dists = distPoints2path(mapPoints, path)
-        if extrapolation:
-                time = max(path.header.stamp.to_sec(), occupancyGrid.header.stamp.to_sec())
-        else:
-                time = min(path.header.stamp.to_sec(), occupancyGrid.header.stamp.to_sec())
-        return dists, time
+
+        stamp = stampSlector(path, occupancyGrid, extrapolation)
+        return dists, stamp
 
 
 def occupancyGridPlot(ax, occupancyGrid):

@@ -21,7 +21,6 @@ import tf2_ros
 import pcl_ros
 import laser_geometry.laser_geometry
 import sensor_msgs.point_cloud2
-from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 
 import rtamt
 
@@ -29,6 +28,7 @@ from ros_distance_libs.rosDistLib import *
 
 #other msg
 from std_msgs.msg import String
+from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
@@ -55,8 +55,8 @@ class HSR_STL_monitor(object):
 	def __init__(self):
                 # listener of tf
                 self.tfListener = tf.TransformListener()
-                self.tf2Buffer = tf2_ros.Buffer()
-                self.tf2listener = tf2_ros.TransformListener(self.tf2Buffer)
+                self.tf2buffer = tf2_ros.Buffer()
+                self.tf2listener = tf2_ros.TransformListener(self.tf2buffer)
 
                 # laser projection
                 self.lp = laser_geometry.laser_geometry.LaserProjection()
@@ -70,6 +70,7 @@ class HSR_STL_monitor(object):
                 self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
                 self.spec_collEgoObs_gt.set_var_io_type('distEgoObs_gt', 'input')
                 self.spec_collEgoObs_gt.spec = 'always [0,10] (distEgoObs_gt >= 0.1)'
+                self.robQue_collEgoObs_gt = Queue.Queue()
 
                 # reach goal (Grabd Truth): /hsrb/odom_ground_truth /goal
                 self.spec_reachEgoGoal_gt = rtamt.STLDenseTimeSpecification()
@@ -303,12 +304,21 @@ class HSR_STL_monitor(object):
                 lidarPointCloud2 = self.lp.projectLaser(laser_message)
 
                 if self.loc_gt != []:
+                        loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
                         while not rospy.is_shutdown():
                                 try:
-                                        trans = self.tf2Buffer.lookup_transform(self.loc_gt.header.frame_id, lidarPointCloud2.header.frame_id, lidarPointCloud2.header.stamp)
-                                except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                                        loc_gt_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(lidarPointCloud2.header.frame_id, loc_gt_poseStamped)
+                                        break
+                                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                                         continue
-                        lidarPointCloud2_frameOdom = do_transform_cloud(lidarPointCloud2, trans)
+                        points = sensor_msgs.point_cloud2.read_points(lidarPointCloud2)
+                        points_list = numpy.array([(i[0],i[1] )for i in points])
+                        dists = distPoints2pose(points_list, loc_gt_poseStamped.pose)
+                        distEgoObs_gt = min(dists)
+                        data = [[lidarPointCloud2.header.stamp.to_sec(),distEgoObs_gt]]
+                        rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
+                        if rob != []:
+                                self.robQue_collEgoObs_gt.put(rob)
 
                 # Evaluate the spec
                 scanDist = numpy.amin(laser_message.ranges)
@@ -354,7 +364,7 @@ class HSR_STL_monitor(object):
                                 rospy.loginfo('dist ego obs: {0}'.format(dist))
 
                 # 1) system -----
-                #spec_collEgoObs_gt.update(['distEgoObs_gt', data])
+                print_robQue(self.robQue_collEgoObs_gt, self.spec_collEgoObs_gt)
                 print_robQue(self.robQue_reachEgoGoal_gt, self.spec_reachEgoGoal_gt)
 
                 # 2) perception -----

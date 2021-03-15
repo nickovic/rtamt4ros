@@ -138,6 +138,7 @@ class HSR_STL_monitor(object):
                 self.spec_collEgoObs.declare_var('distEgoObs', 'float')
                 self.spec_collEgoObs.set_var_io_type('distEgoObs', 'input')
                 self.spec_collEgoObs.spec = 'always [0,10] (distEgoObs >= 0.1)'
+                self.robQue_collEgoObs = Queue.Queue()
 
                 # collision with obstacle LiDAR: hsrb/base_scan
                 self.spec_collLidar = rtamt.STLDenseTimeSpecification()
@@ -318,6 +319,20 @@ class HSR_STL_monitor(object):
                         if rob != []:
                                 self.robQue_collEgoObs_gt.put(rob)
 
+                if self.loc != []:
+                        while not rospy.is_shutdown():
+                                try:
+                                        loc_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(lidarPointCloud2.header.frame_id, self.loc)
+                                        break
+                                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                                        continue
+                        dists, time = distPoseStamped2pointCloud2(loc_pose_frame_base_rage_sensor_link, lidarPointCloud2)
+                        distEgoObs = min(dists)
+                        data = [[time, distEgoObs]]
+                        rob = self.spec_collEgoObs.update(['distEgoObs',data])
+                        if rob != []:
+                                self.robQue_collEgoObs.put(rob)
+
                 # Evaluate the spec
                 scanDist = numpy.amin(laser_message.ranges)
                 data = [[laser_message.header.stamp.to_sec(), scanDist]]
@@ -387,7 +402,7 @@ class HSR_STL_monitor(object):
                 #self.spec_errLidar
 
                 # 3) planner -----
-                #self.spec_collEgoObs.update()
+                print_robQue(self.robQue_collEgoObs, self.spec_collEgoObs)
                 print_robQue(self.robQue_collLidar, self.spec_collLidar)
                 print_robQue(self.robQue_collMotionPathObs, self.spec_collMotionPathObs)
                 #self.spec_reachGlobalPathGoal

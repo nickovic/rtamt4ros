@@ -174,6 +174,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachEgoGoal.declare_var('distEgoGoal', 'float')
                 self.spec_reachEgoGoal.set_var_io_type('distEgoGoal', 'input')
                 self.spec_reachEgoGoal.spec = 'eventually [0,10] (distEgoGoal <= 0.1)'
+                self.robQue_reachEgoGoal = Queue.Queue()
 
                 try:
                         self.spec_collEgoObs.parse()

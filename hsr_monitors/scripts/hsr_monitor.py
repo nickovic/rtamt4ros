@@ -162,7 +162,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachGlobalPathGoal.name = 'reachGlobalPathGoal'
                 self.spec_reachGlobalPathGoal.declare_var('distGlobalPathGoal', 'float')
                 self.spec_reachGlobalPathGoal.set_var_io_type('distGlobalPathGoal', 'input')
-                self.spec_reachGlobalPathGoal.spec = 'eventually [0,10] (distGlobalPathGoal <= 0.1)'
+                self.spec_reachGlobalPathGoal.spec = '(distGlobalPathGoal <= 0.1)'
                 self.robQue_reachGlobalPathGoal = Queue.Queue()
 
                 # reach goal: /global_pose /goal

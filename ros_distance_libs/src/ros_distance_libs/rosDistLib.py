@@ -27,10 +27,10 @@ def orientation2angular(orientation):
         return angular
 
 
-def checkFrameId(data0, data1):
-        check = (data0.header.frame_id == data1.header.frame_id)
+def checkFrameId(stampedData0, stampedData1):
+        check = (stampedData0.header.frame_id == stampedData1.header.frame_id)
         if not check:
-                rospy.logwarn('frame id missmatch {0}!={1}'.format(data0.header.frame_id, data1.header.frame_id))
+                rospy.logwarn('frame id missmatch {0}!={1}'.format(stampedData0.header.frame_id, stampedData1.header.frame_id))
         return check
 
 

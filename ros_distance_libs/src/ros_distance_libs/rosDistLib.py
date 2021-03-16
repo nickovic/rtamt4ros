@@ -1,3 +1,7 @@
+# TODO:
+# 1) Other agent senario
+# 2) monitor with publisher and rtp polot.
+
 import rospy
 import numpy
 import sensor_msgs.point_cloud2
@@ -5,11 +9,8 @@ import sensor_msgs.point_cloud2
 from std_msgs.msg import String
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
-from nav_msgs.msg import Odometry
-from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry, OccupancyGrid, Path
+from geometry_msgs.msg import PoseStamped, Pose, Twist, Point32
 
 from shapelyLib import *
 
@@ -25,6 +26,24 @@ def orientation2angular(orientation):
                 euler[2]
         )
         return angular
+
+
+def pointCloud22PointCloud(pointCloud2):
+        points_gen = sensor_msgs.point_cloud2.read_points(pointCloud2)
+        points_list = []
+        for point in points_gen:
+                point32 = Point32()
+                point32.x = point[0]
+                point32.y = point[1]
+                point32.z = point[2]
+                points_list.append(point32)
+
+        pointCloud = PointCloud()
+        pointCloud.header = pointCloud2.header
+        pointCloud.points = points_list
+        pointCloud.channels = []*len(pointCloud.points)
+
+        return pointCloud
 
 
 def checkFrameId(stampedData0, stampedData1):
@@ -100,27 +119,13 @@ def distOdometry2Odometry(odometry0, odometry1, extrapolation=False):
         return dist, stamp
 
 
-def distPoints2Pose(points, pose):
-        # TODO abolish
-        # just thinking 2D (x,y)
-        if points.shape == (2,):        #for 1 id case
-                points = numpy.array([points])
-        dists = points - numpy.array([pose.position.x, pose.position.y])
-        dists = numpy.square(dists)
-        dists = numpy.sum(dists,axis=1)
-        dists = numpy.sqrt(dists)
-        if dists.shape == (1,1):     #for 1 id case
-                dists = dists[0]
-        return dists
-
-
 def distPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
         check = checkFrameId(poseStamped, pointCloud2)
 
         points = sensor_msgs.point_cloud2.read_points(pointCloud2)
         # TODO just thinking 2D
         points_list = numpy.array([(i[0], i[1])for i in points])
-        dists = distPoints2Pose(points_list, poseStamped.pose)
+        dists = distPoints2Point(points_list, [poseStamped.pose.position.x, poseStamped.pose.position.y])
 
         stamp = stampSlector(poseStamped, pointCloud2, extrapolation)
         return dists, stamp
@@ -128,7 +133,6 @@ def distPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
 
 def distPoints2Path(points, path):
         # just thinking 2D (x,y)
-        # TODO abolish
         pathDists = []
         # TODO just thinking 2D
         pathList = [(poseStamped.pose.position.x, poseStamped.pose.position.y) for poseStamped in path.poses]
@@ -151,6 +155,18 @@ def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
         stamp = stampSlector(path, occupancyGrid, extrapolation)
         return dists, stamp
 
+
+def distPointCloud2OccupancyGrid(pointCloud, occupancyGrid, extrapolation=False):
+        check = checkFrameId(pointCloud, occupancyGrid)
+
+        staticMap = occupancyGridData2StaticMap(occupancyGrid)
+        obsIds = numpy.transpose(numpy.nonzero(staticMap))
+        mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
+        point_list = [ (i.x, i.y) for i in pointCloud.points]
+        dists = distPoints2Points(numpy.array(point_list), numpy.array(mapPoints))
+
+        stamp = stampSlector(pointCloud, occupancyGrid, extrapolation)
+        return dists, stamp
 
 def occupancyGridPlot(ax, occupancyGrid):
         staticMap = occupancyGridData2StaticMap(occupancyGrid)

@@ -111,6 +111,7 @@ class HSR_STL_monitor(object):
                 self.spec_errLidar.declare_var('errLidar', 'float')
                 self.spec_errLidar.set_var_io_type('errLidar', 'input')
                 self.spec_errLidar.spec = 'always [0,10] (errLidar >= 0.1)'
+                self.robQue_errLidar = Queue.Queue()
 
                 # StereoCamera error (Grand Truth): <Setereo_RGBD> <Gazebo3dshape>
 
@@ -334,6 +335,21 @@ class HSR_STL_monitor(object):
                 if rob != []:
                         self.robQue_collLidar.put(rob)
 
+                if self.map != []:
+                        lidarPointCloud = pointCloud22PointCloud(lidarPointCloud2)
+                        while not rospy.is_shutdown():
+                                try:
+                                        lidarPointCloud_frame_map = self.tfListener.transformPointCloud(self.map.header.frame_id, lidarPointCloud)
+                                        break
+                                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                                        continue
+                        dists, stamp = distPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
+                        errLidar = numpy.average(dists)
+                        data = [[stamp.to_sec(), errLidar]]
+                        rob = self.spec_errLidar.update(['errLidar', data])
+                        if rob != []:
+                                self.robQue_errLidar.put(rob)
+
 
         def globalPath_callback(self, path):
                 self.globalPath = path
@@ -395,7 +411,7 @@ class HSR_STL_monitor(object):
                         data = [[stamp.to_sec(), errOdom]]
                         rob = self.spec_errOdom.update(['errOdom', data])
                         print_rob(rob, self.spec_errOdom)
-                #self.spec_errLidar
+                print_robQue(self.robQue_errLidar, self.spec_errLidar)
 
                 # 3) planner -----
                 print_robQue(self.robQue_collEgoObs, self.spec_collEgoObs)

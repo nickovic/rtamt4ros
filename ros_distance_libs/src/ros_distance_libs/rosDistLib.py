@@ -48,7 +48,7 @@ def stampSlector(stampedData0, stampedData1, extrapolation=False):
         return stamp
 
 
-def occupancyGridData2staticMap(occupancyGrid):
+def occupancyGridData2StaticMap(occupancyGrid):
         staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
         return staticMap
 
@@ -100,7 +100,7 @@ def distOdometry2Odometry(odometry0, odometry1, extrapolation=False):
         return dist, stamp
 
 
-def distPoints2pose(points, pose):
+def distPoints2Pose(points, pose):
         # TODO abolish
         # just thinking 2D (x,y)
         if points.shape == (2,):        #for 1 id case
@@ -114,25 +114,25 @@ def distPoints2pose(points, pose):
         return dists
 
 
-def distPoseStamped2pointCloud2(poseStamped, pointCloud2, extrapolation=False):
+def distPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
         check = checkFrameId(poseStamped, pointCloud2)
 
         points = sensor_msgs.point_cloud2.read_points(pointCloud2)
         # TODO just thinkin 2D
         points_list = numpy.array([(i[0],i[1] )for i in points])
-        dists = distPoints2pose(points_list, poseStamped.pose)
+        dists = distPoints2Pose(points_list, poseStamped.pose)
 
         stamp = stampSlector(poseStamped, pointCloud2, extrapolation)
         return dists, stamp
 
 
-def distPoints2path(points, path):
+def distPoints2Path(points, path):
         # just thinking 2D (x,y)
         # TODO abolish
         # TODO all numpy!
         pathDists = []
         for poseStamped in path.poses:
-                dists = distPoints2pose(points, poseStamped.pose)
+                dists = distPoints2Pose(points, poseStamped.pose)
                 dist = numpy.min(dists)
                 pathDists.append(dist)
         pathDists = numpy.array(pathDists)
@@ -140,20 +140,20 @@ def distPoints2path(points, path):
         return pathDist
 
 
-def distPath2occupancyGrid(path, occupancyGrid, extrapolation=False):
+def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
         check = checkFrameId(path, occupancyGrid)
 
-        staticMap = occupancyGridData2staticMap(occupancyGrid)
+        staticMap = occupancyGridData2StaticMap(occupancyGrid)
         obsIds = numpy.transpose(numpy.nonzero(staticMap))
         mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
-        dists = distPoints2path(mapPoints, path)
+        dists = distPoints2Path(mapPoints, path)
 
         stamp = stampSlector(path, occupancyGrid, extrapolation)
         return dists, stamp
 
 
 def occupancyGridPlot(ax, occupancyGrid):
-        staticMap = occupancyGridData2staticMap(occupancyGrid)
+        staticMap = occupancyGridData2StaticMap(occupancyGrid)
         extent = [occupancyGrid.info.origin.position.x, occupancyGrid.info.width*occupancyGrid.info.resolution  + occupancyGrid.info.origin.position.x,
                   occupancyGrid.info.origin.position.y, occupancyGrid.info.height*occupancyGrid.info.resolution + occupancyGrid.info.origin.position.y]
         ax.imshow(staticMap, cmap=plt.cm.gray, origin='lower', extent=extent)

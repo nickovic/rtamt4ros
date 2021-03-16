@@ -307,7 +307,7 @@ class HSR_STL_monitor(object):
                                         break
                                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                                         continue
-                        dists, stamp = distPoseStamped2pointCloud2(loc_gt_pose_frame_base_rage_sensor_link, lidarPointCloud2)
+                        dists, stamp = distPoseStamped2PointCloud2(loc_gt_pose_frame_base_rage_sensor_link, lidarPointCloud2)
                         distEgoObs_gt = min(dists)
                         data = [[stamp.to_sec(), distEgoObs_gt]]
                         rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
@@ -321,7 +321,7 @@ class HSR_STL_monitor(object):
                                         break
                                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                                         continue
-                        dists, stamp = distPoseStamped2pointCloud2(loc_pose_frame_base_rage_sensor_link, lidarPointCloud2)
+                        dists, stamp = distPoseStamped2PointCloud2(loc_pose_frame_base_rage_sensor_link, lidarPointCloud2)
                         distEgoObs = min(dists)
                         data = [[stamp.to_sec(), distEgoObs]]
                         rob = self.spec_collEgoObs.update(['distEgoObs',data])
@@ -348,7 +348,7 @@ class HSR_STL_monitor(object):
                                 self.robQue_reachGlobalPathGoal.put(rob)
 
                 if self.map != []:
-                        dists, stamp = distPath2occupancyGrid(self.globalPath, self.map, True)
+                        dists, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
                         distGlobalPathObs = numpy.min(dists)
                         data = [[stamp.to_sec(), distGlobalPathObs]]
                         rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])

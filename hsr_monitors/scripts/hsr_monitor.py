@@ -328,9 +328,8 @@ class HSR_STL_monitor(object):
                         if rob != []:
                                 self.robQue_collEgoObs.put(rob)
 
-                # Evaluate the spec
-                scanDist = numpy.amin(laser_message.ranges)
-                data = [[laser_message.header.stamp.to_sec(), scanDist]]
+                distLidar = numpy.amin(laser_message.ranges)
+                data = [[laser_message.header.stamp.to_sec(), distLidar]]
                 rob = self.spec_collLidar.update(['distLidar', data])
                 if rob != []:
                         self.robQue_collLidar.put(rob)

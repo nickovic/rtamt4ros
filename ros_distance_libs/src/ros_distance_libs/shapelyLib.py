@@ -34,7 +34,7 @@ class xythCoord:
         return xythCoord(subX, subY, subTh, subTime)
 
 
-def posSizeRect2poly(rectPos, rectSize):
+def posSizeRect2Poly(rectPos, rectSize):
     rectSizeH = numpy.array(rectSize)/2.0
     polyRect = Polygon([(rectPos[0]+rectSizeH[0], rectPos[1]+rectSizeH[1]),
                         (rectPos[0]-rectSizeH[0], rectPos[1]+rectSizeH[1]),
@@ -43,7 +43,7 @@ def posSizeRect2poly(rectPos, rectSize):
     return polyRect
 
 
-def distP2P(p1x, p1y, p2x, p2y):
+def distPoint2Point(p1x, p1y, p2x, p2y):
     point1 = Point((p1x, p1y))
     point2 = Point((p2x, p2y))
     dist = point1.distance(point2)
@@ -53,12 +53,12 @@ def distP2P(p1x, p1y, p2x, p2y):
 def distTraj2Traj(trajX1, trajY1, trajX2, trajY2):
     distTraj = []
     for ix1, iy1, ix2, iy2 in zip(trajX1, trajY1, trajX2, trajY2):
-        dist = distP2P(ix1[1], iy1[1], ix2[1], iy2[1])
+        dist = distPoint2Point(ix1[1], iy1[1], ix2[1], iy2[1])
         distTraj.append( (ix1[0], dist) )
     return distTraj
 
 
-def distP2Po(poly, point):
+def distPoly2Point(poly, point):
     #defining sigined distance
     dist = poly.exterior.distance(point)
     if (point.within(poly)):
@@ -68,24 +68,25 @@ def distP2Po(poly, point):
 
 def distP2R(rectPos, rectSize, pointPos):
     #TODO consider rotation
+    #TODO abolish
     #Pos and Size are 2D
-    polyRect = posSizeRect2poly(rectPos, rectSize)
+    polyRect = posSizeRect2Poly(rectPos, rectSize)
     point = Point(pointPos[0], pointPos[1])
-    dist = distP2Po(polyRect, point)
+    dist = distPoly2Point(polyRect, point)
     return dist
 
 
-def distTraj2Po(poly, trajX, trajY):
+def distTraj2Poly(poly, trajX, trajY):
     distTraj = []
     for ix, iy in zip(trajX, trajY):
         point = Point(ix[1], iy[1])
-        dist = distP2Po(poly, point)
+        dist = distPoly2Point(poly, point)
         distTraj.append( (ix[0], dist) )
     return distTraj
 
 
-def distTraj2R(rectPos, rectSize, trajX, trajY):
-    polyRect = posSizeRect2poly(rectPos, rectSize)
+def distTraj2Rect(rectPos, rectSize, trajX, trajY):
+    polyRect = posSizeRect2Poly(rectPos, rectSize)
     distTraj = distTraj2Po(polyRect, trajX, trajY)
     return distTraj
 
@@ -100,7 +101,7 @@ def distLineStr2Po(poly, line):
 
 
 def distLineStr2R(rectPos, rectSize, line):
-    polyRect = posSizeRect2poly(rectPos, rectSize)
+    polyRect = posSizeRect2Poly(rectPos, rectSize)
     dist = polyRect.exterior.distance(line)
     return dist
 
@@ -135,3 +136,7 @@ def signedDistansL2P(line, point):
     sDist = numpy.cross(sPoint-ePoint, sPoint-oPoint)/norm(sPoint-ePoint)
 
     return sDist[0]
+
+
+def distPoint2LineString(point):
+    return

@@ -11,7 +11,7 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Twist
 
-from xythLib import *
+from shapelyLib import *
 
 def orientation2angular(orientation):
         quaternion = (  orientation.x,
@@ -64,16 +64,10 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
         return pointsGridCoordinations
 
 
-def distTwist2Twist(twist0, twist1):
-        # TODO abolish
-        linear_dist = distP2P(twist0.linear.x, twist0.linear.y, twist1.linear.x, twist1.linear.y)
-        return linear_dist
-
-
 def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False):
         check = checkFrameId(poseStamped0, poseStamped1)
 
-        dist = distP2P(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
+        dist = distPoint2Point(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
 
         stamp = stampSlector(poseStamped0, poseStamped1, extrapolation)
 

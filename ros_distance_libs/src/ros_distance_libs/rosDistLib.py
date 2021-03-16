@@ -118,8 +118,8 @@ def distPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
         check = checkFrameId(poseStamped, pointCloud2)
 
         points = sensor_msgs.point_cloud2.read_points(pointCloud2)
-        # TODO just thinkin 2D
-        points_list = numpy.array([(i[0],i[1] )for i in points])
+        # TODO just thinking 2D
+        points_list = numpy.array([(i[0], i[1])for i in points])
         dists = distPoints2Pose(points_list, poseStamped.pose)
 
         stamp = stampSlector(poseStamped, pointCloud2, extrapolation)
@@ -129,11 +129,11 @@ def distPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
 def distPoints2Path(points, path):
         # just thinking 2D (x,y)
         # TODO abolish
-        # TODO all numpy!
         pathDists = []
-        for poseStamped in path.poses:
-                dists = distPoints2Pose(points, poseStamped.pose)
-                dist = numpy.min(dists)
+        # TODO just thinking 2D
+        pathList = [(poseStamped.pose.position.x, poseStamped.pose.position.y) for poseStamped in path.poses]
+        for point in points:
+                dist = distPoint2LineString(point, pathList)
                 pathDists.append(dist)
         pathDists = numpy.array(pathDists)
         pathDist = numpy.min(pathDists)

@@ -1,6 +1,6 @@
 import numpy
 from numpy.linalg import norm
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, LineString, Point
 from scipy import signal, interpolate
 
 
@@ -140,5 +140,10 @@ def signedDistansL2P(line, point):
     return sDist[0]
 
 
-def distPoint2LineString(point):
-    return
+def distPoint2LineString(point, lineString):
+    if not type(point) is Point:
+        point = Point(point)
+    if not type(lineString) is LineString:
+        lineString = LineString(lineString)
+    dist = lineString.distance(point)
+    return dist

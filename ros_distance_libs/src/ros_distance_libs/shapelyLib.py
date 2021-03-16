@@ -52,14 +52,6 @@ def distPoint2Point(point1, point2):
     return dist
 
 
-def distTraj2Traj(trajX1, trajY1, trajX2, trajY2):
-    distTraj = []
-    for ix1, iy1, ix2, iy2 in zip(trajX1, trajY1, trajX2, trajY2):
-        dist = distPoint2Point(ix1[1], iy1[1], ix2[1], iy2[1])
-        distTraj.append( (ix1[0], dist) )
-    return distTraj
-
-
 def distPoly2Point(poly, point):
     #defining sigined distance
     dist = poly.exterior.distance(point)
@@ -108,6 +100,24 @@ def distLineStr2R(rectPos, rectSize, line):
     return dist
 
 
+def distPoint2LineString(point, lineString):
+    if not type(point) is Point:
+        point = Point(point)
+    if not type(lineString) is LineString:
+        lineString = LineString(lineString)
+    dist = lineString.distance(point)
+    return dist
+
+
+def distLineString2LineString(lineString0, lineString1):
+    if not type(lineString0) is LineString:
+        lineString0 = LineString(lineString0)
+    if not type(lineString1) is LineString:
+        lineString1 = LineString(lineString1)
+    dist = lineString0.distance(lineString1)
+    return dist
+
+
 def closetLineOfWaypoits(tPoint, wayPoints):
     lines = []
     dists = []
@@ -138,12 +148,3 @@ def signedDistansL2P(line, point):
     sDist = numpy.cross(sPoint-ePoint, sPoint-oPoint)/norm(sPoint-ePoint)
 
     return sDist[0]
-
-
-def distPoint2LineString(point, lineString):
-    if not type(point) is Point:
-        point = Point(point)
-    if not type(lineString) is LineString:
-        lineString = LineString(lineString)
-    dist = lineString.distance(point)
-    return dist

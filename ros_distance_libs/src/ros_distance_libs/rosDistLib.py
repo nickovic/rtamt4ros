@@ -67,11 +67,16 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
 def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False):
         check = checkFrameId(poseStamped0, poseStamped1)
 
-        dist = distPoint2Point(poseStamped0.pose.position.x, poseStamped0.pose.position.y, poseStamped1.pose.position.x, poseStamped1.pose.position.y)
+        dist = distPoint2Point((poseStamped0.pose.position.x, poseStamped0.pose.position.y), (poseStamped1.pose.position.x, poseStamped1.pose.position.y))
 
         stamp = stampSlector(poseStamped0, poseStamped1, extrapolation)
 
         return dist, stamp
+
+
+def distTwist2Twist(twist0, twist1):
+        linear_dist = distPoint2Point((twist0.linear.x, twist0.linear.y), (twist1.linear.x, twist1.linear.y))
+        return linear_dist
 
 
 def odometry2PoseStamped(odometry):

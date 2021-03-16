@@ -43,9 +43,11 @@ def posSizeRect2Poly(rectPos, rectSize):
     return polyRect
 
 
-def distPoint2Point(p1x, p1y, p2x, p2y):
-    point1 = Point((p1x, p1y))
-    point2 = Point((p2x, p2y))
+def distPoint2Point(point1, point2):
+    if not type(point1) is Point:
+        point1 = Point(point1)
+    if not type(point2) is Point:
+        point2 = Point(point2)
     dist = point1.distance(point2)
     return dist
 

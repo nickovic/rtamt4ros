@@ -1,16 +1,16 @@
 specification agent_2_monitor
 
 // comment type 1
-from rtamt_msgs.msg import FloatMessage
+from rtamt_msgs.msg import FloatStamped
 
 
 /*
  * comment type 2
 */
 
-FloatMessage b
+FloatStamped b
 input @ topic(b,rtamt/b)
-FloatMessage o2
+FloatStamped o2
 output @ topic(o2,rtamt/o2)
 
 o2.value = (b.value >= 4)

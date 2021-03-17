@@ -1,18 +1,18 @@
 specification central_monitor
 
 // comment type 1
-from rtamt_msgs.msg import FloatMessage
+from rtamt_msgs.msg import FloatStamped
 
 
 /*
  * comment type 2
 */
 
-input FloatMessage o1
-input FloatMessage o2
+input FloatStamped o1
+input FloatStamped o2
 @ topic(o1,rtamt/o1)
 @ topic(o2,rtamt/o2)
-output FloatMessage c
+output FloatStamped c
 @ topic(c,hello/c)
 
 c.value = o1.value -> eventually[0:2] o2.value

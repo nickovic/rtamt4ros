@@ -3,7 +3,7 @@
 <launch>
 
     <!-- Launch signal generator -->
-	<node pkg="systems" name="signal_generator" type="signal_generator"/>
+	<node pkg="rtamt4ros" name="signal_generator" type="signal_generator"/>
 
     <!-- Launch STL monitor (output console)-->
 	<node name="ros_stl_monitor" pkg="rtamt4ros" type="ros_stl_monitor_with_API2.py" output="screen" args="--freq 1"/>

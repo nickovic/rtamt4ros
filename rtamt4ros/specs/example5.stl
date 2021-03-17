@@ -1,7 +1,0 @@
-specification stl_monitor;
-
-input real a;
-input real b;
-output real c;
-
-c = always (a <= 2 xor (a>=3 until[0:3] (b>=3));

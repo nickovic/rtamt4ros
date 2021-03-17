@@ -1,16 +1,16 @@
 specification stl_monitor
 
 // comment type 1
-from rtamt_msgs.msg import FloatMessage
+from rtamt_msgs.msg import FloatStamped
 
 
 /*
  * comment type 2
 */
 
-input FloatMessage a
+input FloatStamped a
 @ topic(a,rtamt/a)
-output FloatMessage c
+output FloatStamped c
 @ topic(c,hello/c)
 
 c.value = always[0:10ms] (a.value <= 2)

@@ -49,9 +49,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   BooleanMessage.msg
-   FloatMessage.msg
-   IntegerMessage.msg
+   BooleanStamped.msg
+   FloatStamped.msg
+   IntegerStamped.msg
    Sample.msg
  )
 

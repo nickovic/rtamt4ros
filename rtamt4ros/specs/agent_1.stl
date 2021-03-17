@@ -1,14 +1,14 @@
 // comment type 1
-from rtamt_msgs.msg import FloatMessage
+from rtamt_msgs.msg import FloatStamped
 
 
 /*
  * comment type 2
 */
 
-input FloatMessage a
+input FloatStamped a
 @ topic(a,rtamt/a)
-output FloatMessage o1
+output FloatStamped o1
 @ topic(o1,rtamt/o1)
 
 o1.value = (a.value <= 2)

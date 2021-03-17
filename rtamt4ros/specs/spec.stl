@@ -1,9 +1,9 @@
-from rtamt_msgs.msg import FloatMessage
+from rtamt_msgs.msg import FloatStamped
 
 // subscribe from system pkg 
-input FloatMessage a
+input FloatStamped a
 @ topic(a, rtamt/a)
-output FloatMessage c
+output FloatStamped c
 @ topic(c, rtamt/c)
 
 c.value = (a.value <= 2)

@@ -1,7 +1,0 @@
-specification stl_monitor;
-
-input real a;
-input real b;
-output real c;
-
-c = always [0:10] ((b <= 3) -> eventually [5:18] (a <= 2));

@@ -9,8 +9,8 @@ from rtamt_msgs.msg import FloatMessage
 */
 
 FloatMessage b
-@ topic(b,rtamt/b)
+input @ topic(b,rtamt/b)
 FloatMessage o2
-@ topic(o2,rtamt/o2)
+output @ topic(o2,rtamt/o2)
 
 o2.value = (b.value >= 4)

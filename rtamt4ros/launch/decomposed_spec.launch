@@ -6,8 +6,9 @@
 	<node pkg="rtamt4ros" name="signal_generator" type="signal_generator"/>
 
     <!-- Launch STL monitor (output console)-->
-	<node name="agent_1_monitor" pkg="rtamt4ros" type="ros_stl_monitor.py" output="screen" args="--stl $(find rtamt4ros)/specs/agent_1.stl --period 1 --unit 1"/>
-	<node name="agent_2_monitor" pkg="rtamt4ros" type="ros_stl_monitor.py" output="screen" args="--stl $(find rtamt4ros)/specs/agent_2.stl --period 1 --unit 1"/>
-	<node name="central_monitor" pkg="rtamt4ros" type="ros_stl_monitor.py" output="screen" args="--stl $(find rtamt4ros)/specs/central.stl --period 1 --unit 1"/>
+	<node name="agent_1_monitor" pkg="rtamt4ros" type="ros_stl_monitor.py" output="screen" args="--stl $(find rtamt4ros)/specs/agent_1.stl --period 1 --unit s"/>
+
+	<node name="agent_2_monitor" pkg="rtamt4ros" type="ros_stl_monitor.py" output="screen" args="--stl $(find rtamt4ros)/specs/agent_2.stl --period 1 --unit s"/>
+	<node name="central_monitor" pkg="rtamt4ros" type="ros_stl_monitor.py" output="screen" args="--stl $(find rtamt4ros)/specs/central.stl --period 1 --unit s"/>
 
 </launch>

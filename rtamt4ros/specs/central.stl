@@ -8,11 +8,11 @@ from rtamt_msgs.msg import FloatMessage
  * comment type 2
 */
 
-FloatMessage o1
-FloatMessage o2
+input FloatMessage o1
+input FloatMessage o2
 @ topic(o1,rtamt/o1)
 @ topic(o2,rtamt/o2)
-FloatMessage c
+output FloatMessage c
 @ topic(c,hello/c)
 
 c.value = o1.value -> eventually[0:2] o2.value

@@ -8,4 +8,7 @@
     <!-- Launch STL monitor (output console)-->
 	<node name="ros_stl_monitor" pkg="rtamt4ros" type="ros_stl_monitor.py" output="screen" args="--stl $(find rtamt4ros)/specs/spec.stl --period 1 --unit s"/>
 
+    <!-- Launch rqt_plot -->
+  	<node name="rob_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/a/value /rtamt/b/value /rtamt/c/value"/>
+
 </launch>

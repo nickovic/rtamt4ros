@@ -56,7 +56,7 @@ class Monitor(object):
                 a_data = [[a.header.stamp.to_nsec(), a.value]]
                 rob = self.spec.update(['a', a_data])
                 self.rob_q.put(rob)
-                
+
 
         def b_callback(self, floatMessage):
                 b = floatMessage

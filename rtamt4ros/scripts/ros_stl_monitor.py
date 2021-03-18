@@ -54,7 +54,7 @@ def monitor(stl_arg, period_arg, unit_arg):
     # Set the frequency at which the monitor is evaluated
     rate = rospy.Rate(freq)
 
-    time_index = 0;
+    time_index = 0
 
     while not rospy.is_shutdown():
         var_name_object_list = []

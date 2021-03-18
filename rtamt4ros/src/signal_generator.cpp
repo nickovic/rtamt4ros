@@ -46,11 +46,17 @@ ros::init(argc, argv, "minimal_publisher_with_timer");
     while(ros::ok()) {
         message1.header.seq++;
         message1.header.stamp = ros::Time::now();
-        message1.value = message1.value + 0.001;
+        message1.value = message1.value + 0.1;
+        if(message1.value >= 2.0){
+            message1.value = 0.0;
+        }
 
         message2.header.seq++;
         message2.header.stamp = ros::Time::now();
-        message2.value = message2.value + 0.003;
+        message2.value = message2.value + 0.3;
+        if(message2.value >= 2.0){
+            message2.value = 0.0;
+        }
 
         publisher_a.publish(message1);
         publisher_b.publish(message2);

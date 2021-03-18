@@ -3,7 +3,7 @@
 # $ roscore
 #
 # IF start in manual
-# $ rosrun rtamt4ros ros_stl_monitor_with_API2.py --freq 0.1
+# $ rosrun rtamt4ros ros_stl_monitor_unsync_update.py --freq 1
 
 import rospy
 import sys

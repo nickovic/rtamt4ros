@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 
 import rospy
 import tf
-import tf2_ros
 import pcl_ros
 import laser_geometry.laser_geometry
 import sensor_msgs.point_cloud2
@@ -28,7 +27,6 @@ from ros_distance_libs.rosDistLib import *
 
 #other msg
 from std_msgs.msg import String
-from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose, Twist
@@ -52,8 +50,6 @@ class HSR_STL_monitor(object):
 	def __init__(self):
                 # listener of tf
                 self.tfListener = tf.TransformListener()
-                self.tf2buffer = tf2_ros.Buffer()
-                self.tf2listener = tf2_ros.TransformListener(self.tf2buffer)
 
                 # laser projection
                 self.lp = laser_geometry.laser_geometry.LaserProjection()

@@ -2,26 +2,23 @@
 
 <launch>
 
-	<!-- Launch HSR -->
-	<include file="$(find hsrb_gazebo_launch)/launch/hsrb_megaweb2015_world.launch">
-		<arg name="paused" value="false" />
-	</include>
-
-	<!-- Launch Agent -->
-	<include file="$(find hsrb_gazebo_launch)/launch/agent.launch">
-		<arg name="paused" value="false" />
-	</include>
-
 	<!-- Launch STL monitor (output console) -->
-	<node name="hsr_monitor" pkg="hsr_monitors" type="hsr_monitor.py" output="screen" args="--freg 1">
+	<node name="hsr_monitor" pkg="hsr_monitors" type="hsr_monitor.py" output="screen" args="--freq 10">
 	</node>
 
-	<!-- Publish order -->
-	<!-- 
-	$ rostopic pub -r 1 /goal geometry_msgs/PoseStamped  '{header:{stamp: now, frame_id: 'map'}, pose:{position:{x: 4.5, y: 0.0, z: 0.0}, orientation:{z: 0.0, z: 0.0, z: 0.0, w: 1}}}'
-	TODO -1 option is much better, but because of launch timing issue, it does not works in the initial phase.
-	-->
-	<node pkg="rostopic" type="rostopic" name="oder" args="pub -r 1 /goal geometry_msgs/PoseStamped '{header: {stamp: now, frame_id: 'map'}, pose:{position: {x: 4.5, y: 0.0, z: 0.0}, orientation: {z: 0.0, z: 0.0, z: 0.0, w: 1}}}'" output="screen">
-	</node>	
+	<!-- Launch rqt_plots -->
+	<arg name="rqt_plot" default="false" />
+	<group if="$(arg rqt_plot)">
+	  	<node name="rob_system_plot" pkg="rqt_plot" type="rqt_plot" args="	/rtamt/collEgoObs_gt/value
+		  																	/rtamt/reachEgoGoal_gt/value"/>
+		<node name="rob_perception_plot" pkg="rqt_plot" type="rqt_plot" args="	/rtamt/errLoc/value
+		  																		/rtamt/errOdom/value
+		  																		/rtamt/errLidar/value"/>
+		<node name="rob_planner_plot" pkg="rqt_plot" type="rqt_plot" args="	/rtamt/collEgoObs/value
+		  																	/rtamt/collGlobalPathObs/value
+		  																	/rtamt/reachGlobalPathGoal/value
+																			/rtamt/reachEgoGoal/value"/>
+	  	<node name="rob_controller_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/referrBodyVel/value"/>
+	</group>
 
 </launch>

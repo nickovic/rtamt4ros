@@ -109,7 +109,7 @@ class HSR_STL_monitor(object):
                 self.spec_errLidar.spec = 'always [0,10] (errLidar >= 0.1)'
                 self.robQue_errLidar = Queue.Queue()
 
-                # StereoCamera error (Grand Truth): <Setereo_RGBD> <Gazebo3dshape>
+                # StereoCamera error (Grand Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
 
                 # Bumper error (Grand Truth): <Bumper> /static_obstacle_map_ref
 
@@ -142,7 +142,7 @@ class HSR_STL_monitor(object):
                 self.spec_collLidar.spec = 'always [0,10] (distLidar >= 0.2)'
                 self.robQue_collLidar = Queue.Queue()
 
-                # collision with obstacle StereoCamera: <Setereo_RGBD>
+                # collision with obstacle StereoCamera: /hsrb/head_rgbd_sensor/depth_registered/rectified_points
 
                 # collision with obstacle Bumper: <Bumper>
 

@@ -26,11 +26,14 @@ import rtamt
 from ros_distance_libs.rosDistLib import *
 
 #other msg
-from std_msgs.msg import String
+from std_msgs.msg import String, Header
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose, Twist
+
+from rtamt_msgs.msg import FloatStamped
 from tmc_navigation_msgs.msg import PathWithGoal
+
 
 DEBUG = False
 
@@ -46,8 +49,24 @@ def print_robQue(robQue, spec):
         return
 
 
+def publishRobstness(publisher, robustness):
+        if robustness != []:
+                for trob in robustness:
+                        floatStamped = FloatStamped()
+                        header = Header()
+                        header.seq = 0
+                        header.stamp = rospy.Time.from_sec(trob[0])
+                        header.frame_id = ''
+                        floatStamped.header = header
+                        floatStamped.value = trob[1]
+                        publisher.publish(floatStamped)
+
+
 class HSR_STL_monitor(object):
 	def __init__(self):
+
+                robTopicName = '/rtamt/'
+
                 # listener of tf
                 self.tfListener = tf.TransformListener()
 
@@ -63,6 +82,7 @@ class HSR_STL_monitor(object):
                 self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
                 self.spec_collEgoObs_gt.set_var_io_type('distEgoObs_gt', 'input')
                 self.spec_collEgoObs_gt.spec = 'always [0,10] (distEgoObs_gt >= 0.1)'
+                self.robPub_collEgoObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
                 self.robQue_collEgoObs_gt = Queue.Queue()
 
                 # reach goal (Grabd Truth): /hsrb/odom_ground_truth /goal
@@ -308,6 +328,7 @@ class HSR_STL_monitor(object):
                         distEgoObs_gt = min(dists)
                         data = [[stamp.to_sec(), distEgoObs_gt]]
                         rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
+                        publishRobstness(self.robPub_collEgoObs_gt, rob)
                         if rob != []:
                                 self.robQue_collEgoObs_gt.put(rob)
 

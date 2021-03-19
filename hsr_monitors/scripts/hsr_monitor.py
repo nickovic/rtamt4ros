@@ -174,7 +174,7 @@ class HSR_STL_monitor(object):
 
                 # collision with obstacle GlobalPath: /base_local_path (/base_path_with_goal) /static_obstacle_map_ref
                 self.spec_collGlobalPathObs = rtamt.STLDenseTimeSpecification()
-                self.spec_collGlobalPathObs.name = 'distMotionPathObs'
+                self.spec_collGlobalPathObs.name = 'collGlobalPathObs'
                 self.spec_collGlobalPathObs.declare_var('distMotionPathObs', 'float')
                 self.spec_collGlobalPathObs.set_var_io_type('distMotionPathObs', 'input')
                 self.spec_collGlobalPathObs.spec = '(distMotionPathObs >= 0.2)'

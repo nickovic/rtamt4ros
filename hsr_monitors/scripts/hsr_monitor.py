@@ -91,6 +91,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
                 self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
                 self.spec_reachEgoGoal_gt.spec = 'eventually [0,10] (distEgoGoal_gt <= 0.1)'
+                self.robPub_reachEgoGoal_gt = rospy.Publisher(robTopicName+self.spec_reachEgoGoal_gt.name, FloatStamped, queue_size=10)
                 self.robQue_reachEgoGoal_gt = Queue.Queue()
 
                 try:
@@ -111,6 +112,7 @@ class HSR_STL_monitor(object):
                 self.spec_errLoc.declare_var('errLoc', 'float')
                 self.spec_errLoc.set_var_io_type('errLoc', 'input')
                 self.spec_errLoc.spec = 'always [0,10] (errLoc >= 0.1)'
+                self.robPub_errLoc = rospy.Publisher(robTopicName+self.spec_errLoc.name, FloatStamped, queue_size=10)
 
                 # odometer error (Grand Truth): /hsrb/odom_ground_truth /hsrb/odom
                 self.spec_errOdom = rtamt.STLDenseTimeSpecification()
@@ -118,6 +120,7 @@ class HSR_STL_monitor(object):
                 self.spec_errOdom.declare_var('errOdom', 'float')
                 self.spec_errOdom.set_var_io_type('errOdom', 'input')
                 self.spec_errOdom.spec = 'always [0,10] (errOdom >= 0.1)'
+                self.robPub_errOdom = rospy.Publisher(robTopicName+self.spec_errOdom.name, FloatStamped, queue_size=10)
 
                 # localization error LiDAR (Grand Truth): /hsrb/odom_ground_truth <LiDAR localizer>
 
@@ -127,6 +130,7 @@ class HSR_STL_monitor(object):
                 self.spec_errLidar.declare_var('errLidar', 'float')
                 self.spec_errLidar.set_var_io_type('errLidar', 'input')
                 self.spec_errLidar.spec = 'always [0,10] (errLidar >= 0.1)'
+                self.robPub_errLidar = rospy.Publisher(robTopicName+self.spec_errLidar.name, FloatStamped, queue_size=10)
                 self.robQue_errLidar = Queue.Queue()
 
                 # StereoCamera error (Grand Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
@@ -152,6 +156,7 @@ class HSR_STL_monitor(object):
                 self.spec_collEgoObs.declare_var('distEgoObs', 'float')
                 self.spec_collEgoObs.set_var_io_type('distEgoObs', 'input')
                 self.spec_collEgoObs.spec = 'always [0,10] (distEgoObs >= 0.1)'
+                self.robPub_collEgoObs = rospy.Publisher(robTopicName+self.spec_collEgoObs.name, FloatStamped, queue_size=10)
                 self.robQue_collEgoObs = Queue.Queue()
 
                 # collision with obstacle LiDAR: hsrb/base_scan
@@ -160,6 +165,7 @@ class HSR_STL_monitor(object):
                 self.spec_collLidar.declare_var('distLidar', 'float')
                 self.spec_collLidar.set_var_io_type('distLidar', 'input')
                 self.spec_collLidar.spec = 'always [0,10] (distLidar >= 0.2)'
+                self.robPub_collLidar = rospy.Publisher(robTopicName+self.spec_collLidar.name, FloatStamped, queue_size=10)
                 self.robQue_collLidar = Queue.Queue()
 
                 # collision with obstacle StereoCamera: /hsrb/head_rgbd_sensor/depth_registered/rectified_points
@@ -172,6 +178,7 @@ class HSR_STL_monitor(object):
                 self.spec_collGlobalPathObs.declare_var('distMotionPathObs', 'float')
                 self.spec_collGlobalPathObs.set_var_io_type('distMotionPathObs', 'input')
                 self.spec_collGlobalPathObs.spec = '(distMotionPathObs >= 0.2)'
+                self.robPub_collGlobalPathObs = rospy.Publisher(robTopicName+self.spec_collGlobalPathObs.name, FloatStamped, queue_size=10)
                 self.robQue_collGlobalPathObs = Queue.Queue()
 
                 # reach goal GlobalPath: /base_local_path(/base_path_with_goal) /goal
@@ -180,6 +187,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachGlobalPathGoal.declare_var('distGlobalPathGoal', 'float')
                 self.spec_reachGlobalPathGoal.set_var_io_type('distGlobalPathGoal', 'input')
                 self.spec_reachGlobalPathGoal.spec = '(distGlobalPathGoal <= 0.1)'
+                self.robPub_reachGlobalPathGoal = rospy.Publisher(robTopicName+self.spec_reachGlobalPathGoal.name, FloatStamped, queue_size=10)
                 self.robQue_reachGlobalPathGoal = Queue.Queue()
 
                 # reach goal: /global_pose /goal
@@ -188,6 +196,7 @@ class HSR_STL_monitor(object):
                 self.spec_reachEgoGoal.declare_var('distEgoGoal', 'float')
                 self.spec_reachEgoGoal.set_var_io_type('distEgoGoal', 'input')
                 self.spec_reachEgoGoal.spec = 'eventually [0,10] (distEgoGoal <= 0.1)'
+                self.robPub_reachEgoGoal = rospy.Publisher(robTopicName+self.spec_reachEgoGoal.name, FloatStamped, queue_size=10)
                 self.robQue_reachEgoGoal = Queue.Queue()
 
                 try:
@@ -213,6 +222,7 @@ class HSR_STL_monitor(object):
                 self.spec_referrBodyVel.declare_var('referrBodyVel', 'float')
                 self.spec_referrBodyVel.set_var_io_type('referrBodyVel', 'input')
                 self.spec_referrBodyVel.spec = 'always [0,10] (referrBodyVel <= 0.1)'
+                self.robPub_referrBodyVel = rospy.Publisher(robTopicName+self.spec_referrBodyVel.name, FloatStamped, queue_size=10)
                 self.robQue_referrBodyVel = Queue.Queue()
 
                 # ref wheel motor control: <ref rpm> <rpm>
@@ -278,6 +288,7 @@ class HSR_STL_monitor(object):
                         distEgoGoal, stamp = distPoseStamped2PoseStamped(self.goal, self.loc, True)
                         data = [[stamp.to_sec(), distEgoGoal]]
                         rob = self.spec_reachEgoGoal.update(['distEgoGoal', data])
+                        publishRobstness(self.robPub_reachEgoGoal, rob)
                         if rob != []:
                                 self.robQue_reachEgoGoal.put(rob)
 
@@ -289,6 +300,7 @@ class HSR_STL_monitor(object):
                         distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
                         data = [[stamp.to_sec(), distEgoGoal_gt]]
                         rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
+                        publishRobstness(self.robPub_reachEgoGoal_gt, rob)
                         if rob != []:
                                 self.robQue_reachEgoGoal_gt.put(rob)
 
@@ -349,6 +361,7 @@ class HSR_STL_monitor(object):
                 distLidar = numpy.amin(laser_message.ranges)
                 data = [[laser_message.header.stamp.to_sec(), distLidar]]
                 rob = self.spec_collLidar.update(['distLidar', data])
+                publishRobstness(self.robPub_collLidar, rob)
                 if rob != []:
                         self.robQue_collLidar.put(rob)
 
@@ -364,6 +377,7 @@ class HSR_STL_monitor(object):
                         errLidar = numpy.average(dists)
                         data = [[stamp.to_sec(), errLidar]]
                         rob = self.spec_errLidar.update(['errLidar', data])
+                        publishRobstness(self.robPub_errLidar, rob)
                         if rob != []:
                                 self.robQue_errLidar.put(rob)
 
@@ -376,6 +390,7 @@ class HSR_STL_monitor(object):
                         distGlobalPathGoal, stamp = distPoseStamped2PoseStamped(self.goal, goalPoseStamped, True)
                         data = [[stamp.to_sec(), distGlobalPathGoal]]
                         rob = self.spec_reachGlobalPathGoal.update(['distGlobalPathGoal', data])
+                        publishRobstness(self.robPub_reachGlobalPathGoal, rob)
                         if rob != []:
                                 self.robQue_reachGlobalPathGoal.put(rob)
 
@@ -384,6 +399,7 @@ class HSR_STL_monitor(object):
                         distGlobalPathObs = numpy.min(dists)
                         data = [[stamp.to_sec(), distGlobalPathObs]]
                         rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+                        publishRobstness(self.robQue_collGlobalPathObs, rob)
                         if rob != []:
                                 self.robQue_collGlobalPathObs.put(rob)
 
@@ -400,6 +416,7 @@ class HSR_STL_monitor(object):
                         now = rospy.get_rostime()
                         data = [[now.to_sec(), referrBodyVel]]
                         rob = self.spec_referrBodyVel.update(['referrBodyVel', data])
+                        publishRobstness(self.robPub_referrBodyVel, rob)
                         if rob != []:
                                 self.robQue_referrBodyVel.put(rob)
 
@@ -414,6 +431,7 @@ class HSR_STL_monitor(object):
                         errLoc, stamp = distPoseStamped2Odometry(self.loc, self.loc_gt)
                         data = [[stamp.to_sec(), errLoc]]
                         rob = self.spec_errLoc.update(['errLoc', data])
+                        publishRobstness(self.robPub_errLoc, rob)
                         print_rob(rob, self.spec_errLoc)
                 if self.wheelOdom != [] and self.loc_gt != []:
                         wheelOdom_poseStamped = odometry2PoseStamped(self.wheelOdom)
@@ -427,6 +445,7 @@ class HSR_STL_monitor(object):
                         errOdom, stamp = distPoseStamped2PoseStamped(wheelOdom_poseStamped, loc_gt_pose_frameOdom)
                         data = [[stamp.to_sec(), errOdom]]
                         rob = self.spec_errOdom.update(['errOdom', data])
+                        publishRobstness(self.robPub_errOdom, rob)
                         print_rob(rob, self.spec_errOdom)
                 print_robQue(self.robQue_errLidar, self.spec_errLidar)
 

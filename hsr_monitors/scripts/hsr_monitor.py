@@ -6,7 +6,6 @@
 # $ rosrun hsr_monitors hsr_monitor.py --freq 10
 # TODO:
 # 1) Other agent senario
-# 2) monitor with publisher and rtp polot.
 
 import sys
 import argparse
@@ -260,6 +259,8 @@ class HSR_STL_monitor(object):
                 rospy.Subscriber('/hsrb/odom', Odometry, self.wheelOdom_callback, queue_size=10)
                 self.wheelOdom = []
                 rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
+                rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, self.stereoCam_callback, queue_size=10)
+                self.stereoCam = []
                 rospy.Subscriber('/base_velocity', Twist, self.baseVel_callback, queue_size=10)
                 self.baseVel = []
 
@@ -380,6 +381,10 @@ class HSR_STL_monitor(object):
                         publishRobstness(self.robPub_errLidar, rob)
                         if rob != []:
                                 self.robQue_errLidar.put(rob)
+
+
+        def stereoCam_callback(self, pointCloud2):
+                self.stereoCam = pointCloud2
 
 
         def globalPath_callback(self, path):

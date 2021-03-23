@@ -75,7 +75,8 @@ class HSR_STL_monitor(object):
                 # STL settings
                 # Load the spec from STL file
                 # 1) system -----
-                # collision with obstacle (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
+                # collision with obstacle (Ground Truth): /hsrb/odom_ground_truth /static_distance_map_ref
+                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_collEgoObs_gt = rtamt.STLDenseTimeSpecification()
                 self.spec_collEgoObs_gt.name = 'collEgoObs_gt'
                 self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
@@ -83,6 +84,10 @@ class HSR_STL_monitor(object):
                 self.spec_collEgoObs_gt.spec = 'always [0,10] (distEgoObs_gt >= 0.1)'
                 self.robPub_collEgoObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
                 self.robQue_collEgoObs_gt = Queue.Queue()
+
+                # colliosion with agents (Ground Truth): /hsrb/odom_ground_truth /dynamic_obstacle_map_ref
+
+                # avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
 
                 # reach goal (Ground Truth): /hsrb/odom_ground_truth /goal
                 self.spec_reachEgoGoal_gt = rtamt.STLDenseTimeSpecification()
@@ -93,7 +98,6 @@ class HSR_STL_monitor(object):
                 self.robPub_reachEgoGoal_gt = rospy.Publisher(robTopicName+self.spec_reachEgoGoal_gt.name, FloatStamped, queue_size=10)
                 self.robQue_reachEgoGoal_gt = Queue.Queue()
 
-                # prohibit area (Ground Truth): /hsrb/odom_ground_truth <prohibit area>
 
                 try:
                         self.spec_collEgoObs_gt.parse()
@@ -115,7 +119,8 @@ class HSR_STL_monitor(object):
                 self.spec_errLoc.spec = 'always [0,10] (errLoc >= 0.1)'
                 self.robPub_errLoc = rospy.Publisher(robTopicName+self.spec_errLoc.name, FloatStamped, queue_size=10)
 
-                # odometer error (Ground Truth): /hsrb/odom_ground_truth /hsrb/odom
+                # odometer error (Ground Truth): /hsrb/odom_ground_truth /hsrb/wheel_odom
+                # TODO here must be /hsrb/wheel_odom not /hsrb/odom
                 self.spec_errOdom = rtamt.STLDenseTimeSpecification()
                 self.spec_errOdom.name = 'errOdom'
                 self.spec_errOdom.declare_var('errOdom', 'float')
@@ -123,9 +128,10 @@ class HSR_STL_monitor(object):
                 self.spec_errOdom.spec = 'always [0,10] (errOdom >= 0.1)'
                 self.robPub_errOdom = rospy.Publisher(robTopicName+self.spec_errOdom.name, FloatStamped, queue_size=10)
 
-                # localization error LiDAR (Ground Truth): /hsrb/odom_ground_truth <LiDAR localizer>
+                # localization error LiDAR (Ground Truth): /hsrb/odom_ground_truth /hsrb/laser_odom
 
-                # LiDAR error (Grand Truth): hsrb/base_scan /static_obstacle_map_ref
+                # LiDAR error (Grand Truth): hsrb/base_scan /static_distance_map_ref
+                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_errLidar = rtamt.STLDenseTimeSpecification()
                 self.spec_errLidar.name = 'errLidar'
                 self.spec_errLidar.declare_var('errLidar', 'float')
@@ -136,7 +142,7 @@ class HSR_STL_monitor(object):
 
                 # StereoCamera error (Ground Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
 
-                # Bumper error (Ground Truth): <Bumper> /static_obstacle_map_ref
+                # Bumper error (Ground Truth): /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor, /static_distance_map_ref
 
                 try:
                         self.spec_errLoc.parse()
@@ -151,7 +157,8 @@ class HSR_STL_monitor(object):
 
 
                 # 3) planner -----
-                # collision with obstacle map: /global_pose /static_obstacle_map_ref
+                # collision with obstacle map: /global_pose /static_distance_map_ref
+                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_collEgoObs = rtamt.STLDenseTimeSpecification()
                 self.spec_collEgoObs.name = 'collEgoObs'
                 self.spec_collEgoObs.declare_var('distEgoObs', 'float')
@@ -171,9 +178,10 @@ class HSR_STL_monitor(object):
 
                 # collision with obstacle StereoCamera: /hsrb/head_rgbd_sensor/depth_registered/rectified_points
 
-                # collision with obstacle Bumper: <Bumper>
+                # collision with obstacle Bumper: /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor
 
-                # collision with obstacle GlobalPath: /base_local_path (/base_path_with_goal) /static_obstacle_map_ref
+                # collision with obstacle GlobalPath: /base_local_path /static_distance_map_ref
+                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_collGlobalPathObs = rtamt.STLDenseTimeSpecification()
                 self.spec_collGlobalPathObs.name = 'collGlobalPathObs'
                 self.spec_collGlobalPathObs.declare_var('distGlobalPathObs', 'float')
@@ -182,7 +190,11 @@ class HSR_STL_monitor(object):
                 self.robPub_collGlobalPathObs = rospy.Publisher(robTopicName+self.spec_collGlobalPathObs.name, FloatStamped, queue_size=10)
                 self.robQue_collGlobalPathObs = Queue.Queue()
 
-                # reach goal GlobalPath: /base_local_path(/base_path_with_goal) /goal
+                # avoid prohibit area: /global_pose /static_obstacle_map_ref
+
+                # colliosion with agents: /global_pose /dynamic_obstacle_map_ref
+
+                # reach goal GlobalPath: /base_local_path /goal
                 self.spec_reachGlobalPathGoal = rtamt.STLDenseTimeSpecification()
                 self.spec_reachGlobalPathGoal.name = 'reachGlobalPathGoal'
                 self.spec_reachGlobalPathGoal.declare_var('distGlobalPathGoal', 'float')
@@ -199,9 +211,6 @@ class HSR_STL_monitor(object):
                 self.spec_reachEgoGoal.spec = 'eventually [0,10] (distEgoGoal <= 0.1)'
                 self.robPub_reachEgoGoal = rospy.Publisher(robTopicName+self.spec_reachEgoGoal.name, FloatStamped, queue_size=10)
                 self.robQue_reachEgoGoal = Queue.Queue()
-
-                # prohibit area: /global_pose <prohibit area>
-
 
                 try:
                         self.spec_collEgoObs.parse()
@@ -220,7 +229,7 @@ class HSR_STL_monitor(object):
 
 
                 # 4) controller -----
-                # ref global path: /base_local_path(/base_path_with_goal) /global_pose
+                # ref global path: /base_local_path /global_pose
 
                 # ref body control: /hsrb/command_velocity /base_velocity
                 self.spec_referrBodyVel = rtamt.STLDenseTimeSpecification()
@@ -231,7 +240,8 @@ class HSR_STL_monitor(object):
                 self.robPub_referrBodyVel = rospy.Publisher(robTopicName+self.spec_referrBodyVel.name, FloatStamped, queue_size=10)
                 self.robQue_referrBodyVel = Queue.Queue()
 
-                # ref wheel motor control: <ref rpm> <rpm>
+                # ref wheel motor control: /hsrb/omni_base_controller/internal_state
+                # internally the topic has paramname, actual, desired data.
 
                 try:
                         self.spec_referrBodyVel.parse()
@@ -242,6 +252,7 @@ class HSR_STL_monitor(object):
 
 
                 # 5) others (intermidiate variables) -----
+                # We expect we can do it with hospital robot.
                 # virtualBumper /hk0/zero_velocity :this one HSRB does not have.
                 # local path generation status hk0/local_path_status_sim :perhaps /path_follow_action/status in HSRB
                 # saftyMoveFlag /hk0/is_safety_move :this one HSRB does not have.

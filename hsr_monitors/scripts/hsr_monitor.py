@@ -411,7 +411,7 @@ class HSR_STL_monitor(object):
                         distGlobalPathObs = numpy.min(dists)
                         data = [[stamp.to_sec(), distGlobalPathObs]]
                         rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
-                        publishRobstness(self.robQue_collGlobalPathObs, rob)
+                        publishRobstness(self.robPub_collGlobalPathObs, rob)
                         if rob != []:
                                 self.robQue_collGlobalPathObs.put(rob)
 

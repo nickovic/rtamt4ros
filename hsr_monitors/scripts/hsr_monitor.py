@@ -174,9 +174,9 @@ class HSR_STL_monitor(object):
                 # collision with obstacle GlobalPath: /base_local_path (/base_path_with_goal) /static_obstacle_map_ref
                 self.spec_collGlobalPathObs = rtamt.STLDenseTimeSpecification()
                 self.spec_collGlobalPathObs.name = 'collGlobalPathObs'
-                self.spec_collGlobalPathObs.declare_var('distMotionPathObs', 'float')
-                self.spec_collGlobalPathObs.set_var_io_type('distMotionPathObs', 'input')
-                self.spec_collGlobalPathObs.spec = '(distMotionPathObs >= 0.2)'
+                self.spec_collGlobalPathObs.declare_var('distGlobalPathObs', 'float')
+                self.spec_collGlobalPathObs.set_var_io_type('distGlobalPathObs', 'input')
+                self.spec_collGlobalPathObs.spec = '(distGlobalPathObs >= 0.2)'
                 self.robPub_collGlobalPathObs = rospy.Publisher(robTopicName+self.spec_collGlobalPathObs.name, FloatStamped, queue_size=10)
                 self.robQue_collGlobalPathObs = Queue.Queue()
 

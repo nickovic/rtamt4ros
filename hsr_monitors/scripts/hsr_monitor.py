@@ -90,7 +90,6 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoObs_gt.set_var_io_type('distEgoObs_gt', 'input')
 		self.spec_collEgoObs_gt.spec = 'always [0,10] (distEgoObs_gt >= 0.1)'
 		self.robPub_collEgoObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
-		self.robQue_collEgoObs_gt = Queue.Queue()
 
 		# colliosion with agents (Ground Truth): /hsrb/odom_ground_truth /dynamic_obstacle_map_ref
 
@@ -147,7 +146,6 @@ class HSR_STL_monitor(object):
 		self.spec_errLidar.set_var_io_type('errLidar', 'input')
 		self.spec_errLidar.spec = 'always [0,10] (errLidar >= 0.1)'
 		self.robPub_errLidar = rospy.Publisher(robTopicName+self.spec_errLidar.name, FloatStamped, queue_size=10)
-		self.robQue_errLidar = Queue.Queue()
 
 		# StereoCamera error (Ground Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
 
@@ -175,7 +173,6 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoObs.set_var_io_type('distEgoObs', 'input')
 		self.spec_collEgoObs.spec = 'always [0,10] (distEgoObs >= 0.1)'
 		self.robPub_collEgoObs = rospy.Publisher(robTopicName+self.spec_collEgoObs.name, FloatStamped, queue_size=10)
-		self.robQue_collEgoObs = Queue.Queue()
 
 		# collision with obstacle LiDAR: hsrb/base_scan
 		self.spec_collLidar = rtamt.STLDenseTimeSpecification()
@@ -307,6 +304,7 @@ class HSR_STL_monitor(object):
 		rospy.Subscriber('/hsrb/laser_odom', Odometry, self.laserOdom_callback, queue_size=10)
 		self.laserOdom = []
 		rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
+		self.lidar =[]
 		rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, self.stereoCam_callback, queue_size=10)
 		self.stereoCam = []
 		rospy.Subscriber('/base_velocity', Twist, self.baseVel_callback, queue_size=10)
@@ -323,251 +321,243 @@ class HSR_STL_monitor(object):
 		self.globalPath = []
 
 
-        # it is not colled ctrl+Z
-		def __del__(self):
-			if DEBUG:
-				plt.close()
+	# it is not colled ctrl+Z
+	def __del__(self):
+		if DEBUG:
+			plt.close()
 
 
-		def loc_callback(self, poseStamped):
-			self.loc = poseStamped
+	def loc_callback(self, poseStamped):
+		self.loc = poseStamped
 
-			if self.goal != []:
-				distEgoGoal, stamp = distPoseStamped2PoseStamped(self.goal, self.loc, True)
-				data = [[stamp.to_sec(), distEgoGoal]]
-				rob = self.spec_reachEgoGoal.update(['distEgoGoal', data])
-				publishRobstness(self.robPub_reachEgoGoal, rob)
-				if rob != []:
-					self.robQue_reachEgoGoal.put(rob)
-
-
-		def odom_gt_callback(self, odometry):
-			self.loc_gt = odometry
-
-			if self.goal != []:
-				distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
-				data = [[stamp.to_sec(), distEgoGoal_gt]]
-				rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
-				publishRobstness(self.robPub_reachEgoGoal_gt, rob)
-				if rob != []:
-					self.robQue_reachEgoGoal_gt.put(rob)
-
-
-		def wheelOdom_callback(self, odometry):
-			self.wheelOdom = odometry
-
-
-		def laserOdom_callback(self, odometry):
-			self.laserOdom = odometry
-
-
-		def goal_callback(self, poseStamped):
-			self.goal = poseStamped
-
-
-        # this will be called just one time.
-		def map_callback(self, occupancyGrid):
-			self.map = occupancyGrid
-
-            # debug for the occupancyGrid data
-			if DEBUG:
-				mapFig = plt.figure(figsize = (12,12))
-				ax = mapFig.add_subplot(1, 1, 1)
-				occupancyGridPlot(ax, occupancyGrid)
-				plt.show()
-
-
-		def prohibitMap_callback(self, occupancyGrid):
-			self.prohibitMap = occupancyGrid
-
-
-		def lidar_callback(self, laser_message):
-			lidarPointCloud2 = self.lp.projectLaser(laser_message)
-
-			if self.loc_gt != []:
-				loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
-				while not rospy.is_shutdown():
-					try:
-						loc_gt_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(lidarPointCloud2.header.frame_id, loc_gt_poseStamped)
-						break
-					except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-						continue
-				dists, stamp = distPoseStamped2PointCloud2(loc_gt_pose_frame_base_rage_sensor_link, lidarPointCloud2)
-				distEgoObs_gt = min(dists)
-				data = [[stamp.to_sec(), distEgoObs_gt]]
-				rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
-				publishRobstness(self.robPub_collEgoObs_gt, rob)
-				if rob != []:
-					self.robQue_collEgoObs_gt.put(rob)
-
-			if self.loc != []:
-				while not rospy.is_shutdown():
-					try:
-						loc_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(lidarPointCloud2.header.frame_id, self.loc)
-						break
-					except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-						continue
-				dists, stamp = distPoseStamped2PointCloud2(loc_pose_frame_base_rage_sensor_link, lidarPointCloud2)
-				distEgoObs = min(dists)
-				data = [[stamp.to_sec(), distEgoObs]]
-				rob = self.spec_collEgoObs.update(['distEgoObs',data])
-				if rob != []:
-					self.robQue_collEgoObs.put(rob)
-
-			distLidar = numpy.amin(laser_message.ranges)
-			data = [[laser_message.header.stamp.to_sec(), distLidar]]
-			rob = self.spec_collLidar.update(['distLidar', data])
-			publishRobstness(self.robPub_collLidar, rob)
+		if self.goal != []:
+			distEgoGoal, stamp = distPoseStamped2PoseStamped(self.goal, self.loc, True)
+			data = [[stamp.to_sec(), distEgoGoal]]
+			rob = self.spec_reachEgoGoal.update(['distEgoGoal', data])
+			publishRobstness(self.robPub_reachEgoGoal, rob)
 			if rob != []:
-				self.robQue_collLidar.put(rob)
-
-			if self.map != []:
-				lidarPointCloud = pointCloud22PointCloud(lidarPointCloud2)
-				while not rospy.is_shutdown():
-					try:
-						lidarPointCloud_frame_map = self.tfListener.transformPointCloud(self.map.header.frame_id, lidarPointCloud)
-						break
-					except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-						continue
-				dists, stamp = distPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
-				errLidar = numpy.average(dists)
-				data = [[stamp.to_sec(), errLidar]]
-				rob = self.spec_errLidar.update(['errLidar', data])
-				publishRobstness(self.robPub_errLidar, rob)
-				if rob != []:
-					self.robQue_errLidar.put(rob)
+				self.robQue_reachEgoGoal.put(rob)
 
 
-		def stereoCam_callback(self, pointCloud2):
-			self.stereoCam = pointCloud2
+	def odom_gt_callback(self, odometry):
+		self.loc_gt = odometry
+
+		if self.goal != []:
+			distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
+			data = [[stamp.to_sec(), distEgoGoal_gt]]
+			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
+			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
+			if rob != []:
+				self.robQue_reachEgoGoal_gt.put(rob)
 
 
-		def globalPath_callback(self, path):
-			self.globalPath = path
-
-			if self.goal !=[]:
-				goalPoseStamped = self.globalPath.poses[-1]
-				distGlobalPathGoal, stamp = distPoseStamped2PoseStamped(self.goal, goalPoseStamped, True)
-				data = [[stamp.to_sec(), distGlobalPathGoal]]
-				rob = self.spec_reachGlobalPathGoal.update(['distGlobalPathGoal', data])
-				publishRobstness(self.robPub_reachGlobalPathGoal, rob)
-				if rob != []:
-					self.robQue_reachGlobalPathGoal.put(rob)
-
-			if self.map != []:
-				dists, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
-				distGlobalPathObs = numpy.min(dists)
-				data = [[stamp.to_sec(), distGlobalPathObs]]
-				rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
-				publishRobstness(self.robPub_collGlobalPathObs, rob)
-				if rob != []:
-					self.robQue_collGlobalPathObs.put(rob)
+	def wheelOdom_callback(self, odometry):
+		self.wheelOdom = odometry
 
 
-		def baseVel_ref_callback(self, twist):
-			self.baseVel_ref = twist
+	def laserOdom_callback(self, odometry):
+		self.laserOdom = odometry
 
 
-		def baseVel_callback(self, twist):
-			self.baseVel = twist
-
-			if self.baseVel_ref != []:
-				referrBodyVel = distTwist2Twist(self.baseVel, self.baseVel_ref)
-				now = rospy.get_rostime()
-				data = [[now.to_sec(), referrBodyVel]]
-				rob = self.spec_referrBodyVel.update(['referrBodyVel', data])
-				publishRobstness(self.robPub_referrBodyVel, rob)
-				if rob != []:
-					self.robQue_referrBodyVel.put(rob)
+	def goal_callback(self, poseStamped):
+		self.goal = poseStamped
 
 
-		def bumperFront_callback(self, data):
-			header = Header()
-			header.seq = 0
-			header.stamp = rospy.Time.now()
-			header.frame_id = ''
+	# this will be called just one time.
+	def map_callback(self, occupancyGrid):
+		self.map = occupancyGrid
 
-			boolStamped = BoolStamped(data, header)
-			self.bumperFront = boolStamped
-
-
-		def bumperBack_callback(self, data):
-			header = Header()
-			header.seq = 0
-			header.stamp = rospy.Time.now()
-			header.frame_id = ''
-
-			boolStamped = BoolStamped(data, header)
-			self.bumperBack = boolStamped
+		# debug for the occupancyGrid data
+		if DEBUG:
+			mapFig = plt.figure(figsize = (12,12))
+			ax = mapFig.add_subplot(1, 1, 1)
+			occupancyGridPlot(ax, occupancyGrid)
+			plt.show()
 
 
-		def controllerInfo_callback(self, data):
-			self.controllerInfo = data
-
-			data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[0]]]
-			rob = self.spec_referrWheelVelL.update(['reSferrWheelVelL', data])
-			publishRobstness(self.robPub_referrWheelVelL, rob)
-			print_rob(rob, self.spec_referrWheelVelL)
-
-			data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[1]]]
-			rob = self.spec_referrWheelVelR.update(['referrWheelVelR', data])
-			publishRobstness(self.robPub_referrWheelVelR, rob)
-			print_rob(rob, self.spec_referrWheelVelR)
+	def prohibitMap_callback(self, occupancyGrid):
+		self.prohibitMap = occupancyGrid
 
 
-		def monitor_callback(self, event):
-			# 1) system -----
-			print_robQue(self.robQue_collEgoObs_gt, self.spec_collEgoObs_gt)
-			print_robQue(self.robQue_reachEgoGoal_gt, self.spec_reachEgoGoal_gt)
+	def lidar_callback(self, laser_message):
+		self.lidar = self.lp.projectLaser(laser_message)
 
-			# 2) perception -----
-			if self.loc != [] and self.loc_gt != []:
-				errLoc, stamp = distPoseStamped2Odometry(self.loc, self.loc_gt)
-				data = [[stamp.to_sec(), errLoc]]
-				rob = self.spec_errLoc.update(['errLoc', data])
-				publishRobstness(self.robPub_errLoc, rob)
-				print_rob(rob, self.spec_errLoc)
-			if self.wheelOdom != [] and self.loc_gt != []:
-				wheelOdom_poseStamped = odometry2PoseStamped(self.wheelOdom)
-				loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
-				while not rospy.is_shutdown():
-					try:
-						loc_gt_pose_frameOdom = self.tfListener.transformPose(wheelOdom_poseStamped.header.frame_id, loc_gt_poseStamped)
-						break
-					except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-						continue
-				errOdom, stamp = distPoseStamped2PoseStamped(wheelOdom_poseStamped, loc_gt_pose_frameOdom)
-				data = [[stamp.to_sec(), errOdom]]
-				rob = self.spec_errWheelOdom.update(['errWheelOdom', data])
-				publishRobstness(self.robPub_errWheelOdom, rob)
-				print_rob(rob, self.spec_errWheelOdom)
-			if self.laserOdom != [] and self.loc_gt != []:
-				laserOdom_poseStamped = odometry2PoseStamped(self.laserOdom)
-				loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
-				while not rospy.is_shutdown():
-					try:
-						loc_gt_pose_frameOdom = self.tfListener.transformPose(laserOdom_poseStamped.header.frame_id, loc_gt_poseStamped)
-						break
-					except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-						continue
-				errOdom, stamp = distPoseStamped2PoseStamped(laserOdom_poseStamped, loc_gt_pose_frameOdom)
-				data = [[stamp.to_sec(), errOdom]]
-				rob = self.spec_errLaserOdom.update(['errLaserOdom', data])
-				publishRobstness(self.robPub_errLaserOdom, rob)
-				print_rob(rob, self.spec_errLaserOdom)
-			print_robQue(self.robQue_errLidar, self.spec_errLidar)
+		distLidar = numpy.amin(laser_message.ranges)
+		data = [[laser_message.header.stamp.to_sec(), distLidar]]
+		rob = self.spec_collLidar.update(['distLidar', data])
+		publishRobstness(self.robPub_collLidar, rob)
+		if rob != []:
+			self.robQue_collLidar.put(rob)
 
-			# 3) planner -----
-			print_robQue(self.robQue_collEgoObs, self.spec_collEgoObs)
-			print_robQue(self.robQue_collLidar, self.spec_collLidar)
-			print_robQue(self.robQue_collGlobalPathObs, self.spec_collGlobalPathObs)
-			print_robQue(self.robQue_reachGlobalPathGoal, self.spec_reachGlobalPathGoal)
-			print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
 
-			# 4) controller -----
-			print_robQue(self.robQue_referrBodyVel, self.spec_referrBodyVel)
+	def stereoCam_callback(self, pointCloud2):
+		self.stereoCam = pointCloud2
 
-			# 5) others (intermidiate variables) -----
+
+	def globalPath_callback(self, path):
+		self.globalPath = path
+
+		if self.goal !=[]:
+			goalPoseStamped = self.globalPath.poses[-1]
+			distGlobalPathGoal, stamp = distPoseStamped2PoseStamped(self.goal, goalPoseStamped, True)
+			data = [[stamp.to_sec(), distGlobalPathGoal]]
+			rob = self.spec_reachGlobalPathGoal.update(['distGlobalPathGoal', data])
+			publishRobstness(self.robPub_reachGlobalPathGoal, rob)
+			if rob != []:
+				self.robQue_reachGlobalPathGoal.put(rob)
+
+		if self.map != []:
+			dists, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
+			distGlobalPathObs = numpy.min(dists)
+			data = [[stamp.to_sec(), distGlobalPathObs]]
+			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+			publishRobstness(self.robPub_collGlobalPathObs, rob)
+			if rob != []:
+				self.robQue_collGlobalPathObs.put(rob)
+
+
+	def baseVel_ref_callback(self, twist):
+		self.baseVel_ref = twist
+
+
+	def baseVel_callback(self, twist):
+		self.baseVel = twist
+
+		if self.baseVel_ref != []:
+			referrBodyVel = distTwist2Twist(self.baseVel, self.baseVel_ref)
+			now = rospy.get_rostime()
+			data = [[now.to_sec(), referrBodyVel]]
+			rob = self.spec_referrBodyVel.update(['referrBodyVel', data])
+			publishRobstness(self.robPub_referrBodyVel, rob)
+			if rob != []:
+				self.robQue_referrBodyVel.put(rob)
+
+
+	def bumperFront_callback(self, data):
+		header = Header()
+		header.seq = 0
+		header.stamp = rospy.Time.now()
+		header.frame_id = ''
+
+		boolStamped = BoolStamped(data, header)
+		self.bumperFront = boolStamped
+
+
+	def bumperBack_callback(self, data):
+		header = Header()
+		header.seq = 0
+		header.stamp = rospy.Time.now()
+		header.frame_id = ''
+
+		boolStamped = BoolStamped(data, header)
+		self.bumperBack = boolStamped
+
+
+	def controllerInfo_callback(self, data):
+		self.controllerInfo = data
+
+		data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[0]]]
+		rob = self.spec_referrWheelVelL.update(['reSferrWheelVelL', data])
+		publishRobstness(self.robPub_referrWheelVelL, rob)
+		print_rob(rob, self.spec_referrWheelVelL)
+
+		data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[1]]]
+		rob = self.spec_referrWheelVelR.update(['referrWheelVelR', data])
+		publishRobstness(self.robPub_referrWheelVelR, rob)
+		print_rob(rob, self.spec_referrWheelVelR)
+
+
+	def monitor_callback(self, event):
+		# 1) system -----
+		if self.loc_gt != [] and self.lidar:
+			loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
+			while not rospy.is_shutdown():
+				try:
+					loc_gt_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(self.lidar.header.frame_id, loc_gt_poseStamped)
+					break
+				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+					continue
+			dists, stamp = distPoseStamped2PointCloud2(loc_gt_pose_frame_base_rage_sensor_link, self.lidar)
+			distEgoObs_gt = min(dists)
+			data = [[stamp.to_sec(), distEgoObs_gt]]
+			rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
+			publishRobstness(self.robPub_collEgoObs_gt, rob)
+			print_rob(rob, self.spec_collEgoObs_gt)
+
+		print_robQue(self.robQue_reachEgoGoal_gt, self.spec_reachEgoGoal_gt)
+
+		# 2) perception -----
+		if self.loc != [] and self.loc_gt != []:
+			errLoc, stamp = distPoseStamped2Odometry(self.loc, self.loc_gt)
+			data = [[stamp.to_sec(), errLoc]]
+			rob = self.spec_errLoc.update(['errLoc', data])
+			publishRobstness(self.robPub_errLoc, rob)
+			print_rob(rob, self.spec_errLoc)
+		if self.wheelOdom != [] and self.loc_gt != []:
+			wheelOdom_poseStamped = odometry2PoseStamped(self.wheelOdom)
+			loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
+			while not rospy.is_shutdown():
+				try:
+					loc_gt_pose_frameOdom = self.tfListener.transformPose(wheelOdom_poseStamped.header.frame_id, loc_gt_poseStamped)
+					break
+				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+					continue
+			errOdom, stamp = distPoseStamped2PoseStamped(wheelOdom_poseStamped, loc_gt_pose_frameOdom)
+			data = [[stamp.to_sec(), errOdom]]
+			rob = self.spec_errWheelOdom.update(['errWheelOdom', data])
+			publishRobstness(self.robPub_errWheelOdom, rob)
+			print_rob(rob, self.spec_errWheelOdom)
+		if self.laserOdom != [] and self.loc_gt != []:
+			laserOdom_poseStamped = odometry2PoseStamped(self.laserOdom)
+			loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
+			while not rospy.is_shutdown():
+				try:
+					loc_gt_pose_frameOdom = self.tfListener.transformPose(laserOdom_poseStamped.header.frame_id, loc_gt_poseStamped)
+					break
+				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+					continue
+			errOdom, stamp = distPoseStamped2PoseStamped(laserOdom_poseStamped, loc_gt_pose_frameOdom)
+			data = [[stamp.to_sec(), errOdom]]
+			rob = self.spec_errLaserOdom.update(['errLaserOdom', data])
+			publishRobstness(self.robPub_errLaserOdom, rob)
+			print_rob(rob, self.spec_errLaserOdom)
+		if self.map != [] and self.lidar:
+			lidarPointCloud = pointCloud22PointCloud(self.lidar)
+			while not rospy.is_shutdown():
+				try:
+					lidarPointCloud_frame_map = self.tfListener.transformPointCloud(self.map.header.frame_id, lidarPointCloud)
+					break
+				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+					continue
+			dists, stamp = distPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
+			errLidar = numpy.average(dists)
+			data = [[stamp.to_sec(), errLidar]]
+			rob = self.spec_errLidar.update(['errLidar', data])
+			publishRobstness(self.robPub_errLidar, rob)
+			print_rob(rob, self.spec_errLidar)
+
+		# 3) planner -----
+		if self.loc != [] and self.lidar:
+			while not rospy.is_shutdown():
+				try:
+					loc_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(self.lidar.header.frame_id, self.loc)
+					break
+				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+					continue
+			dists, stamp = distPoseStamped2PointCloud2(loc_pose_frame_base_rage_sensor_link, self.lidar)
+			distEgoObs = min(dists)
+			data = [[stamp.to_sec(), distEgoObs]]
+			rob = self.spec_collEgoObs.update(['distEgoObs',data])
+			print_rob(rob, self.spec_collEgoObs)
+		print_robQue(self.robQue_collLidar, self.spec_collLidar)
+		print_robQue(self.robQue_collGlobalPathObs, self.spec_collGlobalPathObs)
+		print_robQue(self.robQue_reachGlobalPathGoal, self.spec_reachGlobalPathGoal)
+		print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
+
+		# 4) controller -----
+		print_robQue(self.robQue_referrBodyVel, self.spec_referrBodyVel)
+
+		# 5) others (intermidiate variables) -----
 
 
 if __name__ == '__main__':

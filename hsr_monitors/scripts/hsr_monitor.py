@@ -244,10 +244,28 @@ class HSR_STL_monitor(object):
 
                 # ref wheel motor control: /hsrb/omni_base_controller/internal_state
                 # internally the topic has paramname, actual, desired data.
+                self.spec_referrWheelVelL = rtamt.STLDenseTimeSpecification()
+                self.spec_referrWheelVelL.name = 'referrWheelVelL'
+                self.spec_referrWheelVelL.declare_var('referrWheelVelL', 'float')
+                self.spec_referrWheelVelL.set_var_io_type('referrWheelVelL', 'input')
+                self.spec_referrWheelVelL.spec = 'always [0,1] (referrWheelVelL <= 0.1)'
+                self.robPub_referrWheelVelL = rospy.Publisher(robTopicName+self.spec_referrWheelVelL.name, FloatStamped, queue_size=10)
+
+                self.spec_referrWheelVelR = rtamt.STLDenseTimeSpecification()
+                self.spec_referrWheelVelR.name = 'referrWheelVelR'
+                self.spec_referrWheelVelR.declare_var('referrWheelVelR', 'float')
+                self.spec_referrWheelVelR.set_var_io_type('referrWheelVelR', 'input')
+                self.spec_referrWheelVelR.spec = 'always [0,1] (referrWheelVelR <= 0.1)'
+                self.robPub_referrWheelVelR = rospy.Publisher(robTopicName+self.spec_referrWheelVelR.name, FloatStamped, queue_size=10)
+
 
                 try:
                         self.spec_referrBodyVel.parse()
                         self.spec_referrBodyVel.pastify()
+                        self.spec_referrWheelVelL.parse()
+                        self.spec_referrWheelVelL.pastify()
+                        self.spec_referrWheelVelR.parse()
+                        self.spec_referrWheelVelR.pastify()
                 except rtamt.STLParseException as err:
                         print('STL Parse Exception: {}'.format(err))
                         sys.exit()
@@ -479,6 +497,16 @@ class HSR_STL_monitor(object):
 
         def controllerInfo_callback(self, data):
                 self.controllerInfo = data
+
+                data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[0]]]
+                rob = self.spec_referrWheelVelL.update(['referrWheelVelL', data])
+                publishRobstness(self.robPub_referrWheelVelL, rob)
+                print_rob(rob, self.spec_referrWheelVelL)
+
+                data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[1]]]
+                rob = self.spec_referrWheelVelR.update(['referrWheelVelR', data])
+                publishRobstness(self.robPub_referrWheelVelR, rob)
+                print_rob(rob, self.spec_referrWheelVelR)
 
 
         def monitor_callback(self, event):

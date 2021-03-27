@@ -25,7 +25,7 @@ import rtamt
 from ros_distance_libs.rosDistLib import *
 
 #other msg
-from std_msgs.msg import String, Header
+from std_msgs.msg import String, Header, Bool
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose, Twist
@@ -59,6 +59,12 @@ def publishRobstness(publisher, robustness):
                         floatStamped.header = header
                         floatStamped.value = trob[1]
                         publisher.publish(floatStamped)
+
+
+class BoolStamped(object):
+        def __init__(self, data, header):
+                self.data = data
+                self.header = header
 
 
 class HSR_STL_monitor(object):
@@ -273,11 +279,18 @@ class HSR_STL_monitor(object):
                 self.loc = []
                 rospy.Subscriber('/hsrb/wheel_odom', Odometry, self.wheelOdom_callback, queue_size=10)
                 self.wheelOdom = []
+                rospy.Subscriber('/hsrb/laser_odom', Odometry, self.laserOdom_callback, queue_size=10)
+                self.laserOdom = []
                 rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
                 rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, self.stereoCam_callback, queue_size=10)
                 self.stereoCam = []
                 rospy.Subscriber('/base_velocity', Twist, self.baseVel_callback, queue_size=10)
                 self.baseVel = []
+                rospy.Subscriber('/hsrb/base_f_bumper_sensor', Bool, self.bumperFront_callback, queue_size=10)
+                self.bumperFront = []
+#                rospy.Subscriber('/hsrb/base_b_bumper_sensor', Bool, self.bumperBack_callback, queue_size=10)
+                self.bumperBack = []
+
 
                 # system intermidiate data
                 rospy.Subscriber('/base_local_path', Path, self.globalPath_callback, queue_size=10) #rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalPath_callback, queue_size=10)
@@ -323,6 +336,10 @@ class HSR_STL_monitor(object):
 
         def wheelOdom_callback(self, odometry):
                 self.wheelOdom = odometry
+
+
+        def laserOdom_callback(self, odometry):
+                self.laserOdom = odometry
 
 
         def goal_callback(self, poseStamped):
@@ -443,6 +460,26 @@ class HSR_STL_monitor(object):
                         publishRobstness(self.robPub_referrBodyVel, rob)
                         if rob != []:
                                 self.robQue_referrBodyVel.put(rob)
+
+
+        def bumperFront_callback(self, data):
+                header = Header()
+                header.seq = 0
+                header.stamp = rospy.Time.now()
+                header.frame_id = ''
+
+                boolStamped = BoolStamped(data, header)
+                self.bumperFront = boolStamped
+
+
+        def bumperBack_callback(self, data):
+                header = Header()
+                header.seq = 0
+                header.stamp = rospy.Time.now()
+                header.frame_id = ''
+
+                boolStamped = BoolStamped(data, header)
+                self.bumperBack = boolStamped
 
 
         def monitor_callback(self, event):

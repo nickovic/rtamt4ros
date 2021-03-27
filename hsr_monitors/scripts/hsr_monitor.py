@@ -76,7 +76,6 @@ class HSR_STL_monitor(object):
                 # Load the spec from STL file
                 # 1) system -----
                 # collision with obstacle (Ground Truth): /hsrb/odom_ground_truth /static_distance_map_ref
-                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_collEgoObs_gt = rtamt.STLDenseTimeSpecification()
                 self.spec_collEgoObs_gt.name = 'collEgoObs_gt'
                 self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
@@ -120,7 +119,6 @@ class HSR_STL_monitor(object):
                 self.robPub_errLoc = rospy.Publisher(robTopicName+self.spec_errLoc.name, FloatStamped, queue_size=10)
 
                 # odometer error (Ground Truth): /hsrb/odom_ground_truth /hsrb/wheel_odom
-                # TODO here must be /hsrb/wheel_odom not /hsrb/odom
                 self.spec_errOdom = rtamt.STLDenseTimeSpecification()
                 self.spec_errOdom.name = 'errOdom'
                 self.spec_errOdom.declare_var('errOdom', 'float')
@@ -131,7 +129,6 @@ class HSR_STL_monitor(object):
                 # localization error LiDAR (Ground Truth): /hsrb/odom_ground_truth /hsrb/laser_odom
 
                 # LiDAR error (Grand Truth): hsrb/base_scan /static_distance_map_ref
-                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_errLidar = rtamt.STLDenseTimeSpecification()
                 self.spec_errLidar.name = 'errLidar'
                 self.spec_errLidar.declare_var('errLidar', 'float')
@@ -158,7 +155,6 @@ class HSR_STL_monitor(object):
 
                 # 3) planner -----
                 # collision with obstacle map: /global_pose /static_distance_map_ref
-                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_collEgoObs = rtamt.STLDenseTimeSpecification()
                 self.spec_collEgoObs.name = 'collEgoObs'
                 self.spec_collEgoObs.declare_var('distEgoObs', 'float')
@@ -181,7 +177,6 @@ class HSR_STL_monitor(object):
                 # collision with obstacle Bumper: /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor
 
                 # collision with obstacle GlobalPath: /base_local_path /static_distance_map_ref
-                # TODO here must be /static_distance_map_ref not static_obstacle_map_ref!
                 self.spec_collGlobalPathObs = rtamt.STLDenseTimeSpecification()
                 self.spec_collGlobalPathObs.name = 'collGlobalPathObs'
                 self.spec_collGlobalPathObs.declare_var('distGlobalPathObs', 'float')
@@ -276,7 +271,7 @@ class HSR_STL_monitor(object):
                 # system sensor
                 rospy.Subscriber('/global_pose', PoseStamped, self.loc_callback, queue_size=10)
                 self.loc = []
-                rospy.Subscriber('/hsrb/odom', Odometry, self.wheelOdom_callback, queue_size=10)
+                rospy.Subscriber('/hsrb/wheel_odom', Odometry, self.wheelOdom_callback, queue_size=10)
                 self.wheelOdom = []
                 rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
                 rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, self.stereoCam_callback, queue_size=10)

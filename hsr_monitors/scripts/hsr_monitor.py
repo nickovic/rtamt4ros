@@ -29,6 +29,7 @@ from std_msgs.msg import String, Header, Bool
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose, Twist
+from control_msgs.msg import JointTrajectoryControllerState
 
 from rtamt_msgs.msg import FloatStamped
 from tmc_navigation_msgs.msg import PathWithGoal
@@ -288,8 +289,10 @@ class HSR_STL_monitor(object):
                 self.baseVel = []
                 rospy.Subscriber('/hsrb/base_f_bumper_sensor', Bool, self.bumperFront_callback, queue_size=10)
                 self.bumperFront = []
-#                rospy.Subscriber('/hsrb/base_b_bumper_sensor', Bool, self.bumperBack_callback, queue_size=10)
+                rospy.Subscriber('/hsrb/base_b_bumper_sensor', Bool, self.bumperBack_callback, queue_size=10)
                 self.bumperBack = []
+                rospy.Subscriber('/hsrb/omni_base_controller/internal_state', JointTrajectoryControllerState, self.controllerInfo_callback, queue_size=10)
+                self.controllerInfo = []
 
 
                 # system intermidiate data
@@ -480,6 +483,10 @@ class HSR_STL_monitor(object):
 
                 boolStamped = BoolStamped(data, header)
                 self.bumperBack = boolStamped
+
+
+        def controllerInfo_callback(self, data):
+                self.controllerInfo = data
 
 
         def monitor_callback(self, event):

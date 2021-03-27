@@ -4,10 +4,11 @@ Real-time monitoring tool for ROS applications that uses the rtamt library
 
 ## Install back-ends
 
-### ROS kinectic + Ubuntu16.04
+### install ROS
 
-Please see ROS kinectic page.
-<http://wiki.ros.org/kinetic/Installation/Ubuntu>
+Please see ROS web page.  
+kinectic + Ubuntu16.04: <http://wiki.ros.org/kinetic/Installation/Ubuntu>  
+melodic + Ubuntu18.04: <http://wiki.ros.org/melodic/Installation/Ubuntu>
 
 ### install rtamt
 

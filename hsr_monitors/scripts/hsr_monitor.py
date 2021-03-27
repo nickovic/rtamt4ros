@@ -294,17 +294,9 @@ class HSR_STL_monitor(object):
                 rospy.Subscriber('/hsrb/omni_base_controller/internal_state', JointTrajectoryControllerState, self.controllerInfo_callback, queue_size=10)
                 self.controllerInfo = []
 
-
                 # system intermidiate data
                 rospy.Subscriber('/base_local_path', Path, self.globalPath_callback, queue_size=10) #rospy.Subscriber('/base_path_with_goal', PathWithGoal, self.globalPath_callback, queue_size=10)
                 self.globalPath = []
-
-                # data init
-                self.obss = []
-
-                # Advertise the node as a publisher to the topic defined by the out var of the spec
-                #var_object = self.spec.get_var_object(self.spec.out_var)
-                #self.stl_publisher = rospy.Publisher('rtamt/c', var_object.__class__, queue_size=10)
 
 
         # it is not colled ctrl+Z

@@ -117,7 +117,6 @@ class HSR_STL_monitor(object):
 
                 # 2) perception -----
                 # localization error (Ground Truth): /hsrb/odom_ground_truth /global_pose
-                # (localization error (Ground Truth): /hk0/gazebo_pose /hk0/global_pose)
                 self.spec_errLoc = rtamt.STLDenseTimeSpecification()
                 self.spec_errLoc.name = 'errLoc'
                 self.spec_errLoc.declare_var('errLoc', 'float')
@@ -126,14 +125,20 @@ class HSR_STL_monitor(object):
                 self.robPub_errLoc = rospy.Publisher(robTopicName+self.spec_errLoc.name, FloatStamped, queue_size=10)
 
                 # odometer error (Ground Truth): /hsrb/odom_ground_truth /hsrb/wheel_odom
-                self.spec_errOdom = rtamt.STLDenseTimeSpecification()
-                self.spec_errOdom.name = 'errOdom'
-                self.spec_errOdom.declare_var('errOdom', 'float')
-                self.spec_errOdom.set_var_io_type('errOdom', 'input')
-                self.spec_errOdom.spec = 'always [0,10] (errOdom >= 0.1)'
-                self.robPub_errOdom = rospy.Publisher(robTopicName+self.spec_errOdom.name, FloatStamped, queue_size=10)
+                self.spec_errWheelOdom = rtamt.STLDenseTimeSpecification()
+                self.spec_errWheelOdom.name = 'errWheelOdom'
+                self.spec_errWheelOdom.declare_var('errWheelOdom', 'float')
+                self.spec_errWheelOdom.set_var_io_type('errWheelOdom', 'input')
+                self.spec_errWheelOdom.spec = 'always [0,10] (errWheelOdom >= 0.1)'
+                self.robPub_errWheelOdom = rospy.Publisher(robTopicName+self.spec_errWheelOdom.name, FloatStamped, queue_size=10)
 
                 # localization error LiDAR (Ground Truth): /hsrb/odom_ground_truth /hsrb/laser_odom
+                self.spec_errLaserOdom = rtamt.STLDenseTimeSpecification()
+                self.spec_errLaserOdom.name = 'errLaserOdom'
+                self.spec_errLaserOdom.declare_var('errLaserOdom', 'float')
+                self.spec_errLaserOdom.set_var_io_type('errLaserOdom', 'input')
+                self.spec_errLaserOdom.spec = 'always [0,10] (errLaserOdom >= 0.1)'
+                self.robPub_errLaserOdom = rospy.Publisher(robTopicName+self.spec_errLaserOdom.name, FloatStamped, queue_size=10)
 
                 # LiDAR error (Grand Truth): hsrb/base_scan /static_distance_map_ref
                 self.spec_errLidar = rtamt.STLDenseTimeSpecification()
@@ -151,8 +156,10 @@ class HSR_STL_monitor(object):
                 try:
                         self.spec_errLoc.parse()
                         self.spec_errLoc.pastify()
-                        self.spec_errOdom.parse()
-                        self.spec_errOdom.pastify()
+                        self.spec_errWheelOdom.parse()
+                        self.spec_errWheelOdom.pastify()
+                        self.spec_errLaserOdom.parse()
+                        self.spec_errLaserOdom.pastify()
                         self.spec_errLidar.parse()
                         self.spec_errLidar.pastify()
                 except rtamt.STLParseException as err:
@@ -257,7 +264,6 @@ class HSR_STL_monitor(object):
                 self.spec_referrWheelVelR.set_var_io_type('referrWheelVelR', 'input')
                 self.spec_referrWheelVelR.spec = 'always [0,1] (referrWheelVelR <= 0.1)'
                 self.robPub_referrWheelVelR = rospy.Publisher(robTopicName+self.spec_referrWheelVelR.name, FloatStamped, queue_size=10)
-
 
                 try:
                         self.spec_referrBodyVel.parse()
@@ -532,9 +538,23 @@ class HSR_STL_monitor(object):
                                         continue
                         errOdom, stamp = distPoseStamped2PoseStamped(wheelOdom_poseStamped, loc_gt_pose_frameOdom)
                         data = [[stamp.to_sec(), errOdom]]
-                        rob = self.spec_errOdom.update(['errOdom', data])
-                        publishRobstness(self.robPub_errOdom, rob)
-                        print_rob(rob, self.spec_errOdom)
+                        rob = self.spec_errWheelOdom.update(['errWheelOdom', data])
+                        publishRobstness(self.robPub_errWheelOdom, rob)
+                        print_rob(rob, self.spec_errWheelOdom)
+                if self.laserOdom != [] and self.loc_gt != []:
+                        laserOdom_poseStamped = odometry2PoseStamped(self.laserOdom)
+                        loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
+                        while not rospy.is_shutdown():
+                                try:
+                                        loc_gt_pose_frameOdom = self.tfListener.transformPose(laserOdom_poseStamped.header.frame_id, loc_gt_poseStamped)
+                                        break
+                                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                                        continue
+                        errOdom, stamp = distPoseStamped2PoseStamped(laserOdom_poseStamped, loc_gt_pose_frameOdom)
+                        data = [[stamp.to_sec(), errOdom]]
+                        rob = self.spec_errLaserOdom.update(['errLaserOdom', data])
+                        publishRobstness(self.robPub_errLaserOdom, rob)
+                        print_rob(rob, self.spec_errLaserOdom)
                 print_robQue(self.robQue_errLidar, self.spec_errLidar)
 
                 # 3) planner -----

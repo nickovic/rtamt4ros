@@ -262,8 +262,10 @@ class HSR_STL_monitor(object):
                 # system ground truth
                 rospy.Subscriber('/hsrb/odom_ground_truth', Odometry, self.odom_gt_callback, queue_size=10)
                 self.loc_gt = []
-                rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.map_callback, queue_size=10)
+                rospy.Subscriber('/static_distance_map_ref', OccupancyGrid, self.map_callback, queue_size=10)
                 self.map = []
+                rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.prohibitMap_callback, queue_size=10)
+                self.prohibitMap = []
 
                 # system order
                 rospy.Subscriber('/goal', PoseStamped, self.goal_callback, queue_size=10)
@@ -342,6 +344,10 @@ class HSR_STL_monitor(object):
                         ax = mapFig.add_subplot(1, 1, 1)
                         occupancyGridPlot(ax, occupancyGrid)
                         plt.show()
+
+
+        def prohibitMap_callback(self, occupancyGrid):
+                self.prohibitMap = occupancyGrid
 
 
         def lidar_callback(self, laser_message):

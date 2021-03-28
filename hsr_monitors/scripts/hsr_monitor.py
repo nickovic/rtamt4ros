@@ -44,9 +44,12 @@ def print_rob(rob, spec):
 
 
 def print_robQue(robQue, spec):
-    if not robQue.empty():
-    	print_rob(robQue.get(), spec)
-    return
+	robs = []
+	while not robQue.empty():
+		robs.append(robQue.get())
+
+   	print_rob(robs, spec)
+	return
 
 
 def publishRobstness(publisher, robustness):
@@ -88,7 +91,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoObs_gt.name = 'collEgoObs_gt'
 		self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
 		self.spec_collEgoObs_gt.set_var_io_type('distEgoObs_gt', 'input')
-		self.spec_collEgoObs_gt.spec = 'always [0,10] (distEgoObs_gt >= 0.1)'
+		self.spec_collEgoObs_gt.spec = 'always [0,1] (distEgoObs_gt >= 0.1)'
 		self.robPub_collEgoObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
 
 		# colliosion with agents (Ground Truth): /hsrb/odom_ground_truth /dynamic_obstacle_map_ref
@@ -100,7 +103,7 @@ class HSR_STL_monitor(object):
 		self.spec_reachEgoGoal_gt.name = 'reachEgoGoal_gt'
 		self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
 		self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
-		self.spec_reachEgoGoal_gt.spec = 'eventually [0,10] (distEgoGoal_gt <= 0.1)'
+		self.spec_reachEgoGoal_gt.spec = 'eventually [0,1] (distEgoGoal_gt <= 0.1)'
 		self.robPub_reachEgoGoal_gt = rospy.Publisher(robTopicName+self.spec_reachEgoGoal_gt.name, FloatStamped, queue_size=10)
 		self.robQue_reachEgoGoal_gt = Queue.Queue()
 
@@ -120,7 +123,7 @@ class HSR_STL_monitor(object):
 		self.spec_errLoc.name = 'errLoc'
 		self.spec_errLoc.declare_var('errLoc', 'float')
 		self.spec_errLoc.set_var_io_type('errLoc', 'input')
-		self.spec_errLoc.spec = 'always [0,10] (errLoc >= 0.1)'
+		self.spec_errLoc.spec = 'always [0,1] (errLoc >= 0.1)'
 		self.robPub_errLoc = rospy.Publisher(robTopicName+self.spec_errLoc.name, FloatStamped, queue_size=10)
 
 		# odometer error (Ground Truth): /hsrb/odom_ground_truth /hsrb/wheel_odom
@@ -128,7 +131,7 @@ class HSR_STL_monitor(object):
 		self.spec_errWheelOdom.name = 'errWheelOdom'
 		self.spec_errWheelOdom.declare_var('errWheelOdom', 'float')
 		self.spec_errWheelOdom.set_var_io_type('errWheelOdom', 'input')
-		self.spec_errWheelOdom.spec = 'always [0,10] (errWheelOdom >= 0.1)'
+		self.spec_errWheelOdom.spec = 'always [0,1] (errWheelOdom >= 0.1)'
 		self.robPub_errWheelOdom = rospy.Publisher(robTopicName+self.spec_errWheelOdom.name, FloatStamped, queue_size=10)
 
 		# localization error LiDAR (Ground Truth): /hsrb/odom_ground_truth /hsrb/laser_odom
@@ -136,7 +139,7 @@ class HSR_STL_monitor(object):
 		self.spec_errLaserOdom.name = 'errLaserOdom'
 		self.spec_errLaserOdom.declare_var('errLaserOdom', 'float')
 		self.spec_errLaserOdom.set_var_io_type('errLaserOdom', 'input')
-		self.spec_errLaserOdom.spec = 'always [0,10] (errLaserOdom >= 0.1)'
+		self.spec_errLaserOdom.spec = 'always [0,1] (errLaserOdom >= 0.1)'
 		self.robPub_errLaserOdom = rospy.Publisher(robTopicName+self.spec_errLaserOdom.name, FloatStamped, queue_size=10)
 
 		# LiDAR error (Grand Truth): hsrb/base_scan /static_distance_map_ref
@@ -144,7 +147,7 @@ class HSR_STL_monitor(object):
 		self.spec_errLidar.name = 'errLidar'
 		self.spec_errLidar.declare_var('errLidar', 'float')
 		self.spec_errLidar.set_var_io_type('errLidar', 'input')
-		self.spec_errLidar.spec = 'always [0,10] (errLidar >= 0.1)'
+		self.spec_errLidar.spec = 'always [0,1] (errLidar >= 0.1)'
 		self.robPub_errLidar = rospy.Publisher(robTopicName+self.spec_errLidar.name, FloatStamped, queue_size=10)
 
 		# StereoCamera error (Ground Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
@@ -171,7 +174,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoObs.name = 'collEgoObs'
 		self.spec_collEgoObs.declare_var('distEgoObs', 'float')
 		self.spec_collEgoObs.set_var_io_type('distEgoObs', 'input')
-		self.spec_collEgoObs.spec = 'always [0,10] (distEgoObs >= 0.1)'
+		self.spec_collEgoObs.spec = 'always [0,1] (distEgoObs >= 0.1)'
 		self.robPub_collEgoObs = rospy.Publisher(robTopicName+self.spec_collEgoObs.name, FloatStamped, queue_size=10)
 
 		# collision with obstacle LiDAR: hsrb/base_scan
@@ -179,11 +182,18 @@ class HSR_STL_monitor(object):
 		self.spec_collLidar.name = 'collLidar'
 		self.spec_collLidar.declare_var('distLidar', 'float')
 		self.spec_collLidar.set_var_io_type('distLidar', 'input')
-		self.spec_collLidar.spec = 'always [0,10] (distLidar >= 0.2)'
+		self.spec_collLidar.spec = 'always [0,1] (distLidar >= 0.2)'
 		self.robPub_collLidar = rospy.Publisher(robTopicName+self.spec_collLidar.name, FloatStamped, queue_size=10)
 		self.robQue_collLidar = Queue.Queue()
 
 		# collision with obstacle StereoCamera: /hsrb/head_rgbd_sensor/depth_registered/rectified_points
+		self.spec_collStereoCamera = rtamt.STLDenseTimeSpecification()
+		self.spec_collStereoCamera.name = 'collStereoCamera'
+		self.spec_collStereoCamera.declare_var('distStereoCamera', 'float')
+		self.spec_collStereoCamera.set_var_io_type('distStereoCamera', 'input')
+		self.spec_collStereoCamera.spec = 'always [0,1] (distStereoCamera >= 0.2)'
+		self.robPub_collStereoCamera = rospy.Publisher(robTopicName+self.spec_collStereoCamera.name, FloatStamped, queue_size=10)
+		self.robQue_collStereoCamera = Queue.Queue()
 
 		# collision with obstacle Bumper: /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor
 
@@ -214,7 +224,7 @@ class HSR_STL_monitor(object):
 		self.spec_reachEgoGoal.name = 'reachEgoGoal'
 		self.spec_reachEgoGoal.declare_var('distEgoGoal', 'float')
 		self.spec_reachEgoGoal.set_var_io_type('distEgoGoal', 'input')
-		self.spec_reachEgoGoal.spec = 'eventually [0,10] (distEgoGoal <= 0.1)'
+		self.spec_reachEgoGoal.spec = 'eventually [0,1] (distEgoGoal <= 0.1)'
 		self.robPub_reachEgoGoal = rospy.Publisher(robTopicName+self.spec_reachEgoGoal.name, FloatStamped, queue_size=10)
 		self.robQue_reachEgoGoal = Queue.Queue()
 
@@ -223,6 +233,8 @@ class HSR_STL_monitor(object):
 			self.spec_collEgoObs.pastify()
 			self.spec_collLidar.parse()
 			self.spec_collLidar.pastify()
+			self.spec_collStereoCamera.parse()
+			self.spec_collStereoCamera.pastify()
 			self.spec_collGlobalPathObs.parse()
 			self.spec_collGlobalPathObs.pastify()
 			self.spec_reachGlobalPathGoal.parse()
@@ -242,7 +254,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrBodyVel.name = 'referrBodyVel'
 		self.spec_referrBodyVel.declare_var('referrBodyVel', 'float')
 		self.spec_referrBodyVel.set_var_io_type('referrBodyVel', 'input')
-		self.spec_referrBodyVel.spec = 'always [0,10] (referrBodyVel <= 0.1)'
+		self.spec_referrBodyVel.spec = 'always [0,1] (referrBodyVel <= 0.1)'
 		self.robPub_referrBodyVel = rospy.Publisher(robTopicName+self.spec_referrBodyVel.name, FloatStamped, queue_size=10)
 		self.robQue_referrBodyVel = Queue.Queue()
 
@@ -254,6 +266,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrWheelVelL.set_var_io_type('referrWheelVelL', 'input')
 		self.spec_referrWheelVelL.spec = 'always [0,1] (referrWheelVelL <= 0.1)'
 		self.robPub_referrWheelVelL = rospy.Publisher(robTopicName+self.spec_referrWheelVelL.name, FloatStamped, queue_size=10)
+		self.robQue_referrWheelVelL = Queue.Queue()
 
 		self.spec_referrWheelVelR = rtamt.STLDenseTimeSpecification()
 		self.spec_referrWheelVelR.name = 'referrWheelVelR'
@@ -261,6 +274,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrWheelVelR.set_var_io_type('referrWheelVelR', 'input')
 		self.spec_referrWheelVelR.spec = 'always [0,1] (referrWheelVelR <= 0.1)'
 		self.robPub_referrWheelVelR = rospy.Publisher(robTopicName+self.spec_referrWheelVelR.name, FloatStamped, queue_size=10)
+		self.robQue_referrWheelVelR = Queue.Queue()
 
 		try:
 			self.spec_referrBodyVel.parse()
@@ -305,7 +319,7 @@ class HSR_STL_monitor(object):
 		self.laserOdom = []
 		rospy.Subscriber('/hsrb/base_scan', LaserScan, self.lidar_callback, queue_size=10)
 		self.lidar =[]
-		rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, self.stereoCam_callback, queue_size=10)
+		rospy.Subscriber('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2, self.stereoCamera_callback, queue_size=10)
 		self.stereoCam = []
 		rospy.Subscriber('/base_velocity', Twist, self.baseVel_callback, queue_size=10)
 		self.baseVel = []
@@ -382,16 +396,28 @@ class HSR_STL_monitor(object):
 	def lidar_callback(self, laser_message):
 		self.lidar = self.lp.projectLaser(laser_message)
 
-		distLidar = numpy.amin(laser_message.ranges)
+		distLidar = min(laser_message.ranges)
 		data = [[laser_message.header.stamp.to_sec(), distLidar]]
 		rob = self.spec_collLidar.update(['distLidar', data])
 		publishRobstness(self.robPub_collLidar, rob)
 		if rob != []:
-			self.robQue_collLidar.put(rob)
+			for t in rob:
+				self.robQue_collLidar.put(t)
 
 
-	def stereoCam_callback(self, pointCloud2):
+	def stereoCamera_callback(self, pointCloud2):
 		self.stereoCam = pointCloud2
+
+		points_gen = sensor_msgs.point_cloud2.read_points(self.stereoCam, field_names = ("x", "y", "z"), skip_nans=True)
+		points_list = numpy.array([i for i in points_gen])
+		dists = distPoints2Point(numpy.array(points_list), numpy.array([0.0,0.0,0.0]))
+		dist = min(dists)
+		data = [[self.stereoCam.header.stamp.to_sec(), dist]]
+		rob = self.spec_collStereoCamera.update(['distStereoCamera', data])
+		publishRobstness(self.robPub_collStereoCamera, rob)
+		if rob != []:
+			for t in rob:
+				self.robQue_collStereoCamera.put(t)
 
 
 	def globalPath_callback(self, path):
@@ -430,7 +456,8 @@ class HSR_STL_monitor(object):
 			rob = self.spec_referrBodyVel.update(['referrBodyVel', data])
 			publishRobstness(self.robPub_referrBodyVel, rob)
 			if rob != []:
-				self.robQue_referrBodyVel.put(rob)
+				for t in rob:
+					self.robQue_referrBodyVel.put(t)
 
 
 	def bumperFront_callback(self, data):
@@ -459,12 +486,16 @@ class HSR_STL_monitor(object):
 		data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[0]]]
 		rob = self.spec_referrWheelVelL.update(['reSferrWheelVelL', data])
 		publishRobstness(self.robPub_referrWheelVelL, rob)
-		print_rob(rob, self.spec_referrWheelVelL)
+		if rob != []:
+			for t in rob:
+				self.robQue_referrWheelVelL.put(t)
 
 		data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[1]]]
 		rob = self.spec_referrWheelVelR.update(['referrWheelVelR', data])
 		publishRobstness(self.robPub_referrWheelVelR, rob)
-		print_rob(rob, self.spec_referrWheelVelR)
+		if rob != []:
+			for t in rob:
+				self.robQue_referrWheelVelR.put(t)
 
 
 	def monitor_callback(self, event):
@@ -550,12 +581,15 @@ class HSR_STL_monitor(object):
 			rob = self.spec_collEgoObs.update(['distEgoObs',data])
 			print_rob(rob, self.spec_collEgoObs)
 		print_robQue(self.robQue_collLidar, self.spec_collLidar)
+		print_robQue(self.robQue_collStereoCamera, self.spec_collStereoCamera)
 		print_robQue(self.robQue_collGlobalPathObs, self.spec_collGlobalPathObs)
 		print_robQue(self.robQue_reachGlobalPathGoal, self.spec_reachGlobalPathGoal)
 		print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
 
 		# 4) controller -----
 		print_robQue(self.robQue_referrBodyVel, self.spec_referrBodyVel)
+		print_robQue(self.robQue_referrWheelVelL, self.spec_referrWheelVelL)
+		print_robQue(self.robQue_referrWheelVelR, self.spec_referrWheelVelR)
 
 		# 5) others (intermidiate variables) -----
 

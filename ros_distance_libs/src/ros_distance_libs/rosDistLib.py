@@ -28,6 +28,18 @@ def orientation2angular(orientation):
         return angular
 
 
+def distsPointCloud2(pointCloud2):
+        points_gen = sensor_msgs.point_cloud2.read_points(pointCloud2)
+        dists = []
+        for point in points_gen:
+                point32 = Point32()
+                point32.x = point[0]
+                point32.y = point[1]
+                point32.z = point[2]
+
+                dists.append(point32)
+
+
 def pointCloud22PointCloud(pointCloud2):
         points_gen = sensor_msgs.point_cloud2.read_points(pointCloud2)
         points_list = []
@@ -122,9 +134,9 @@ def distOdometry2Odometry(odometry0, odometry1, extrapolation=False):
 def distPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
         check = checkFrameId(poseStamped, pointCloud2)
 
-        points = sensor_msgs.point_cloud2.read_points(pointCloud2)
+        points_gen = sensor_msgs.point_cloud2.read_points(pointCloud2)
         # TODO just thinking 2D
-        points_list = numpy.array([(i[0], i[1])for i in points])
+        points_list = numpy.array([(i[0], i[1])for i in points_gen])
         dists = distPoints2Point(points_list, [poseStamped.pose.position.x, poseStamped.pose.position.y])
 
         stamp = stampSlector(poseStamped, pointCloud2, extrapolation)

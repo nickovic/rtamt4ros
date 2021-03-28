@@ -44,8 +44,7 @@ def posSizeRect2Poly(rectPos, rectSize):
 
 
 def distPoints2Point(points, point):
-    # just thinking 2D (x,y)
-    if points.shape == (2,):        #for 1 id case
+    if points.shape == (2,) or points.shape == (3,):        #for 1 id case
             points = numpy.array([points])
     dists = points - numpy.array(point)
     dists = numpy.square(dists)

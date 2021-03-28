@@ -196,6 +196,21 @@ class HSR_STL_monitor(object):
 		self.robQue_collStereoCamera = Queue.Queue()
 
 		# collision with obstacle Bumper: /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor
+		self.spec_collBumperFront = rtamt.STLDenseTimeSpecification()
+		self.spec_collBumperFront.name = 'bumperFront'
+		self.spec_collBumperFront.declare_var('bumperFront', 'float')
+		self.spec_collBumperFront.set_var_io_type('bumperFront', 'input')
+		self.spec_collBumperFront.spec = 'always [0,1] (bumperFront <= 0.5)'
+		self.robPub_collBumperFront = rospy.Publisher(robTopicName+self.spec_collBumperFront.name, FloatStamped, queue_size=10)
+		self.robQue_collBumperFront = Queue.Queue()
+
+		self.spec_collBumperBack = rtamt.STLDenseTimeSpecification()
+		self.spec_collBumperBack.name = 'bumperBack'
+		self.spec_collBumperBack.declare_var('bumperBack', 'float')
+		self.spec_collBumperBack.set_var_io_type('bumperBack', 'input')
+		self.spec_collBumperBack.spec = 'always [0,1] (bumperBack <= 0.5 )'
+		self.robPub_collBumperBack = rospy.Publisher(robTopicName+self.spec_collBumperBack.name, FloatStamped, queue_size=10)
+		self.robQue_collBumperBack = Queue.Queue()
 
 		# collision with obstacle GlobalPath: /base_local_path /static_distance_map_ref
 		self.spec_collGlobalPathObs = rtamt.STLDenseTimeSpecification()
@@ -235,6 +250,10 @@ class HSR_STL_monitor(object):
 			self.spec_collLidar.pastify()
 			self.spec_collStereoCamera.parse()
 			self.spec_collStereoCamera.pastify()
+			self.spec_collBumperFront.parse()
+			self.spec_collBumperFront.pastify()
+			self.spec_collBumperBack.parse()
+			self.spec_collBumperBack.pastify()
 			self.spec_collGlobalPathObs.parse()
 			self.spec_collGlobalPathObs.pastify()
 			self.spec_reachGlobalPathGoal.parse()
@@ -465,9 +484,14 @@ class HSR_STL_monitor(object):
 		header.seq = 0
 		header.stamp = rospy.Time.now()
 		header.frame_id = ''
+		self.bumperFront = BoolStamped(data.data, header)
 
-		boolStamped = BoolStamped(data, header)
-		self.bumperFront = boolStamped
+		data = [[self.bumperFront.header.stamp.to_sec(), float(self.bumperFront.data)]]
+		rob = self.spec_collBumperFront.update(['bumperFront', data])
+		publishRobstness(self.robPub_collBumperFront, rob)
+		if rob != []:
+			for t in rob:
+				self.robQue_collBumperFront.put(t)
 
 
 	def bumperBack_callback(self, data):
@@ -475,9 +499,14 @@ class HSR_STL_monitor(object):
 		header.seq = 0
 		header.stamp = rospy.Time.now()
 		header.frame_id = ''
+		self.bumperBack = BoolStamped(data.data, header)
 
-		boolStamped = BoolStamped(data, header)
-		self.bumperBack = boolStamped
+		data = [[self.bumperBack.header.stamp.to_sec(), float(self.bumperBack.data)]]
+		rob = self.spec_collBumperBack.update(['bumperBack', data])
+		publishRobstness(self.robPub_collBumperBack, rob)
+		if rob != []:
+			for t in rob:
+				self.robQue_collBumperBack.put(t)
 
 
 	def controllerInfo_callback(self, data):
@@ -585,6 +614,8 @@ class HSR_STL_monitor(object):
 		print_robQue(self.robQue_collGlobalPathObs, self.spec_collGlobalPathObs)
 		print_robQue(self.robQue_reachGlobalPathGoal, self.spec_reachGlobalPathGoal)
 		print_robQue(self.robQue_reachEgoGoal, self.spec_reachEgoGoal)
+		print_robQue(self.robQue_collBumperFront, self.spec_collBumperFront)
+		print_robQue(self.robQue_collBumperBack, self.spec_collBumperBack)
 
 		# 4) controller -----
 		print_robQue(self.robQue_referrBodyVel, self.spec_referrBodyVel)

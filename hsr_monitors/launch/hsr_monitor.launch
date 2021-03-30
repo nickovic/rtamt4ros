@@ -12,11 +12,16 @@
 	  	<node name="rob_system_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/collEgoObs_gt/value
 		  																  /rtamt/reachEgoGoal_gt/value"/>
 		<node name="rob_perception_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/errLoc/value
-		  																	  /rtamt/errOdom/value
+		  																	  /rtamt/errWheelOdom/value
+																			  /rtamt/errLaserOdom/value
 		  																	  /rtamt/errLidar/value"/>
 		<node name="rob_planner_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/collEgoObs/value
+		  																   /rtamt/collLidar/value
+																		   /rtamt/collStereoCamera/value
+																		   /rtamt/collBumperFront/value
+																		   /rtamt/collBbumperBack/value
 		  																   /rtamt/collGlobalPathObs/value
-		  																   /rtamt/reachGlobalPathGoal/value
+																		   /rtamt/reachGlobalPathGoal/value
 																		   /rtamt/reachEgoGoal/value"/>
 	  	<node name="rob_controller_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/referrBodyVel/value
 		  																	  /rtamt/referrWheelVelL/value

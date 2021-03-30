@@ -206,7 +206,7 @@ class HSR_STL_monitor(object):
 
 		# collision with obstacle Bumper: /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor
 		self.spec_collBumperFront = rtamt.STLDenseTimeSpecification()
-		self.spec_collBumperFront.name = 'bumperFront'
+		self.spec_collBumperFront.name = 'collBumperFront'
 		self.spec_collBumperFront.declare_var('bumperFront', 'float')
 		self.spec_collBumperFront.set_var_io_type('bumperFront', 'input')
 		self.spec_collBumperFront.spec = 'always [0,1] (bumperFront <= 0.5)'
@@ -214,7 +214,7 @@ class HSR_STL_monitor(object):
 		self.robQue_collBumperFront = RobQue(self.spec_collBumperFront.name)
 
 		self.spec_collBumperBack = rtamt.STLDenseTimeSpecification()
-		self.spec_collBumperBack.name = 'bumperBack'
+		self.spec_collBumperBack.name = 'collBbumperBack'
 		self.spec_collBumperBack.declare_var('bumperBack', 'float')
 		self.spec_collBumperBack.set_var_io_type('bumperBack', 'input')
 		self.spec_collBumperBack.spec = 'always [0,1] (bumperBack <= 0.5 )'

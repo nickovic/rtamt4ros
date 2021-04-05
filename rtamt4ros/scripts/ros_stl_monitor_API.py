@@ -24,9 +24,9 @@ def monitor(period_arg, unit_arg):
     freq = spec.get_sampling_frequency()
 
     spec.name = 'HandMadeMonitor'
-    spec.import_module('rtamt_msgs.msg', 'FloatMessage')
-    spec.declare_var('a', 'FloatMessage')
-    spec.declare_var('c', 'FloatMessage')
+    spec.import_module('rtamt_msgs.msg', 'FloatStamped')
+    spec.declare_var('a', 'FloatStamped')
+    spec.declare_var('c', 'FloatStamped')
     spec.set_var_topic('a', 'rtamt/a')
     spec.set_var_topic('c', 'rtamt/c')
     spec.spec = 'c.value = a.value<=2'

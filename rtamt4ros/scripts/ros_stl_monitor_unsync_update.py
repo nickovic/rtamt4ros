@@ -13,7 +13,7 @@ import Queue
 import rtamt
 
 #other msg
-from rtamt_msgs.msg import FloatMessage
+from rtamt_msgs.msg import FloatStamped
 
 DEBUG = False
 
@@ -40,26 +40,26 @@ class Monitor(object):
                         sys.exit()
 
                 # For each var from the spec, subscribe to its topic
-                self.a_subscriber = rospy.Subscriber('rtamt/a', FloatMessage, self.a_callback, queue_size=10)
-                self.b_subscriber = rospy.Subscriber('rtamt/b', FloatMessage, self.b_callback, queue_size=10)
+                self.a_subscriber = rospy.Subscriber('rtamt/a', FloatStamped, self.a_callback, queue_size=10)
+                self.b_subscriber = rospy.Subscriber('rtamt/b', FloatStamped, self.b_callback, queue_size=10)
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
                 var_object = self.spec.get_var_object(self.spec.out_var)
-                self.c_publisher = rospy.Publisher('rtamt/c', FloatMessage, queue_size=10)
+                self.c_publisher = rospy.Publisher('rtamt/c', FloatStamped, queue_size=10)
 
                 # queue for rob
                 self.rob_q = Queue.Queue()
 
 
-        def a_callback(self, floatMessage):
-                a = floatMessage
+        def a_callback(self, floatStamped):
+                a = floatStamped
                 a_data = [[a.header.stamp.to_nsec(), a.value]]
                 rob = self.spec.update(['a', a_data])
                 self.rob_q.put(rob)
 
 
-        def b_callback(self, floatMessage):
-                b = floatMessage
+        def b_callback(self, floatStamped):
+                b = floatStamped
                 b_data = [[b.header.stamp.to_nsec(), b.value]]
                 rob = self.spec.update(['b', b_data])
                 self.rob_q.put(rob)

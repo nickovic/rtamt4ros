@@ -23,7 +23,8 @@
 		  																   /rtamt/collGlobalPathObs/value
 																		   /rtamt/reachGlobalPathGoal/value
 																		   /rtamt/reachEgoGoal/value"/>
-	  	<node name="rob_controller_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/referrBodyVel/value
+	  	<node name="rob_controller_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/referrLocGlobalPath/value
+		  																	  /rtamt/referrBodyVel/value
 		  																	  /rtamt/referrWheelVelL/value
 																			  /rtamt/referrWheelVelR/value"/>
 	</group>

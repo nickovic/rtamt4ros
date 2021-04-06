@@ -143,11 +143,25 @@ def distPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
 	return dists, stamp
 
 
+def distPoseStamped2Path(poseStamped, path, extrapolation=False):
+	check = checkFrameId(poseStamped, path)
+
+	# just thinking 2D (x,y)
+	pathDists = []
+	# TODO just thinking 2D
+	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
+	point = (poseStamped.pose.position.x, poseStamped.pose.position.y)
+	dist = distPoint2LineString(point, pathList)
+
+	stamp = stampSlector(path, poseStamped, extrapolation)
+	return dist, stamp
+
+
 def distPoints2Path(points, path):
 	# just thinking 2D (x,y)
 	pathDists = []
 	# TODO just thinking 2D
-	pathList = [(poseStamped.pose.position.x, poseStamped.pose.position.y) for poseStamped in path.poses]
+	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
 	for point in points:
 		dist = distPoint2LineString(point, pathList)
 		pathDists.append(dist)

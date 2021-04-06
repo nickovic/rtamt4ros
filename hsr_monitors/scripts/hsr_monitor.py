@@ -5,7 +5,15 @@
 # IF start in manual
 # $ rosrun hsr_monitors hsr_monitor.py --freq 10
 # TODO:
-# 1) Other agent senario
+# 1) write all properties expected.
+# 2) fault localization.
+# 3) check overhead
+# 4) Other agent senario.
+# Others: robQue is annoying
+#         cleraning rosDistLib
+#         handling publish is annoying too.
+# Limitation: rqt_plot does not plot based on header.stamp. It is back-end limitation. However, the robutness itself hanldes time-stamps exactly. That is just viewer issue.
+
 
 import sys
 import argparse
@@ -275,7 +283,15 @@ class HSR_STL_monitor(object):
 
 
 		# 4) controller -----
+		# TODO: perhaps we had better to check Squared distance.
 		# ref global path: /base_local_path /global_pose
+		self.spec_referrLocGlobalPath = rtamt.STLDenseTimeSpecification()
+		self.spec_referrLocGlobalPath.name = 'referrLocGlobalPath'
+		self.spec_referrLocGlobalPath.declare_var('referrLocGlobalPath', 'float')
+		self.spec_referrLocGlobalPath.set_var_io_type('referrLocGlobalPath', 'input')
+		self.spec_referrLocGlobalPath.spec = 'always [0,1] (referrLocGlobalPath <= 0.1)'
+		self.robPub_referrLocGlobalPath = rospy.Publisher(robTopicName+self.spec_referrLocGlobalPath.name, FloatStamped, queue_size=10)
+		self.robQue_referrLocGlobalPath = RobQue(self.robPub_referrLocGlobalPath.name)
 
 		# ref body control: /hsrb/command_velocity /base_velocity
 		self.spec_referrBodyVel = rtamt.STLDenseTimeSpecification()
@@ -305,6 +321,8 @@ class HSR_STL_monitor(object):
 		self.robQue_referrWheelVelR = RobQue(self.spec_referrWheelVelR.name)
 
 		try:
+			self.spec_referrLocGlobalPath.parse()
+			self.spec_referrLocGlobalPath.pastify()
 			self.spec_referrBodyVel.parse()
 			self.spec_referrBodyVel.pastify()
 			self.spec_referrWheelVelL.parse()
@@ -377,8 +395,14 @@ class HSR_STL_monitor(object):
 			data = [[stamp.to_sec(), distEgoGoal]]
 			rob = self.spec_reachEgoGoal.update(['distEgoGoal', data])
 			publishRobstness(self.robPub_reachEgoGoal, rob)
-			if rob != []:
-				self.robQue_reachEgoGoal.putRob(rob)
+			self.robQue_reachEgoGoal.putRob(rob)
+
+		if self.globalPath != []:
+			referrLocGlobalPath, stamp = distPoseStamped2Path(self.loc, self.globalPath, True)
+			data = [[stamp.to_sec(), referrLocGlobalPath]]
+			rob = self.spec_referrLocGlobalPath.update(['referrLocGlobalPath', data])
+			publishRobstness(self.robPub_referrLocGlobalPath, rob)
+			self.robQue_referrLocGlobalPath.putRob(rob)
 
 
 	def odom_gt_callback(self, odometry):
@@ -389,8 +413,7 @@ class HSR_STL_monitor(object):
 			data = [[stamp.to_sec(), distEgoGoal_gt]]
 			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
 			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
-			if rob != []:
-				self.robQue_reachEgoGoal_gt.putRob(rob)
+			self.robQue_reachEgoGoal_gt.putRob(rob)
 
 
 	def wheelOdom_callback(self, odometry):
@@ -611,6 +634,7 @@ class HSR_STL_monitor(object):
 		self.robQue_collBumperBack.printRob()
 
 		# 4) controller -----
+		self.robQue_referrLocGlobalPath.printRob()
 		self.robQue_referrBodyVel.printRob()
 		self.robQue_referrWheelVelL.printRob()
 		self.robQue_referrWheelVelR.printRob()

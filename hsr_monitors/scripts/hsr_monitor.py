@@ -112,6 +112,12 @@ class HSR_STL_monitor(object):
 		self.robPub_collEgoObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
 
 		# colliosion with agents (Ground Truth): /hsrb/odom_ground_truth /dynamic_obstacle_map_ref
+		self.spec_collEgoDynamicObs_gt = rtamt.STLDenseTimeSpecification()
+		self.spec_collEgoDynamicObs_gt.name = 'collEgoDynamicObs_gt'
+		self.spec_collEgoDynamicObs_gt.declare_var('distEgoDynamicObs_gt', 'float')
+		self.spec_collEgoDynamicObs_gt.set_var_io_type('distEgoDynamicObs_gt', 'input')
+		self.spec_collEgoDynamicObs_gt.spec = 'always [0,1] (distEgoDynamicObs_gt >= 0.1)'
+		self.robPub_spec_collEgoDynamicObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
 
@@ -127,6 +133,8 @@ class HSR_STL_monitor(object):
 		try:
 			self.spec_collEgoObs_gt.parse()
 			self.spec_collEgoObs_gt.pastify()
+			self.spec_collEgoDynamicObs_gt.parse()
+			self.spec_collEgoDynamicObs_gt.pastify()
 			self.spec_reachEgoGoal_gt.parse()
 			self.spec_reachEgoGoal_gt.pastify()
 		except rtamt.STLParseException as err:
@@ -349,6 +357,8 @@ class HSR_STL_monitor(object):
 		self.map = []
 		rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.prohibitMap_callback, queue_size=10)
 		self.prohibitMap = []
+		rospy.Subscriber('/dynamic_obstacle_map_ref', OccupancyGrid, self.dynamicObsMap_callback, queue_size=10)
+		self.dynamicObsMap = []
 
 		# system order
 		rospy.Subscriber('/goal', PoseStamped, self.goal_callback, queue_size=10)
@@ -442,6 +452,10 @@ class HSR_STL_monitor(object):
 
 	def prohibitMap_callback(self, occupancyGrid):
 		self.prohibitMap = occupancyGrid
+
+
+	def dynamicObsMap_callback(self, occupancyGrid):
+		self.dynamicObsMap = occupancyGrid
 
 
 	def lidar_callback(self, laser_message):
@@ -545,21 +559,20 @@ class HSR_STL_monitor(object):
 
 	def monitor_callback(self, event):
 		# 1) system -----
-		if self.loc_gt != [] and self.lidar:
-			loc_gt_poseStamped = odometry2PoseStamped(self.loc_gt)
-			while not rospy.is_shutdown():
-				try:
-					loc_gt_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(self.lidar.header.frame_id, loc_gt_poseStamped)
-					break
-				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-					continue
-			dists, stamp = distPoseStamped2PointCloud2(loc_gt_pose_frame_base_rage_sensor_link, self.lidar)
+		if self.loc_gt != [] and self.map != []:
+			dists, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.map, True)
 			distEgoObs_gt = min(dists)
 			data = [[stamp.to_sec(), distEgoObs_gt]]
 			rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
 			publishRobstness(self.robPub_collEgoObs_gt, rob)
 			print_rob(rob, self.spec_collEgoObs_gt.name)
-
+		if self.loc_gt != [] and self.dynamicObsMap != []:
+			dists, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.dynamicObsMap, True)
+			distEgoDynamicObs_gt = min(dists)
+			data = [[stamp.to_sec(), distEgoDynamicObs_gt]]
+			rob = self.spec_collEgoDynamicObs_gt.update(['distEgoDynamicObs_gt',data])
+			publishRobstness(self.robPub_collEgoDynamicObs_gt, rob)
+			print_rob(rob, self.spec_collEgoDynamicObs_gt.name)
 		self.robQue_reachEgoGoal_gt.printRob
 
 		# 2) perception -----
@@ -611,6 +624,7 @@ class HSR_STL_monitor(object):
 			rob = self.spec_errLidar.update(['errLidar', data])
 			publishRobstness(self.robPub_errLidar, rob)
 			print_rob(rob, self.spec_errLidar.name)
+
 
 		# 3) planner -----
 		if self.loc != [] and self.lidar:

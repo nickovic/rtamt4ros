@@ -170,6 +170,21 @@ def distPoints2Path(points, path):
 	return pathDist
 
 
+def distOdometry2OccupancyGrid(odometry, occupancyGrid, extrapolation=False):
+	check = checkFrameId(odometry, occupancyGrid)
+
+	poseStamped = odometry2PoseStamped(odometry)
+	point = (poseStamped.pose.position.x, poseStamped.pose.position.y)
+
+	staticMap = occupancyGridData2StaticMap(occupancyGrid)
+	obsIds = numpy.transpose(numpy.nonzero(staticMap))
+	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
+	dists = distPoints2Point(mapPoints, point)
+
+	stamp = stampSlector(odometry, occupancyGrid, extrapolation)
+	return dists, stamp
+
+
 def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
 	check = checkFrameId(path, occupancyGrid)
 

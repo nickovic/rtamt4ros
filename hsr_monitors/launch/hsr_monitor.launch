@@ -10,6 +10,7 @@
 	<arg name="rqt_plot" default="false" />
 	<group if="$(arg rqt_plot)">
 	  	<node name="rob_system_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/collEgoObs_gt/value
+		  																  /rtamt/collEgoDynamicObs_gt/value
 		  																  /rtamt/reachEgoGoal_gt/value"/>
 		<node name="rob_perception_plot" pkg="rqt_plot" type="rqt_plot" args="/rtamt/errLoc/value
 		  																	  /rtamt/errWheelOdom/value

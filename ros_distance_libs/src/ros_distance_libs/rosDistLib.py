@@ -1,6 +1,5 @@
 # TODO:
-# 1) Other agent senario
-# 2) monitor with publisher and rtp polot.
+# 1) support 3D
 
 import rospy
 import numpy

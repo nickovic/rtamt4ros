@@ -120,6 +120,7 @@ class HSR_STL_monitor(object):
 		self.robPub_spec_collEgoDynamicObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
+		# TODO
 
 		# reach goal (Ground Truth): /hsrb/odom_ground_truth /goal
 		self.spec_reachEgoGoal_gt = rtamt.STLDenseTimeSpecification()
@@ -176,8 +177,10 @@ class HSR_STL_monitor(object):
 		self.robPub_errLidar = rospy.Publisher(robTopicName+self.spec_errLidar.name, FloatStamped, queue_size=10)
 
 		# StereoCamera error (Ground Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
+		# this time we can skipt it. too much implimentation effort.
 
 		# Bumper error (Ground Truth): /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor, /static_distance_map_ref
+		# TODO: always(distEgoObs < e -> eventuraly bumper_sensor == True)
 
 		try:
 			self.spec_errLoc.parse()
@@ -247,8 +250,10 @@ class HSR_STL_monitor(object):
 		self.robQue_collGlobalPathObs = RobQue(self.spec_collGlobalPathObs.name)
 
 		# avoid prohibit area: /global_pose /static_obstacle_map_ref
+		# TODO
 
 		# colliosion with agents: /global_pose /dynamic_obstacle_map_ref
+		# TODO
 
 		# reach goal GlobalPath: /base_local_path /goal
 		self.spec_reachGlobalPathGoal = rtamt.STLDenseTimeSpecification()

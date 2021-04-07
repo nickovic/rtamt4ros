@@ -120,7 +120,13 @@ class HSR_STL_monitor(object):
 		self.robPub_spec_collEgoDynamicObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
-		# TODO
+		# TODO: use always eventually
+		self.spec_collEgoStaticObs_gt = rtamt.STLDenseTimeSpecification()
+		self.spec_collEgoStaticObs_gt.name = 'collEgoStaticObs_gt'
+		self.spec_collEgoStaticObs_gt.declare_var('distEgoStaticObs_gt', 'float')
+		self.spec_collEgoStaticObs_gt.set_var_io_type('distEgoStaticObs_gt', 'input')
+		self.spec_collEgoStaticObs_gt.spec = 'always [0,1] (distEgoStaticObs_gt >= 0.1)'
+		self.robPub_collEgoStaticObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoStaticObs_gt.name, FloatStamped, queue_size=10)
 
 		# reach goal (Ground Truth): /hsrb/odom_ground_truth /goal
 		self.spec_reachEgoGoal_gt = rtamt.STLDenseTimeSpecification()
@@ -136,6 +142,8 @@ class HSR_STL_monitor(object):
 			self.spec_collEgoObs_gt.pastify()
 			self.spec_collEgoDynamicObs_gt.parse()
 			self.spec_collEgoDynamicObs_gt.pastify()
+			self.spec_collEgoStaticObs_gt.parse()
+			self.spec_collEgoStaticObs_gt.pastify()
 			self.spec_reachEgoGoal_gt.parse()
 			self.spec_reachEgoGoal_gt.pastify()
 		except rtamt.STLParseException as err:
@@ -578,6 +586,13 @@ class HSR_STL_monitor(object):
 			rob = self.spec_collEgoDynamicObs_gt.update(['distEgoDynamicObs_gt',data])
 			publishRobstness(self.robPub_collEgoDynamicObs_gt, rob)
 			print_rob(rob, self.spec_collEgoDynamicObs_gt.name)
+		if self.loc_gt != [] and self.prohibitMap != []:
+			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.prohibitMap, True)
+			distEgoStaticObs_gt = min(dists)
+			data = [[stamp.to_sec(), distEgoStaticObs_gt]]
+			rob = self.spec_collEgoStaticObs_gt.update(['distEgoStaticObs_gt',data])
+			publishRobstness(self.robPub_collEgoStaticObs_gt, rob)
+			print_rob(rob, self.spec_collEgoStaticObs_gt.name)
 		self.robQue_reachEgoGoal_gt.printRob
 
 		# 2) perception -----

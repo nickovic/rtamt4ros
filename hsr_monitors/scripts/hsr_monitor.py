@@ -7,7 +7,7 @@
 # TODO:
 # 1) write all properties expected.
 # 2) fault localization.
-# 3) check overhead
+# 3) check overhead with some time command, and timing of update
 # 4) Other agent senario.
 # Others: robQue is annoying
 #         cleraning rosDistLib
@@ -498,7 +498,7 @@ class HSR_STL_monitor(object):
 			self.robQue_reachGlobalPathGoal.putRob(rob)
 
 		if self.map != []:
-			dists, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
+			dists, stamp = distsPath2OccupancyGrid(self.globalPath, self.map, True)
 			distGlobalPathObs = numpy.min(dists)
 			data = [[stamp.to_sec(), distGlobalPathObs]]
 			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
@@ -565,14 +565,14 @@ class HSR_STL_monitor(object):
 	def monitor_callback(self, event):
 		# 1) system -----
 		if self.loc_gt != [] and self.map != []:
-			dists, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.map, True)
+			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.map, True)
 			distEgoObs_gt = min(dists)
 			data = [[stamp.to_sec(), distEgoObs_gt]]
 			rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
 			publishRobstness(self.robPub_collEgoObs_gt, rob)
 			print_rob(rob, self.spec_collEgoObs_gt.name)
 		if self.loc_gt != [] and self.dynamicObsMap != []:
-			dists, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.dynamicObsMap, True)
+			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.dynamicObsMap, True)
 			distEgoDynamicObs_gt = min(dists)
 			data = [[stamp.to_sec(), distEgoDynamicObs_gt]]
 			rob = self.spec_collEgoDynamicObs_gt.update(['distEgoDynamicObs_gt',data])
@@ -623,7 +623,7 @@ class HSR_STL_monitor(object):
 					break
 				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
 					continue
-			dists, stamp = distPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
+			dists, stamp = distsPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
 			errLidar = numpy.average(dists)
 			data = [[stamp.to_sec(), errLidar]]
 			rob = self.spec_errLidar.update(['errLidar', data])
@@ -633,7 +633,7 @@ class HSR_STL_monitor(object):
 
 		# 3) planner -----
 		if self.loc != [] and self.map:
-			dists, stamp = distPoseStamped2OccupancyGrid(self.loc, self.map)
+			dists, stamp = distsPoseStamped2OccupancyGrid(self.loc, self.map)
 			distEgoObs = min(dists)
 			data = [[stamp.to_sec(), distEgoObs]]
 			rob = self.spec_collEgoObs.update(['distEgoObs',data])

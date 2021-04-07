@@ -121,12 +121,12 @@ class HSR_STL_monitor(object):
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
 		# TODO: use always eventually
-		self.spec_collEgoStaticObs_gt = rtamt.STLDenseTimeSpecification()
-		self.spec_collEgoStaticObs_gt.name = 'collEgoStaticObs_gt'
-		self.spec_collEgoStaticObs_gt.declare_var('distEgoStaticObs_gt', 'float')
-		self.spec_collEgoStaticObs_gt.set_var_io_type('distEgoStaticObs_gt', 'input')
-		self.spec_collEgoStaticObs_gt.spec = 'always [0,1] (distEgoStaticObs_gt >= 0.1)'
-		self.robPub_collEgoStaticObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoStaticObs_gt.name, FloatStamped, queue_size=10)
+		self.spec_avoidProhibitArea_gt = rtamt.STLDenseTimeSpecification()
+		self.spec_avoidProhibitArea_gt.name = 'avoidProhibitArea_gt'
+		self.spec_avoidProhibitArea_gt.declare_var('distEgoProhibitArea_gt', 'float')
+		self.spec_avoidProhibitArea_gt.set_var_io_type('distEgoProhibitArea_gt', 'input')
+		self.spec_avoidProhibitArea_gt.spec = 'always [0,1] (distEgoProhibitArea_gt >= 0.1)'
+		self.robPub_avoidProhibitArea_gt = rospy.Publisher(robTopicName+self.spec_avoidProhibitArea_gt.name, FloatStamped, queue_size=10)
 
 		# reach goal (Ground Truth): /hsrb/odom_ground_truth /goal
 		self.spec_reachEgoGoal_gt = rtamt.STLDenseTimeSpecification()
@@ -142,8 +142,8 @@ class HSR_STL_monitor(object):
 			self.spec_collEgoObs_gt.pastify()
 			self.spec_collEgoDynamicObs_gt.parse()
 			self.spec_collEgoDynamicObs_gt.pastify()
-			self.spec_collEgoStaticObs_gt.parse()
-			self.spec_collEgoStaticObs_gt.pastify()
+			self.spec_avoidProhibitArea_gt.parse()
+			self.spec_avoidProhibitArea_gt.pastify()
 			self.spec_reachEgoGoal_gt.parse()
 			self.spec_reachEgoGoal_gt.pastify()
 		except rtamt.STLParseException as err:
@@ -213,6 +213,23 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoObs.spec = 'always [0,1] (distEgoObs >= 0.1)'
 		self.robPub_collEgoObs = rospy.Publisher(robTopicName+self.spec_collEgoObs.name, FloatStamped, queue_size=10)
 
+		# colliosion with agents: /global_pose /dynamic_obstacle_map_ref
+		self.spec_collEgoDynamicObs = rtamt.STLDenseTimeSpecification()
+		self.spec_collEgoDynamicObs.name = 'collEgoDynamicObs'
+		self.spec_collEgoDynamicObs.declare_var('distEgoDynamicObs', 'float')
+		self.spec_collEgoDynamicObs.set_var_io_type('distEgoDynamicObs', 'input')
+		self.spec_collEgoDynamicObs.spec = 'always [0,1] (distEgoDynamicObs >= 0.1)'
+		self.robPub_collEgoDynamicObs = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs.name, FloatStamped, queue_size=10)
+
+		# avoid prohibit area: /global_pose /static_obstacle_map_ref
+		# TODO: always(distEgoObs < e -> eventuraly bumper_sensor == True)
+		self.spec_avoidEgoProhibitArea = rtamt.STLDenseTimeSpecification()
+		self.spec_avoidEgoProhibitArea.name = 'avoidEgoProhibitArea'
+		self.spec_avoidEgoProhibitArea.declare_var('distEgoProhibitArea', 'float')
+		self.spec_avoidEgoProhibitArea.set_var_io_type('distEgoProhibitArea', 'input')
+		self.spec_avoidEgoProhibitArea.spec = 'always [0,1] (distEgoProhibitArea >= 0.1)'
+		self.robPub_avoidEgoProhibitArea = rospy.Publisher(robTopicName+self.spec_avoidEgoProhibitArea.name, FloatStamped, queue_size=10)
+
 		# collision with obstacle LiDAR: hsrb/base_scan
 		self.spec_collLidar = rtamt.STLDenseTimeSpecification()
 		self.spec_collLidar.name = 'collLidar'
@@ -257,12 +274,6 @@ class HSR_STL_monitor(object):
 		self.robPub_collGlobalPathObs = rospy.Publisher(robTopicName+self.spec_collGlobalPathObs.name, FloatStamped, queue_size=10)
 		self.robQue_collGlobalPathObs = RobQue(self.spec_collGlobalPathObs.name)
 
-		# avoid prohibit area: /global_pose /static_obstacle_map_ref
-		# TODO
-
-		# colliosion with agents: /global_pose /dynamic_obstacle_map_ref
-		# TODO
-
 		# reach goal GlobalPath: /base_local_path /goal
 		self.spec_reachGlobalPathGoal = rtamt.STLDenseTimeSpecification()
 		self.spec_reachGlobalPathGoal.name = 'reachGlobalPathGoal'
@@ -284,6 +295,10 @@ class HSR_STL_monitor(object):
 		try:
 			self.spec_collEgoObs.parse()
 			self.spec_collEgoObs.pastify()
+			self.spec_collEgoDynamicObs.parse()
+			self.spec_collEgoDynamicObs.pastify()
+			self.spec_avoidEgoProhibitArea.parse()
+			self.spec_avoidEgoProhibitArea.pastify()
 			self.spec_collLidar.parse()
 			self.spec_collLidar.pastify()
 			self.spec_collStereoCamera.parse()
@@ -590,9 +605,9 @@ class HSR_STL_monitor(object):
 			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.prohibitMap, True)
 			distEgoStaticObs_gt = min(dists)
 			data = [[stamp.to_sec(), distEgoStaticObs_gt]]
-			rob = self.spec_collEgoStaticObs_gt.update(['distEgoStaticObs_gt',data])
-			publishRobstness(self.robPub_collEgoStaticObs_gt, rob)
-			print_rob(rob, self.spec_collEgoStaticObs_gt.name)
+			rob = self.spec_avoidProhibitArea_gt.update(['distEgoProhibitArea_gt',data])
+			publishRobstness(self.robPub_avoidProhibitArea_gt, rob)
+			print_rob(rob, self.spec_avoidProhibitArea_gt.name)
 		self.robQue_reachEgoGoal_gt.printRob
 
 		# 2) perception -----
@@ -653,6 +668,18 @@ class HSR_STL_monitor(object):
 			data = [[stamp.to_sec(), distEgoObs]]
 			rob = self.spec_collEgoObs.update(['distEgoObs',data])
 			print_rob(rob, self.spec_collEgoObs.name)
+		if self.loc != [] and self.dynamicObsMap:
+			dists, stamp = distsPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap)
+			distEgoDynamicObs = min(dists)
+			data = [[stamp.to_sec(), distEgoDynamicObs]]
+			rob = self.spec_collEgoDynamicObs.update(['distEgoDynamicObs',data])
+			print_rob(rob, self.spec_collEgoDynamicObs.name)
+		if self.loc != [] and self.prohibitMap:
+			dists, stamp = distsPoseStamped2OccupancyGrid(self.loc, self.prohibitMap)
+			distEgoProhibitArea = min(dists)
+			data = [[stamp.to_sec(), distEgoProhibitArea]]
+			rob = self.spec_avoidEgoProhibitArea.update(['distEgoProhibitArea',data])
+			print_rob(rob, self.spec_avoidEgoProhibitArea.name)
 		self.robQue_collLidar.printRob()
 		self.robQue_collStereoCamera.printRob()
 		self.robQue_collGlobalPathObs.printRob()

@@ -80,7 +80,7 @@ class RobQue(object):
 		while not self.queue.empty():
 			robs.append(self.queue.get())
 
-	   	print_rob(robs, self.name)
+		print_rob(robs, self.name)
 
 
 class BoolStamped(object):

@@ -632,14 +632,8 @@ class HSR_STL_monitor(object):
 
 
 		# 3) planner -----
-		if self.loc != [] and self.lidar:
-			while not rospy.is_shutdown():
-				try:
-					loc_pose_frame_base_rage_sensor_link = self.tfListener.transformPose(self.lidar.header.frame_id, self.loc)
-					break
-				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-					continue
-			dists, stamp = distPoseStamped2PointCloud2(loc_pose_frame_base_rage_sensor_link, self.lidar)
+		if self.loc != [] and self.map:
+			dists, stamp = distPoseStamped2OccupancyGrid(self.loc, self.map)
 			distEgoObs = min(dists)
 			data = [[stamp.to_sec(), distEgoObs]]
 			rob = self.spec_collEgoObs.update(['distEgoObs',data])

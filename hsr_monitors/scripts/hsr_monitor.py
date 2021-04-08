@@ -7,8 +7,9 @@
 # TODO:
 # 1) write all properties expected.
 # 2) fault localization.
-# 3) check overhead with some time command, and timing of update
-# 4) Other agent senario.
+# 3) change TF to TF2
+# 4) check overhead with some time command, and timing of update
+# 5) Other agent senario.
 # Others: robQue is annoying
 #         cleraning rosDistLib
 #         handling publish is annoying too.

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<!-- wrong path -->
+    <!-- $ rostopic pub /base_local_path nav_msgs/Path "{header: {frame_id: map}, poses: [{header: {frame_id: map}, pose: {position:{x: 0.1, y: 0.0, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}, {header: {frame_id: map}, pose: {position:{x: 6.0, y: 3.0, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0.7, w: 0.7}}}]}" -->
+	<node pkg="rostopic" type="rostopic" name="wrong_global_path" args= "pub /base_local_path nav_msgs/Path '{header: {frame_id: map}, poses: [{header: {frame_id: map}, pose: {position:{x: 0.1, y: 0.0, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}, {header: {frame_id: map}, pose: {position:{x: 6.0, y: 3.0, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0.7, w: 0.7}}}]}' --once">
+	</node>
+
+</launch>

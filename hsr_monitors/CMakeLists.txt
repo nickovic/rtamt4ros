@@ -10,9 +10,13 @@ project(hsr_monitors)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+# msgs
   std_msgs
-  tmc_navigation_msgs
-#  ros_distance_libs
+  sensor_msgs
+  nav_msgs
+  geometry_msgs
+  control_msgs
+  rtamt_msgs
 )
 
 ## System dependencies are found with CMake's conventions

@@ -41,7 +41,6 @@ from geometry_msgs.msg import PoseStamped, Pose, Twist
 from control_msgs.msg import JointTrajectoryControllerState
 
 from rtamt_msgs.msg import FloatStamped
-from tmc_navigation_msgs.msg import PathWithGoal
 
 
 DEBUG = False
@@ -416,6 +415,7 @@ class HSR_STL_monitor(object):
 		self.controllerInfo = []
 
 		# system intermidiate data
+		# TODO: original controller path is /path_follow_action/goal /base_local_path is only for viewer
 		rospy.Subscriber('/base_local_path', Path, self.globalPath_callback, queue_size=10)
 		self.globalPath = []
 

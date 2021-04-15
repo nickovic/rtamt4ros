@@ -589,6 +589,9 @@ class HSR_STL_monitor(object):
 			rob = self.spec_errLaserOdom.update(['errLaserOdom', data])
 			publishRobstness(self.robPub_errLaserOdom, rob)
 			print_rob(rob, self.spec_errLaserOdom.name)
+
+	#TODO: Becuase of distsPointCloud2OccupancyGrid tooks time, separately called. Maybe map filter is needed.
+	def monitor_perception_callback_temp(self, event):
 		if self.map != [] and self.lidar:
 			liderPointCloud2 = self.lp.projectLaser(self.lidar)
 			lidarPointCloud = pointCloud22PointCloud(liderPointCloud2)
@@ -701,6 +704,7 @@ if __name__ == '__main__':
 		hsr_stl_monitor = HSR_STL_monitor()
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_system_callback)
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_perception_callback)
+		rospy.Timer(rospy.Duration(5.0), hsr_stl_monitor.monitor_perception_callback_temp) #TODO: remove this
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_planner_callback)
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_controller_callback)
 		rospy.spin()

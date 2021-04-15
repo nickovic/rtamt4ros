@@ -385,7 +385,7 @@ class HSR_STL_monitor(object):
 		self.map = []
 		rospy.Subscriber('/static_obstacle_map_ref', OccupancyGrid, self.prohibitMap_callback, queue_size=10)
 		self.prohibitMap = []
-		rospy.Subscriber('/dynamic_obstacle_map_ref', OccupancyGrid, self.dynamicObsMap_callback, queue_size=10)
+		rospy.Subscriber('/dynamic_obstacle_map', OccupancyGrid, self.dynamicObsMap_callback, queue_size=10)
 		self.dynamicObsMap = []
 
 		# system order

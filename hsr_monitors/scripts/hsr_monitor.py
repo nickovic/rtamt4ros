@@ -550,7 +550,7 @@ class HSR_STL_monitor(object):
 			data = [[stamp.to_sec(), distEgoGoal_gt]]
 			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
 			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
-			print_rob(rob, self.robPub_reachEgoGoal_gt.name)
+			print_rob(rob, self.spec_reachEgoGoal_gt.name)
 
 
 	def monitor_perception_callback(self, event):
@@ -685,7 +685,7 @@ class HSR_STL_monitor(object):
 			data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[1]]]
 			rob = self.spec_referrWheelVelR.update(['referrWheelVelR', data])
 			publishRobstness(self.robPub_referrWheelVelR, rob)
-			print_rob(rob, self.robPub_referrWheelVelR.name)
+			print_rob(rob, self.spec_referrWheelVelR.name)
 
 		# 5) others (intermidiate variables) -----
 

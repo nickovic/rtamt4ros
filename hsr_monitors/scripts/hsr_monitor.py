@@ -429,30 +429,9 @@ class HSR_STL_monitor(object):
 	def loc_callback(self, poseStamped):
 		self.loc = poseStamped
 
-		if self.goal != []:
-			distEgoGoal, stamp = distPoseStamped2PoseStamped(self.goal, self.loc, True)
-			data = [[stamp.to_sec(), distEgoGoal]]
-			rob = self.spec_reachEgoGoal.update(['distEgoGoal', data])
-			publishRobstness(self.robPub_reachEgoGoal, rob)
-			self.robQue_reachEgoGoal.putRob(rob)
-
-		if self.globalPath != []:
-			referrLocGlobalPath, stamp = distPoseStamped2Path(self.loc, self.globalPath, True)
-			data = [[stamp.to_sec(), referrLocGlobalPath]]
-			rob = self.spec_referrLocGlobalPath.update(['referrLocGlobalPath', data])
-			publishRobstness(self.robPub_referrLocGlobalPath, rob)
-			self.robQue_referrLocGlobalPath.putRob(rob)
-
 
 	def odom_gt_callback(self, odometry):
 		self.loc_gt = odometry
-
-		if self.goal != []:
-			distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
-			data = [[stamp.to_sec(), distEgoGoal_gt]]
-			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
-			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
-			self.robQue_reachEgoGoal_gt.putRob(rob)
 
 
 	def wheelOdom_callback(self, odometry):
@@ -488,26 +467,11 @@ class HSR_STL_monitor(object):
 
 
 	def lidar_callback(self, laser_message):
-		self.lidar = self.lp.projectLaser(laser_message)
-
-		distLidar = min(laser_message.ranges)
-		data = [[laser_message.header.stamp.to_sec(), distLidar]]
-		rob = self.spec_collLidar.update(['distLidar', data])
-		publishRobstness(self.robPub_collLidar, rob)
-		self.robQue_collLidar.putRob(rob)
+		self.lidar = laser_message
 
 
 	def stereoCamera_callback(self, pointCloud2):
 		self.stereoCam = pointCloud2
-
-		points_gen = sensor_msgs.point_cloud2.read_points(self.stereoCam, field_names = ("x", "y", "z"), skip_nans=True)
-		points_list = numpy.array([i for i in points_gen])
-		dists = distPoints2Point(numpy.array(points_list), numpy.array([0.0,0.0,0.0]))
-		dist = min(dists)
-		data = [[self.stereoCam.header.stamp.to_sec(), dist]]
-		rob = self.spec_collStereoCamera.update(['distStereoCamera', data])
-		publishRobstness(self.robPub_collStereoCamera, rob)
-		self.robQue_collStereoCamera.putRob(rob)
 
 
 	def globalPath_callback(self, path):
@@ -537,14 +501,6 @@ class HSR_STL_monitor(object):
 	def baseVel_callback(self, twist):
 		self.baseVel = twist
 
-		if self.baseVel_ref != []:
-			referrBodyVel = distTwist2Twist(self.baseVel, self.baseVel_ref)
-			now = rospy.get_rostime()
-			data = [[now.to_sec(), referrBodyVel]]
-			rob = self.spec_referrBodyVel.update(['referrBodyVel', data])
-			publishRobstness(self.robPub_referrBodyVel, rob)
-			self.robQue_referrBodyVel.putRob(rob)
-
 
 	def bumperFront_callback(self, data):
 		header = Header()
@@ -552,11 +508,6 @@ class HSR_STL_monitor(object):
 		header.stamp = rospy.Time.now()
 		header.frame_id = ''
 		self.bumperFront = BoolStamped(data.data, header)
-
-		data = [[self.bumperFront.header.stamp.to_sec(), float(self.bumperFront.data)]]
-		rob = self.spec_collBumperFront.update(['bumperFront', data])
-		publishRobstness(self.robPub_collBumperFront, rob)
-		self.robQue_collBumperFront.putRob(rob)
 
 
 	def bumperBack_callback(self, data):
@@ -566,24 +517,9 @@ class HSR_STL_monitor(object):
 		header.frame_id = ''
 		self.bumperBack = BoolStamped(data.data, header)
 
-		data = [[self.bumperBack.header.stamp.to_sec(), float(self.bumperBack.data)]]
-		rob = self.spec_collBumperBack.update(['bumperBack', data])
-		publishRobstness(self.robPub_collBumperBack, rob)
-		self.robQue_collBumperBack.putRob(rob)
-
 
 	def controllerInfo_callback(self, data):
 		self.controllerInfo = data
-
-		data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[0]]]
-		rob = self.spec_referrWheelVelL.update(['reSferrWheelVelL', data])
-		publishRobstness(self.robPub_referrWheelVelL, rob)
-		self.robQue_referrWheelVelL.putRob(rob)
-
-		data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[1]]]
-		rob = self.spec_referrWheelVelR.update(['referrWheelVelR', data])
-		publishRobstness(self.robPub_referrWheelVelR, rob)
-		self.robQue_referrWheelVelR.putRob(rob)
 
 
 	def monitor_system_callback(self, event):
@@ -609,7 +545,12 @@ class HSR_STL_monitor(object):
 			rob = self.spec_avoidProhibitArea_gt.update(['distEgoProhibitArea_gt',data])
 			publishRobstness(self.robPub_avoidProhibitArea_gt, rob)
 			print_rob(rob, self.spec_avoidProhibitArea_gt.name)
-		self.robQue_reachEgoGoal_gt.printRob
+		if self.loc_gt != [] and self.goal != []:
+			distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
+			data = [[stamp.to_sec(), distEgoGoal_gt]]
+			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
+			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
+			print_rob(rob, self.robPub_reachEgoGoal_gt.name)
 
 
 	def monitor_perception_callback(self, event):
@@ -649,7 +590,8 @@ class HSR_STL_monitor(object):
 			publishRobstness(self.robPub_errLaserOdom, rob)
 			print_rob(rob, self.spec_errLaserOdom.name)
 		if self.map != [] and self.lidar:
-			lidarPointCloud = pointCloud22PointCloud(self.lidar)
+			liderPointCloud2 = self.lp.projectLaser(self.lidar)
+			lidarPointCloud = pointCloud22PointCloud(liderPointCloud2)
 			while not rospy.is_shutdown():
 				try:
 					lidarPointCloud_frame_map = self.tfListener.transformPointCloud(self.map.header.frame_id, lidarPointCloud)
@@ -684,21 +626,66 @@ class HSR_STL_monitor(object):
 			data = [[stamp.to_sec(), distEgoProhibitArea]]
 			rob = self.spec_avoidEgoProhibitArea.update(['distEgoProhibitArea',data])
 			print_rob(rob, self.spec_avoidEgoProhibitArea.name)
-		self.robQue_collLidar.printRob()
-		self.robQue_collStereoCamera.printRob()
+		if self.lidar !=[]:
+			distLidar = min(self.lidar.ranges)
+			data = [[laser_message.header.stamp.to_sec(), distLidar]]
+			rob = self.spec_collLidar.update(['distLidar', data])
+			publishRobstness(self.robPub_collLidar, rob)
+			print_rob(rob, self.spec_collLidar.name)
+		if self.stereoCam != []:
+			points_gen = sensor_msgs.point_cloud2.read_points(self.stereoCam, field_names = ("x", "y", "z"), skip_nans=True)
+			points_list = numpy.array([i for i in points_gen])
+			dists = distPoints2Point(numpy.array(points_list), numpy.array([0.0,0.0,0.0]))
+			dist = min(dists)
+			data = [[self.stereoCam.header.stamp.to_sec(), dist]]
+			rob = self.spec_collStereoCamera.update(['distStereoCamera', data])
+			publishRobstness(self.robPub_collStereoCamera, rob)
+			print_rob(rob, self.spec_collStereoCamera.name)
 		self.robQue_collGlobalPathObs.printRob()
 		self.robQue_reachGlobalPathGoal.printRob()
-		self.robQue_reachEgoGoal.printRob()
-		self.robQue_collBumperFront.printRob()
-		self.robQue_collBumperBack.printRob()
+		if self.loc != [] and self.goal != []:
+			distEgoGoal, stamp = distPoseStamped2PoseStamped(self.goal, self.loc, True)
+			data = [[stamp.to_sec(), distEgoGoal]]
+			rob = self.spec_reachEgoGoal.update(['distEgoGoal', data])
+			publishRobstness(self.robPub_reachEgoGoal, rob)
+			print_rob(rob, self.spec_reachEgoGoal.name)
+		if self.bumperFront != []:
+			data = [[self.bumperFront.header.stamp.to_sec(), float(self.bumperFront.data)]]
+			rob = self.spec_collBumperFront.update(['bumperFront', data])
+			publishRobstness(self.robPub_collBumperFront, rob)
+			print_rob(rob, self.spec_collBumperFront.name)
+		if self.bumperBack != []:
+			data = [[self.bumperBack.header.stamp.to_sec(), float(self.bumperBack.data)]]
+			rob = self.spec_collBumperBack.update(['bumperBack', data])
+			publishRobstness(self.robPub_collBumperBack, rob)
+			print_rob(rob, self.spec_collBumperBack.name)
 
 
 	def monitor_controller_callback(self, event):
 		# 4) controller -----
-		self.robQue_referrLocGlobalPath.printRob()
-		self.robQue_referrBodyVel.printRob()
-		self.robQue_referrWheelVelL.printRob()
-		self.robQue_referrWheelVelR.printRob()
+		if self.loc != [] and self.globalPath != []:
+			referrLocGlobalPath, stamp = distPoseStamped2Path(self.loc, self.globalPath, True)
+			data = [[stamp.to_sec(), referrLocGlobalPath]]
+			rob = self.spec_referrLocGlobalPath.update(['referrLocGlobalPath', data])
+			publishRobstness(self.robPub_referrLocGlobalPath, rob)
+			print_rob(rob, self.spec_referrLocGlobalPath.name)
+		if self.baseVel != [] and self.baseVel_ref != []:
+			referrBodyVel = distTwist2Twist(self.baseVel, self.baseVel_ref)
+			now = rospy.get_rostime()
+			data = [[now.to_sec(), referrBodyVel]]
+			rob = self.spec_referrBodyVel.update(['referrBodyVel', data])
+			publishRobstness(self.robPub_referrBodyVel, rob)
+			print_rob(rob, self.spec_referrBodyVel.name)
+		if self.controllerInfo != []:
+			data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[0]]]
+			rob = self.spec_referrWheelVelL.update(['reSferrWheelVelL', data])
+			publishRobstness(self.robPub_referrWheelVelL, rob)
+			print_rob(rob, self.spec_referrWheelVelL.name)
+
+			data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[1]]]
+			rob = self.spec_referrWheelVelR.update(['referrWheelVelR', data])
+			publishRobstness(self.robPub_referrWheelVelR, rob)
+			print_rob(rob, self.robPub_referrWheelVelR.name)
 
 		# 5) others (intermidiate variables) -----
 
@@ -716,7 +703,6 @@ if __name__ == '__main__':
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_perception_callback)
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_planner_callback)
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_controller_callback)
-
 		rospy.spin()
 	except rospy.ROSInterruptException:
 		pass

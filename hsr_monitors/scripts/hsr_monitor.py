@@ -678,7 +678,7 @@ class HSR_STL_monitor(object):
 			print_rob(rob, self.spec_referrBodyVel.name)
 		if self.controllerInfo != []:
 			data = [[self.controllerInfo.header.stamp.to_sec(), self.controllerInfo.error.velocities[0]]]
-			rob = self.spec_referrWheelVelL.update(['reSferrWheelVelL', data])
+			rob = self.spec_referrWheelVelL.update(['referrWheelVelL', data])
 			publishRobstness(self.robPub_referrWheelVelL, rob)
 			print_rob(rob, self.spec_referrWheelVelL.name)
 

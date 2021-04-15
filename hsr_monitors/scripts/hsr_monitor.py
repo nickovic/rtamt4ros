@@ -628,7 +628,7 @@ class HSR_STL_monitor(object):
 			print_rob(rob, self.spec_avoidEgoProhibitArea.name)
 		if self.lidar !=[]:
 			distLidar = min(self.lidar.ranges)
-			data = [[laser_message.header.stamp.to_sec(), distLidar]]
+			data = [[self.lidar.header.stamp.to_sec(), distLidar]]
 			rob = self.spec_collLidar.update(['distLidar', data])
 			publishRobstness(self.robPub_collLidar, rob)
 			print_rob(rob, self.spec_collLidar.name)

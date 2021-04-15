@@ -586,7 +586,7 @@ class HSR_STL_monitor(object):
 		self.robQue_referrWheelVelR.putRob(rob)
 
 
-	def monitor_callback(self, event):
+	def monitor_system_callback(self, event):
 		# 1) system -----
 		if self.loc_gt != [] and self.map != []:
 			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.map, True)
@@ -611,6 +611,8 @@ class HSR_STL_monitor(object):
 			print_rob(rob, self.spec_avoidProhibitArea_gt.name)
 		self.robQue_reachEgoGoal_gt.printRob
 
+
+	def monitor_perception_callback(self, event):
 		# 2) perception -----
 		if self.loc != [] and self.loc_gt != []:
 			errLoc, stamp = distPoseStamped2Odometry(self.loc, self.loc_gt)
@@ -662,6 +664,7 @@ class HSR_STL_monitor(object):
 			print_rob(rob, self.spec_errLidar.name)
 
 
+	def monitor_planner_callback(self, event):
 		# 3) planner -----
 		if self.loc != [] and self.map:
 			dists, stamp = distsPoseStamped2OccupancyGrid(self.loc, self.map)
@@ -689,6 +692,8 @@ class HSR_STL_monitor(object):
 		self.robQue_collBumperFront.printRob()
 		self.robQue_collBumperBack.printRob()
 
+
+	def monitor_controller_callback(self, event):
 		# 4) controller -----
 		self.robQue_referrLocGlobalPath.printRob()
 		self.robQue_referrBodyVel.printRob()
@@ -707,7 +712,11 @@ if __name__ == '__main__':
 	try:
 		rospy.init_node('hsr_stl_monitor')
 		hsr_stl_monitor = HSR_STL_monitor()
-		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_callback)
+		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_system_callback)
+		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_perception_callback)
+		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_planner_callback)
+		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_controller_callback)
+
 		rospy.spin()
 	except rospy.ROSInterruptException:
 		pass

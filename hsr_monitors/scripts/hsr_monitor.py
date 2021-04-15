@@ -117,7 +117,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoDynamicObs_gt.declare_var('distEgoDynamicObs_gt', 'float')
 		self.spec_collEgoDynamicObs_gt.set_var_io_type('distEgoDynamicObs_gt', 'input')
 		self.spec_collEgoDynamicObs_gt.spec = 'always [0,1] (distEgoDynamicObs_gt >= 0.1)'
-		self.robPub_spec_collEgoDynamicObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
+		self.robPub_collEgoDynamicObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
 		# TODO: use always eventually

@@ -1,5 +1,6 @@
 # TODO:
-# 1) support 3D
+# 1) distsPointCloud2OccupancyGrid, distsOdometry2OccupancyGrid are too slow.
+# 2) support 3D
 
 import rospy
 import numpy

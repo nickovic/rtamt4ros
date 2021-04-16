@@ -635,15 +635,6 @@ class HSR_STL_monitor(object):
 			rob = self.spec_collLidar.update(['distLidar', data])
 			publishRobstness(self.robPub_collLidar, rob)
 			print_rob(rob, self.spec_collLidar.name)
-		if self.stereoCam != []:
-			points_gen = sensor_msgs.point_cloud2.read_points(self.stereoCam, field_names = ("x", "y", "z"), skip_nans=True)
-			points_list = numpy.array([i for i in points_gen])
-			dists = distPoints2Point(numpy.array(points_list), numpy.array([0.0,0.0,0.0]))
-			dist = min(dists)
-			data = [[self.stereoCam.header.stamp.to_sec(), dist]]
-			rob = self.spec_collStereoCamera.update(['distStereoCamera', data])
-			publishRobstness(self.robPub_collStereoCamera, rob)
-			print_rob(rob, self.spec_collStereoCamera.name)
 		self.robQue_collGlobalPathObs.printRob()
 		self.robQue_reachGlobalPathGoal.printRob()
 		if self.loc != [] and self.goal != []:
@@ -662,6 +653,20 @@ class HSR_STL_monitor(object):
 			rob = self.spec_collBumperBack.update(['bumperBack', data])
 			publishRobstness(self.robPub_collBumperBack, rob)
 			print_rob(rob, self.spec_collBumperBack.name)
+
+
+	#TODO: Becuase of stereoCam dist tooks time, separately called.
+	def monitor_planner_callback_temp(self, event):
+		rospy.loginfo('here')
+		if self.stereoCam != []:
+			points_gen = sensor_msgs.point_cloud2.read_points(self.stereoCam, field_names = ("x", "y", "z"), skip_nans=True)
+			points_list = numpy.array([i for i in points_gen])
+			dists = distPoints2Point(numpy.array(points_list), numpy.array([0.0,0.0,0.0]))
+			dist = min(dists)
+			data = [[self.stereoCam.header.stamp.to_sec(), dist]]
+			rob = self.spec_collStereoCamera.update(['distStereoCamera', data])
+			publishRobstness(self.robPub_collStereoCamera, rob)
+			print_rob(rob, self.spec_collStereoCamera.name)
 
 
 	def monitor_controller_callback(self, event):
@@ -706,6 +711,7 @@ if __name__ == '__main__':
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_perception_callback)
 		rospy.Timer(rospy.Duration(5.0), hsr_stl_monitor.monitor_perception_callback_temp) #TODO: remove this
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_planner_callback)
+		rospy.Timer(rospy.Duration(3.0), hsr_stl_monitor.monitor_planner_callback_temp) #TODO: remove this. The loop does not work.
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_controller_callback)
 		rospy.spin()
 	except rospy.ROSInterruptException:

@@ -63,7 +63,6 @@ def mapids2mapCoordination(mapIds, occupancyGrid):
 	if mapIds.shape == (2,):        #for 1 id case
 		mapIds = numpy.array([mapIds])
 	pointsGridCoordinations = mapIds*occupancyGrid.info.resolution
-	#TODO condider TF!
 	pointsGridCoordinations = pointsGridCoordinations + [occupancyGrid.info.origin.position.x, occupancyGrid.info.origin.position.y]
 	if pointsGridCoordinations.shape == (1,2):     #for 1 id case
 		pointsGridCoordinations = pointsGridCoordinations[0]
@@ -136,17 +135,17 @@ def distPoseStamped2Path(poseStamped, path, extrapolation=False):
 	return dist, stamp
 
 
-def distPoints2Path(points, path):
-	# just thinking 2D (x,y)
-	pathDists = []
-	# TODO just thinking 2D
-	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
-	for point in points:
-		dist = distPoint2LineString(point, pathList)
-		pathDists.append(dist)
-	pathDists = numpy.array(pathDists)
-	pathDist = numpy.min(pathDists)
-	return pathDist
+# def distPoints2Path(points, path):
+# 	# just thinking 2D (x,y)
+# 	pathDists = []
+# 	# TODO just thinking 2D
+# 	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
+# 	for point in points:
+# 		dist = distPoint2LineString(point, pathList)
+# 		pathDists.append(dist)
+# 	pathDists = numpy.array(pathDists)
+# 	pathDist = numpy.min(pathDists)
+# 	return pathDist
 
 
 # def distsPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
@@ -184,16 +183,17 @@ def distsOdometry2OccupancyGrid(odometry, occupancyGrid, extrapolation=False):
 	return dists, stamp
 
 
-def distsPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
+def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
 	check = checkFrameId(path, occupancyGrid)
 
 	staticMap = occupancyGridData2StaticMap(occupancyGrid)
 	obsIds = numpy.transpose(numpy.nonzero(staticMap))
 	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
-	dists = distPoints2Path(mapPoints, path)
+	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
+	dist = distMultiPoint2LineString(mapPoints, pathList)
 
 	stamp = stampSlector(path, occupancyGrid, extrapolation)
-	return dists, stamp
+	return dist, stamp
 
 
 def distsPointCloud2OccupancyGrid(pointCloud, occupancyGrid, extrapolation=False):

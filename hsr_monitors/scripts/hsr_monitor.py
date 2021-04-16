@@ -485,14 +485,6 @@ class HSR_STL_monitor(object):
 			publishRobstness(self.robPub_reachGlobalPathGoal, rob)
 			self.robQue_reachGlobalPathGoal.putRob(rob)
 
-		if self.map != []:
-			dists, stamp = distsPath2OccupancyGrid(self.globalPath, self.map, True)
-			distGlobalPathObs = numpy.min(dists)
-			data = [[stamp.to_sec(), distGlobalPathObs]]
-			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
-			publishRobstness(self.robPub_collGlobalPathObs, rob)
-			self.robQue_collGlobalPathObs.putRob(rob)
-
 
 	def baseVel_ref_callback(self, twist):
 		self.baseVel_ref = twist
@@ -653,6 +645,12 @@ class HSR_STL_monitor(object):
 			rob = self.spec_collBumperBack.update(['bumperBack', data])
 			publishRobstness(self.robPub_collBumperBack, rob)
 			print_rob(rob, self.spec_collBumperBack.name)
+		if self.globalPath != [] and self.map != []:
+			dists, stamp = distsPath2OccupancyGrid(self.globalPath, self.map, True)
+			distGlobalPathObs = numpy.min(dists)
+			data = [[stamp.to_sec(), distGlobalPathObs]]
+			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+			publishRobstness(self.robPub_collGlobalPathObs, rob)
 
 
 	#TODO: Becuase of stereoCam dist tooks time, separately called.

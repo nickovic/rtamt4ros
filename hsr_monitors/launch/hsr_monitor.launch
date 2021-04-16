@@ -10,29 +10,12 @@
 	<arg name="rqt_plot" default="false" />
 	<group if="$(arg rqt_plot)">
 	  	<node name="rob_system_plot" pkg="rqt_plot" type="rqt_plot" args="
-			/rtamt/collEgoObs_gt/value
-		  	/rtamt/collEgoDynamicObs_gt/value
-			/rtatm/avoidProhibitArea_gt/value
-		  	/rtamt/reachEgoGoal_gt/value"/>
+			/rtamt/collEgoObs_gt/value"/>
 		<node name="rob_perception_plot" pkg="rqt_plot" type="rqt_plot" args="
-			/rtamt/errLoc/value
-			/rtamt/errWheelOdom/value
-			/rtamt/errLaserOdom/value
-		  	/rtamt/errLidar/value"/>
+			/rtamt/errLoc/value"/>
 		<node name="rob_planner_plot" pkg="rqt_plot" type="rqt_plot" args="
-			/rtamt/collEgoObs/value
-			/rtamt/collEgoDynamicObs/value
-			/rtamt/avoidEgoProhibitArea/value
-		  	/rtamt/collLidar/value
-			/rtamt/collStereoCamera/value
-			/rtamt/collBumperFront/value
-			/rtamt/collBbumperBack/value
-		  	/rtamt/collGlobalPathObs/value
-			/rtamt/reachGlobalPathGoal/value
-			/rtamt/reachEgoGoal/value"/>
+		  	/rtamt/collGlobalPathObs/value"/>
 	  	<node name="rob_controller_plot" pkg="rqt_plot" type="rqt_plot" args="
-			/rtamt/referrLocGlobalPath/value
-		  	/rtamt/referrBodyVel/value
 		  	/rtamt/referrWheelVelL/value
 			/rtamt/referrWheelVelR/value"/>
 	</group>

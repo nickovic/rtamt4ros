@@ -1,6 +1,6 @@
 import numpy
 from numpy.linalg import norm
-from shapely.geometry import Polygon, LineString, Point
+from shapely.geometry import Polygon, LineString, Point, MultiPoint
 from scipy import signal, interpolate
 
 
@@ -134,6 +134,15 @@ def distPoint2LineString(point, lineString):
     if not type(lineString) is LineString:
         lineString = LineString(lineString)
     dist = lineString.distance(point)
+    return dist
+
+
+def distMultiPoint2LineString(multiPoint, lineString):
+    if not type(multiPoint) is MultiPoint:
+        multiPoint = MultiPoint(multiPoint)
+    if not type(lineString) is LineString:
+        lineString = LineString(lineString)
+    dist = lineString.distance(multiPoint)
     return dist
 
 

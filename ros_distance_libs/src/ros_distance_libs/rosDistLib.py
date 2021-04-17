@@ -4,15 +4,19 @@
 
 import rospy
 import numpy
+import tf
 import sensor_msgs.point_cloud2
 
 from std_msgs.msg import String
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
-from geometry_msgs.msg import PoseStamped, Pose, Twist, Point32
+from geometry_msgs.msg import PoseStamped, Pose, Twist, Point32, Vector3
 
 from shapelyLib import *
+
+import matplotlib.pyplot as plt
+
 
 # ROS data conversion -----
 def orientation2angular(orientation):
@@ -56,17 +60,27 @@ def odometry2PoseStamped(odometry):
 
 def occupancyGridData2StaticMap(occupancyGrid):
 	staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
+	staticMap = numpy.transpose(staticMap)
 	return staticMap
 
 
 def mapids2mapCoordination(mapIds, occupancyGrid):
 	if mapIds.shape == (2,):        #for 1 id case
 		mapIds = numpy.array([mapIds])
+
 	pointsGridCoordinations = mapIds*occupancyGrid.info.resolution
 	pointsGridCoordinations = pointsGridCoordinations + [occupancyGrid.info.origin.position.x, occupancyGrid.info.origin.position.y]
+
 	if pointsGridCoordinations.shape == (1,2):     #for 1 id case
 		pointsGridCoordinations = pointsGridCoordinations[0]
 	return pointsGridCoordinations
+
+
+def occupancyGridData2PointList(occupancyGrid):
+	staticMap = occupancyGridData2StaticMap(occupancyGrid)
+	obsIds = numpy.transpose(numpy.nonzero(staticMap))
+	pointList = mapids2mapCoordination(obsIds, occupancyGrid)
+	return pointList
 
 
 # basic functions -----

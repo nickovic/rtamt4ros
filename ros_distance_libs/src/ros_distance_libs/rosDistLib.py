@@ -148,50 +148,25 @@ def distPoseStamped2Path(poseStamped, path, extrapolation=False):
 	return dist, stamp
 
 
-# def distPoints2Path(points, path):
-# 	# just thinking 2D (x,y)
-# 	pathDists = []
-# 	# TODO just thinking 2D
-# 	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
-# 	for point in points:
-# 		dist = distPoint2LineString(point, pathList)
-# 		pathDists.append(dist)
-# 	pathDists = numpy.array(pathDists)
-# 	pathDist = numpy.min(pathDists)
-# 	return pathDist
-
-
-# def distsPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
-# 	check = checkFrameId(poseStamped, pointCloud2)
-
-# 	points_gen = sensor_msgs.point_cloud2.read_points(pointCloud2)
-# 	# TODO just thinking 2D
-# 	points_list = numpy.array([(i[0], i[1])for i in points_gen])
-# 	dists = distPoints2Point(points_list, [poseStamped.pose.position.x, poseStamped.pose.position.y])
-
-# 	stamp = stampSlector(poseStamped, pointCloud2, extrapolation)
-# 	return dists, stamp
-
-
-def distsPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation=False):
+def distPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation=False):
 	check = checkFrameId(poseStamped, occupancyGrid)
 
 	point = (poseStamped.pose.position.x, poseStamped.pose.position.y)
 
 	mapPoints = occupancyGridData2PointList(occupancyGrid)
-	dists = distPoints2Point(mapPoints, point)
+	dist = distMultiPoint2Point(mapPoints, point)
 
 	stamp = stampSlector(poseStamped, occupancyGrid, extrapolation)
-	return dists, stamp
+	return dist, stamp
 
 
-def distsOdometry2OccupancyGrid(odometry, occupancyGrid, extrapolation=False):
+def distOdometry2OccupancyGrid(odometry, occupancyGrid, extrapolation=False):
 	check = checkFrameId(odometry, occupancyGrid)
 
 	poseStamped = odometry2PoseStamped(odometry)
-	dists, stamp = distsPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation)
+	dist, stamp = distPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation)
 
-	return dists, stamp
+	return dist, stamp
 
 
 def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):

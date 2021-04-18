@@ -10,13 +10,9 @@ import timeit
 
 import rospy
 
-import rtamt
-
 from ros_distance_libs.rosDistLib import *
 
 #other msg
-from std_msgs.msg import String, Header, Bool
-from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import OccupancyGrid, Path
 
 

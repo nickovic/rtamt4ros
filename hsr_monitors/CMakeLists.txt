@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   geometry_msgs
   control_msgs
-  rtamt_msgs
 )
 
 ## System dependencies are found with CMake's conventions

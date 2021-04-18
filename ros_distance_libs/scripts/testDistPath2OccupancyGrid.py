@@ -73,13 +73,6 @@ class TestDistPath2OccupancyGrid(object):
 		plt.show()
 
 
-
-		# t_start = timeit.default_timer()
-		# distGlobalPathObs, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
-		# t_dist = timeit.default_timer()
-		# rospy.logwarn('Computation time[s]: dist={:0.8f}'.format(t_dist-t_start))
-
-
 if __name__ == '__main__':
 
 	try:

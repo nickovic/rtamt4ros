@@ -489,7 +489,7 @@ class HSR_STL_monitor(object):
 			t_pub = timeit.default_timer()
 			rospy.logwarn('Dist: {}'.format(distGlobalPathObs))
 			rospy.logwarn('Rob: {}'.format(rob))
-			rospy.logwarn('Computation time[s]: dist={:0.8f}, rtamt={:0.8f}, publish={:0.8f}'.format(t_dist-t_start, t_rtamt-t_dist, t_pub-t_rtamt))
+			rospy.logwarn('collGlobalPathObs Computation time[s]: dist={:0.8f}, rtamt={:0.8f}, publish={:0.8f}'.format(t_dist-t_start, t_rtamt-t_dist, t_pub-t_rtamt))
 		if self.goal !=[]:
 			goalPoseStamped = self.globalPath.poses[-1]
 			distGlobalPathGoal, stamp = distPoseStamped2PoseStamped(self.goal, goalPoseStamped, True)
@@ -595,6 +595,7 @@ class HSR_STL_monitor(object):
 	#TODO: Becuase of distsPointCloud2OccupancyGrid tooks time, separately called. Maybe map filter is needed.
 	def monitor_perception_callback_temp(self, event):
 		if self.map != [] and self.lidar:
+			t_start = timeit.default_timer()
 			liderPointCloud2 = self.lp.projectLaser(self.lidar)
 			lidarPointCloud = pointCloud22PointCloud(liderPointCloud2)
 			while not rospy.is_shutdown():
@@ -603,12 +604,16 @@ class HSR_STL_monitor(object):
 					break
 				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
 					continue
-			dists, stamp = distsPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
-			errLidar = numpy.average(dists)
+			t_convert = timeit.default_timer()
+			errLidar, stamp = distPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
+			t_dist = timeit.default_timer()
 			data = [[stamp.to_sec(), errLidar]]
 			rob = self.spec_errLidar.update(['errLidar', data])
+			t_rtamt = timeit.default_timer()
 			publishRobstness(self.robPub_errLidar, rob)
 			print_rob(rob, self.spec_errLidar.name)
+
+			rospy.logwarn('errLidar Computation time[s]: convert={:0.8f}, dist={:0.8f}, rtamt={:0.8f}'.format(t_convert-t_start, t_dist-t_convert, t_rtamt-t_dist))
 
 
 	def monitor_planner_callback(self, event):
@@ -617,16 +622,19 @@ class HSR_STL_monitor(object):
 			distEgoObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.map)
 			data = [[stamp.to_sec(), distEgoObs]]
 			rob = self.spec_collEgoObs.update(['distEgoObs',data])
+			publishRobstness(self.robPub_collEgoObs, rob)
 			print_rob(rob, self.spec_collEgoObs.name)
 		if self.loc != [] and self.dynamicObsMap:
 			distEgoDynamicObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap)
 			data = [[stamp.to_sec(), distEgoDynamicObs]]
 			rob = self.spec_collEgoDynamicObs.update(['distEgoDynamicObs',data])
+			publishRobstness(self.robPub_collEgoDynamicObs, rob)
 			print_rob(rob, self.spec_collEgoDynamicObs.name)
 		if self.loc != [] and self.prohibitMap:
 			distEgoProhibitArea, stamp = distPoseStamped2OccupancyGrid(self.loc, self.prohibitMap)
 			data = [[stamp.to_sec(), distEgoProhibitArea]]
 			rob = self.spec_avoidEgoProhibitArea.update(['distEgoProhibitArea',data])
+			publishRobstness(self.robPub_avoidEgoProhibitArea, rob)
 			print_rob(rob, self.spec_avoidEgoProhibitArea.name)
 		if self.lidar !=[]:
 			distLidar = min(self.lidar.ranges)
@@ -699,9 +707,9 @@ if __name__ == '__main__':
 		hsr_stl_monitor = HSR_STL_monitor()
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_system_callback)
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_perception_callback)
-		rospy.Timer(rospy.Duration(5.0), hsr_stl_monitor.monitor_perception_callback_temp) #TODO: remove this
+		#rospy.Timer(rospy.Duration(1.0), hsr_stl_monitor.monitor_perception_callback_temp) #TODO: remove this
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_planner_callback)
-		rospy.Timer(rospy.Duration(3.0), hsr_stl_monitor.monitor_planner_callback_temp) #TODO: remove this. The loop does not work.
+		#rospy.Timer(rospy.Duration(3.0), hsr_stl_monitor.monitor_planner_callback_temp) #TODO: remove this. The loop does not work.
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_controller_callback)
 		rospy.spin()
 	except rospy.ROSInterruptException:

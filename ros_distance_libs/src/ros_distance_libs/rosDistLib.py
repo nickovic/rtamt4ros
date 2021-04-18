@@ -152,7 +152,6 @@ def distPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation=Fals
 	check = checkFrameId(poseStamped, occupancyGrid)
 
 	point = (poseStamped.pose.position.x, poseStamped.pose.position.y)
-
 	mapPoints = occupancyGridData2PointList(occupancyGrid)
 	dist = distMultiPoint2Point(mapPoints, point)
 
@@ -180,15 +179,15 @@ def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
 	return dist, stamp
 
 
-def distsPointCloud2OccupancyGrid(pointCloud, occupancyGrid, extrapolation=False):
+def distPointCloud2OccupancyGrid(pointCloud, occupancyGrid, extrapolation=False):
 	check = checkFrameId(pointCloud, occupancyGrid)
 
 	mapPoints = occupancyGridData2PointList(occupancyGrid)
-	point_list = [ (i.x, i.y) for i in pointCloud.points]
-	dists = distPoints2Points(numpy.array(point_list), numpy.array(mapPoints))
+	LiderPoints = [ (i.x, i.y) for i in pointCloud.points]
+	dist = distMultiPoint2MultiPoint(LiderPoints, mapPoints)
 
 	stamp = stampSlector(pointCloud, occupancyGrid, extrapolation)
-	return dists, stamp
+	return dist, stamp
 
 
 def occupancyGridPlot(ax, occupancyGrid):

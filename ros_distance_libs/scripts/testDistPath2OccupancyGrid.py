@@ -48,6 +48,7 @@ class TestDistPath2OccupancyGrid(object):
 		occupancyGrid = self.map
 		path = self.globalPath
 
+		# internal
 		t_start = timeit.default_timer()
 
 		mapPoints = occupancyGridData2PointList(occupancyGrid)
@@ -57,10 +58,16 @@ class TestDistPath2OccupancyGrid(object):
 		t_convsrsion = timeit.default_timer()
 
 		dist = distMultiPoint2LineString(mapPoints, pathList)
-		t_dist = timeit.default_timer()
+		t_shape = timeit.default_timer()
 		rospy.loginfo('Dist: {}'.format(dist))
 
-		rospy.logwarn('Computation time[s]: conversion={:0.8f}, dist={:0.8f}'.format(t_convsrsion-t_start, t_dist-t_convsrsion))
+		rospy.loginfo('Computation time[s]: conversion={:0.8f}, shape={:0.8f}'.format(t_convsrsion-t_start, t_shape-t_convsrsion))
+
+		# distPath2OccupancyGrid
+		t_start = timeit.default_timer()
+		dist = distPath2OccupancyGrid(path, occupancyGrid)
+		t_dist = timeit.default_timer()
+		rospy.loginfo('distPath2OccupancyGrid time[s]: {:0.8f}'.format(t_dist-t_start))
 
 		mapFig = plt.figure(figsize = (12,12))
 		ax = mapFig.add_subplot(1, 1, 1)

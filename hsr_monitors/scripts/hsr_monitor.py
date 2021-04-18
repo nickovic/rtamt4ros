@@ -133,7 +133,9 @@ class HSR_STL_monitor(object):
 		self.spec_reachEgoGoal_gt.name = 'reachEgoGoal_gt'
 		self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
 		self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
-		self.spec_reachEgoGoal_gt.spec = 'eventually [0,3] (distEgoGoal_gt < 0.1)'
+		self.spec_reachEgoGoal_gt.declare_var('moveTask', 'float')
+		self.spec_reachEgoGoal_gt.set_var_io_type('moveTask', 'input')
+		self.spec_reachEgoGoal_gt.spec = 'eventually [0,30] (distEgoGoal_gt < 0.5)'
 		self.robPub_reachEgoGoal_gt = rospy.Publisher(robTopicPrefix+self.spec_reachEgoGoal_gt.name, FloatStamped, queue_size=10)
 		self.robQue_reachEgoGoal_gt = RobQue(self.spec_reachEgoGoal_gt.name)
 
@@ -290,7 +292,7 @@ class HSR_STL_monitor(object):
 		self.spec_reachEgoGoal.name = 'reachEgoGoal'
 		self.spec_reachEgoGoal.declare_var('distEgoGoal', 'float')
 		self.spec_reachEgoGoal.set_var_io_type('distEgoGoal', 'input')
-		self.spec_reachEgoGoal.spec = 'eventually [0,3] (distEgoGoal < 0.1)'
+		self.spec_reachEgoGoal.spec = 'eventually [0,30] (distEgoGoal < 0.5)'
 		self.robPub_reachEgoGoal = rospy.Publisher(robTopicPrefix+self.spec_reachEgoGoal.name, FloatStamped, queue_size=10)
 		self.robQue_reachEgoGoal = RobQue(self.spec_reachEgoGoal.name)
 
@@ -538,7 +540,7 @@ class HSR_STL_monitor(object):
 			publishRobstness(self.robPub_collEgoObs_gt, rob)
 			print_rob(rob, self.spec_collEgoObs_gt.name)
 		if self.loc_gt != [] and self.dynamicObsMap != []:
-			distEgoDynamicObs_gt, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.dynamicObsMap, True)
+			distEgoDynamicObs_gt, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.dynamicObsMap, True, 3)
 			data = [[stamp.to_sec(), distEgoDynamicObs_gt]]
 			rob = self.spec_collEgoDynamicObs_gt.update(['distEgoDynamicObs_gt',data])
 			publishRobstness(self.robPub_collEgoDynamicObs_gt, rob)
@@ -551,8 +553,13 @@ class HSR_STL_monitor(object):
 			print_rob(rob, self.spec_avoidProhibitArea_gt.name)
 		if self.loc_gt != [] and self.goal != []:
 			distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
-			data = [[stamp.to_sec(), distEgoGoal_gt]]
-			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
+			distData = [[stamp.to_sec(), distEgoGoal_gt]]
+			if self.goal != []:
+				moveTask = 1.0
+			else:
+				moveTask = 0.0
+			eventData = [[stamp.to_sec(), moveTask]]
+			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', distData])
 			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
 			print_rob(rob, self.spec_reachEgoGoal_gt.name)
 
@@ -628,7 +635,7 @@ class HSR_STL_monitor(object):
 			publishRobstness(self.robPub_collEgoObs, rob)
 			print_rob(rob, self.spec_collEgoObs.name)
 		if self.loc != [] and self.dynamicObsMap:
-			distEgoDynamicObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap, True)
+			distEgoDynamicObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap, True, 3)
 			data = [[stamp.to_sec(), distEgoDynamicObs]]
 			rob = self.spec_collEgoDynamicObs.update(['distEgoDynamicObs',data])
 			publishRobstness(self.robPub_collEgoDynamicObs, rob)

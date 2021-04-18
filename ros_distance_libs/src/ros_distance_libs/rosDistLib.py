@@ -109,7 +109,6 @@ def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False)
 	check = checkFrameId(poseStamped0, poseStamped1)
 
 	dist = distPoint2Point((poseStamped0.pose.position.x, poseStamped0.pose.position.y), (poseStamped1.pose.position.x, poseStamped1.pose.position.y))
-
 	stamp = stampSlector(poseStamped0, poseStamped1, extrapolation)
 
 	return dist, stamp
@@ -179,9 +178,7 @@ def distsPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation=Fal
 
 	point = (poseStamped.pose.position.x, poseStamped.pose.position.y)
 
-	staticMap = occupancyGridData2StaticMap(occupancyGrid)
-	obsIds = numpy.transpose(numpy.nonzero(staticMap))
-	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
+	mapPoints = occupancyGridData2PointList(occupancyGrid)
 	dists = distPoints2Point(mapPoints, point)
 
 	stamp = stampSlector(poseStamped, occupancyGrid, extrapolation)
@@ -200,9 +197,7 @@ def distsOdometry2OccupancyGrid(odometry, occupancyGrid, extrapolation=False):
 def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
 	check = checkFrameId(path, occupancyGrid)
 
-	staticMap = occupancyGridData2StaticMap(occupancyGrid)
-	obsIds = numpy.transpose(numpy.nonzero(staticMap))
-	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
+	mapPoints = occupancyGridData2PointList(occupancyGrid)
 	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
 	dist = distMultiPoint2LineString(mapPoints, pathList)
 
@@ -213,9 +208,7 @@ def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
 def distsPointCloud2OccupancyGrid(pointCloud, occupancyGrid, extrapolation=False):
 	check = checkFrameId(pointCloud, occupancyGrid)
 
-	staticMap = occupancyGridData2StaticMap(occupancyGrid)
-	obsIds = numpy.transpose(numpy.nonzero(staticMap))
-	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
+	mapPoints = occupancyGridData2PointList(occupancyGrid)
 	point_list = [ (i.x, i.y) for i in pointCloud.points]
 	dists = distPoints2Points(numpy.array(point_list), numpy.array(mapPoints))
 

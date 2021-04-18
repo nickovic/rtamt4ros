@@ -6,6 +6,7 @@ import rospy
 import numpy
 import tf
 import sensor_msgs.point_cloud2
+import timeit
 
 from std_msgs.msg import String
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
@@ -59,7 +60,9 @@ def odometry2PoseStamped(odometry):
 
 
 def occupancyGridData2StaticMap(occupancyGrid):
-	staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
+	#t_start = timeit.default_timer()
+	staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width) #TODO: numpy.asarray(occupancyGrid.data, dtype=numpy.int8) takes 150msec
+	#rospy.logwarn('{:.8f}'.format(timeit.default_timer()-t_start))
 	staticMap = numpy.transpose(staticMap)
 	return staticMap
 

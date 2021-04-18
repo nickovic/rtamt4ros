@@ -619,19 +619,19 @@ class HSR_STL_monitor(object):
 	def monitor_planner_callback(self, event):
 		# 3) planner -----
 		if self.loc != [] and self.map:
-			distEgoObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.map)
+			distEgoObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.map, True)
 			data = [[stamp.to_sec(), distEgoObs]]
 			rob = self.spec_collEgoObs.update(['distEgoObs',data])
 			publishRobstness(self.robPub_collEgoObs, rob)
 			print_rob(rob, self.spec_collEgoObs.name)
 		if self.loc != [] and self.dynamicObsMap:
-			distEgoDynamicObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap)
+			distEgoDynamicObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap, True)
 			data = [[stamp.to_sec(), distEgoDynamicObs]]
 			rob = self.spec_collEgoDynamicObs.update(['distEgoDynamicObs',data])
 			publishRobstness(self.robPub_collEgoDynamicObs, rob)
 			print_rob(rob, self.spec_collEgoDynamicObs.name)
 		if self.loc != [] and self.prohibitMap:
-			distEgoProhibitArea, stamp = distPoseStamped2OccupancyGrid(self.loc, self.prohibitMap)
+			distEgoProhibitArea, stamp = distPoseStamped2OccupancyGrid(self.loc, self.prohibitMap, True)
 			data = [[stamp.to_sec(), distEgoProhibitArea]]
 			rob = self.spec_avoidEgoProhibitArea.update(['distEgoProhibitArea',data])
 			publishRobstness(self.robPub_avoidEgoProhibitArea, rob)

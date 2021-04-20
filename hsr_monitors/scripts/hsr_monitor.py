@@ -116,7 +116,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoDynamicObs_gt.name = 'collEgoDynamicObs_gt'
 		self.spec_collEgoDynamicObs_gt.declare_var('distEgoDynamicObs_gt', 'float')
 		self.spec_collEgoDynamicObs_gt.set_var_io_type('distEgoDynamicObs_gt', 'input')
-		self.spec_collEgoDynamicObs_gt.spec = 'always [0,3] (distEgoDynamicObs_gt > 0.2)'
+		self.spec_collEgoDynamicObs_gt.spec = 'always [0,3] (distEgoDynamicObs_gt > 0.05)'
 		self.robPub_collEgoDynamicObs_gt = rospy.Publisher(robTopicPrefix+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
@@ -222,7 +222,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoDynamicObs.name = 'collEgoDynamicObs'
 		self.spec_collEgoDynamicObs.declare_var('distEgoDynamicObs', 'float')
 		self.spec_collEgoDynamicObs.set_var_io_type('distEgoDynamicObs', 'input')
-		self.spec_collEgoDynamicObs.spec = 'always [0,3] (distEgoDynamicObs > 0.2)'
+		self.spec_collEgoDynamicObs.spec = 'always [0,3] (distEgoDynamicObs > 0.05)'
 		self.robPub_collEgoDynamicObs = rospy.Publisher(robTopicPrefix+self.spec_collEgoDynamicObs.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area: /global_pose /static_obstacle_map_ref

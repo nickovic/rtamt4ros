@@ -7,11 +7,10 @@
 	'{
 		header: {stamp: now, frame_id: map},
 		goal: {
-			path_with_goal: {
+			path: {
 				header: {stamp: now, frame_id: map},
 				poses: [{header: {stamp: now, frame_id: map}, pose: {position:{x: 0.1, y: 0.0, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0.0, w: 1.0}}},
 		    			{header: {stamp: now, frame_id: map}, pose: {position:{x: 6.0, y: 3.0, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0.7, w: 0.7}}}],
-				goal: {position:{x: 6.0, y: 3.0, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0.7, w: 0.7}}
 			}
 		}
 	}'

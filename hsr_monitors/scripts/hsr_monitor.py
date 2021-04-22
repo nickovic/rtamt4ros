@@ -330,7 +330,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrLocGlobalPath.name = 'referrLocGlobalPath'
 		self.spec_referrLocGlobalPath.declare_var('referrLocGlobalPath', 'float')
 		self.spec_referrLocGlobalPath.set_var_io_type('referrLocGlobalPath', 'input')
-		self.spec_referrLocGlobalPath.spec = 'always [0,3] (referrLocGlobalPath < 0.1)'
+		self.spec_referrLocGlobalPath.spec = 'always [0,7] (eventually [0, 5] (referrLocGlobalPath < 0.1))'
 		self.robPub_referrLocGlobalPath = rospy.Publisher(robTopicPrefix+self.spec_referrLocGlobalPath.name, FloatStamped, queue_size=10)
 		self.robQue_referrLocGlobalPath = RobQue(self.robPub_referrLocGlobalPath.name)
 
@@ -339,7 +339,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrBodyVel.name = 'referrBodyVel'
 		self.spec_referrBodyVel.declare_var('referrBodyVel', 'float')
 		self.spec_referrBodyVel.set_var_io_type('referrBodyVel', 'input')
-		self.spec_referrBodyVel.spec = 'always [0,5] (referrBodyVel < 0.1)'
+		self.spec_referrBodyVel.spec = 'always [0,7] (eventually [0, 5] (referrBodyVel < 0.1))'
 		self.robPub_referrBodyVel = rospy.Publisher(robTopicPrefix+self.spec_referrBodyVel.name, FloatStamped, queue_size=10)
 		self.robQue_referrBodyVel = RobQue(self.spec_referrBodyVel.name)
 
@@ -349,7 +349,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrWheelVelL.name = 'referrWheelVelL'
 		self.spec_referrWheelVelL.declare_var('referrWheelVelL', 'float')
 		self.spec_referrWheelVelL.set_var_io_type('referrWheelVelL', 'input')
-		self.spec_referrWheelVelL.spec = 'always [0,5] (referrWheelVelL < 0.1)'
+		self.spec_referrWheelVelL.spec = 'always [0,7] (eventually [0, 5] (referrWheelVelL < 0.1))'
 		self.robPub_referrWheelVelL = rospy.Publisher(robTopicPrefix+self.spec_referrWheelVelL.name, FloatStamped, queue_size=10)
 		self.robQue_referrWheelVelL = RobQue(self.spec_referrWheelVelL.name)
 
@@ -357,7 +357,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrWheelVelR.name = 'referrWheelVelR'
 		self.spec_referrWheelVelR.declare_var('referrWheelVelR', 'float')
 		self.spec_referrWheelVelR.set_var_io_type('referrWheelVelR', 'input')
-		self.spec_referrWheelVelR.spec = 'always [0,5] (referrWheelVelR < 0.1)'
+		self.spec_referrWheelVelR.spec = 'always [0,7] (eventually [0, 5] (referrWheelVelR < 0.1))'
 		self.robPub_referrWheelVelR = rospy.Publisher(robTopicPrefix+self.spec_referrWheelVelR.name, FloatStamped, queue_size=10)
 		self.robQue_referrWheelVelR = RobQue(self.spec_referrWheelVelR.name)
 

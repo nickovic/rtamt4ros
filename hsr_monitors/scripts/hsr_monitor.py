@@ -135,7 +135,7 @@ class HSR_STL_monitor(object):
 		self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
 		self.spec_reachEgoGoal_gt.declare_var('moveTask', 'float')
 		self.spec_reachEgoGoal_gt.set_var_io_type('moveTask', 'input')
-		self.spec_reachEgoGoal_gt.spec = 'eventually [0,30] (distEgoGoal_gt < 0.5)'
+		self.spec_reachEgoGoal_gt.spec = 'always[0,50]( moveTask > 0.5 -> eventually [0,30] (distEgoGoal_gt < 0.5))'
 		self.robPub_reachEgoGoal_gt = rospy.Publisher(robTopicPrefix+self.spec_reachEgoGoal_gt.name, FloatStamped, queue_size=10)
 		self.robQue_reachEgoGoal_gt = RobQue(self.spec_reachEgoGoal_gt.name)
 
@@ -539,18 +539,19 @@ class HSR_STL_monitor(object):
 			rob = self.spec_avoidProhibitArea_gt.update(['distEgoProhibitArea_gt',data])
 			publishRobstness(self.robPub_avoidProhibitArea_gt, rob)
 			print_rob(rob, self.spec_avoidProhibitArea_gt.name)
+
 		if self.loc_gt != [] and self.goal != []:
 			distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
-			distData = [[stamp.to_sec(), distEgoGoal_gt]]
-			if self.goal != []:
-				moveTask = 1.0
-			else:
-				moveTask = 0.0
-			eventData = [[stamp.to_sec(), moveTask]]
-			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', distData])
-			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
-			print_rob(rob, self.spec_reachEgoGoal_gt.name)
-
+			distData = [[rospy.Time.now().to_sec(), distEgoGoal_gt]] # here current time is input.
+			eventData = [[rospy.Time.now().to_sec(), 1.0]]
+		else:
+			distData = [[rospy.Time.now().to_sec(), 0.0]] # here current time is input.
+			eventData = [[rospy.Time.now().to_sec(), 0.0]]
+		rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', distData, 'moveTask', eventData])
+		publishRobstness(self.robPub_reachEgoGoal_gt, rob)
+		print_rob(rob, self.spec_reachEgoGoal_gt.name)
+		rospy.logwarn('data: {}'.format(['distEgoGoal_gt', distData, 'moveTask', eventData]))
+		rospy.logwarn('Rob: {}'.format(rob))
 
 	def monitor_perception_callback(self, event):
 		# 2) perception -----
@@ -668,13 +669,13 @@ class HSR_STL_monitor(object):
 			t_rtamt = timeit.default_timer()
 			publishRobstness(self.robPub_collGlobalPathObs, rob)
 			t_pub = timeit.default_timer()
-			rospy.logwarn('collGlobalPathObs Computation time[s]: dist={:0.8f}, rtamt={:0.8f}, publish={:0.8f}'.format(t_dist-t_start, t_rtamt-t_dist, t_pub-t_rtamt))
+			#rospy.logwarn('collGlobalPathObs Computation time[s]: dist={:0.8f}, rtamt={:0.8f}, publish={:0.8f}'.format(t_dist-t_start, t_rtamt-t_dist, t_pub-t_rtamt))
 		else:
 			data = [[rospy.Time.now().to_sec(), 1.0]] # default is 1m.
 			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
 			publishRobstness(self.robPub_collGlobalPathObs, rob)
-		rospy.logwarn('data: {}'.format(data))
-		rospy.logwarn('Rob: {}'.format(rob))
+		#rospy.logwarn('data: {}'.format(data))
+		#rospy.logwarn('Rob: {}'.format(rob))
 
 
 	#TODO: Becuase of stereoCam dist tooks time, separately called.

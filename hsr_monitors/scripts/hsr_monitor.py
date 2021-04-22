@@ -108,7 +108,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoObs_gt.name = 'collEgoObs_gt'
 		self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
 		self.spec_collEgoObs_gt.set_var_io_type('distEgoObs_gt', 'input')
-		self.spec_collEgoObs_gt.spec = 'always [0,3] (distEgoObs_gt > 0.2)'
+		self.spec_collEgoObs_gt.spec = 'always [0,3] (distEgoObs_gt > 0.3)'
 		self.robPub_collEgoObs_gt = rospy.Publisher(robTopicPrefix+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
 
 		# colliosion with agents (Ground Truth): /hsrb/odom_ground_truth /dynamic_obstacle_map_ref
@@ -160,7 +160,7 @@ class HSR_STL_monitor(object):
 		self.spec_errLoc.name = 'errLoc'
 		self.spec_errLoc.declare_var('errLoc', 'float')
 		self.spec_errLoc.set_var_io_type('errLoc', 'input')
-		self.spec_errLoc.spec = 'always [0,3] (errLoc < 0.05)'
+		self.spec_errLoc.spec = 'always [0,3] (errLoc < 0.1)'
 		self.robPub_errLoc = rospy.Publisher(robTopicPrefix+self.spec_errLoc.name, FloatStamped, queue_size=10)
 
 		# odometer error (Ground Truth): /hsrb/odom_ground_truth /hsrb/wheel_odom
@@ -168,7 +168,7 @@ class HSR_STL_monitor(object):
 		self.spec_errWheelOdom.name = 'errWheelOdom'
 		self.spec_errWheelOdom.declare_var('errWheelOdom', 'float')
 		self.spec_errWheelOdom.set_var_io_type('errWheelOdom', 'input')
-		self.spec_errWheelOdom.spec = 'always [0,3] (errWheelOdom < 0.05)'
+		self.spec_errWheelOdom.spec = 'always [0,3] (errWheelOdom < 0.1)'
 		self.robPub_errWheelOdom = rospy.Publisher(robTopicPrefix+self.spec_errWheelOdom.name, FloatStamped, queue_size=10)
 
 		# localization error LiDAR (Ground Truth): /hsrb/odom_ground_truth /hsrb/laser_odom
@@ -176,7 +176,7 @@ class HSR_STL_monitor(object):
 		self.spec_errLaserOdom.name = 'errLaserOdom'
 		self.spec_errLaserOdom.declare_var('errLaserOdom', 'float')
 		self.spec_errLaserOdom.set_var_io_type('errLaserOdom', 'input')
-		self.spec_errLaserOdom.spec = 'always [0,3] (errLaserOdom < 0.05)'
+		self.spec_errLaserOdom.spec = 'always [0,3] (errLaserOdom < 0.1)'
 		self.robPub_errLaserOdom = rospy.Publisher(robTopicPrefix+self.spec_errLaserOdom.name, FloatStamped, queue_size=10)
 
 		# LiDAR error (Grand Truth): hsrb/base_scan /static_distance_map_ref
@@ -184,7 +184,7 @@ class HSR_STL_monitor(object):
 		self.spec_errLidar.name = 'errLidar'
 		self.spec_errLidar.declare_var('errLidar', 'float')
 		self.spec_errLidar.set_var_io_type('errLidar', 'input')
-		self.spec_errLidar.spec = 'always [0,3] (errLidar < 0.05)'
+		self.spec_errLidar.spec = 'always [0,3] (errLidar < 0.1)'
 		self.robPub_errLidar = rospy.Publisher(robTopicPrefix+self.spec_errLidar.name, FloatStamped, queue_size=10)
 
 		# StereoCamera error (Ground Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
@@ -222,7 +222,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoDynamicObs.name = 'collEgoDynamicObs'
 		self.spec_collEgoDynamicObs.declare_var('distEgoDynamicObs', 'float')
 		self.spec_collEgoDynamicObs.set_var_io_type('distEgoDynamicObs', 'input')
-		self.spec_collEgoDynamicObs.spec = 'always [0,3] (distEgoDynamicObs > 0.05)'
+		self.spec_collEgoDynamicObs.spec = 'always [0,3] (distEgoDynamicObs > 0.2)'
 		self.robPub_collEgoDynamicObs = rospy.Publisher(robTopicPrefix+self.spec_collEgoDynamicObs.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area: /global_pose /static_obstacle_map_ref
@@ -274,7 +274,7 @@ class HSR_STL_monitor(object):
 		self.spec_collGlobalPathObs.name = 'collGlobalPathObs'
 		self.spec_collGlobalPathObs.declare_var('distGlobalPathObs', 'float')
 		self.spec_collGlobalPathObs.set_var_io_type('distGlobalPathObs', 'input')
-		self.spec_collGlobalPathObs.spec = '(distGlobalPathObs > 0.2)'
+		self.spec_collGlobalPathObs.spec = '(distGlobalPathObs > 0.1)'
 		self.robPub_collGlobalPathObs = rospy.Publisher(robTopicPrefix+self.spec_collGlobalPathObs.name, FloatStamped, queue_size=10)
 		self.robQue_collGlobalPathObs = RobQue(self.spec_collGlobalPathObs.name)
 
@@ -482,18 +482,6 @@ class HSR_STL_monitor(object):
 	def globalPath_callback(self, path):
 		self.globalPath = path
 
-		if self.globalPath != [] and self.map != []:
-			t_start = timeit.default_timer()
-			distGlobalPathObs, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
-			t_dist = timeit.default_timer()
-			data = [[stamp.to_sec(), distGlobalPathObs]]
-			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
-			t_rtamt = timeit.default_timer()
-			publishRobstness(self.robPub_collGlobalPathObs, rob)
-			t_pub = timeit.default_timer()
-			#rospy.logwarn('Dist: {}'.format(distGlobalPathObs))
-			#rospy.logwarn('Rob: {}'.format(rob))
-			#rospy.logwarn('collGlobalPathObs Computation time[s]: dist={:0.8f}, rtamt={:0.8f}, publish={:0.8f}'.format(t_dist-t_start, t_rtamt-t_dist, t_pub-t_rtamt))
 		if self.goal !=[]:
 			goalPoseStamped = self.globalPath.poses[-1]
 			distGlobalPathGoal, stamp = distPoseStamped2PoseStamped(self.goal, goalPoseStamped, True)
@@ -670,6 +658,23 @@ class HSR_STL_monitor(object):
 			rob = self.spec_collBumperBack.update(['bumperBack', data])
 			publishRobstness(self.robPub_collBumperBack, rob)
 			print_rob(rob, self.spec_collBumperBack.name)
+
+		if self.globalPath != [] and self.map != []:
+			t_start = timeit.default_timer()
+			distGlobalPathObs, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
+			t_dist = timeit.default_timer()
+			data = [[rospy.Time.now().to_sec(), distGlobalPathObs]] # here current time is input.
+			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+			t_rtamt = timeit.default_timer()
+			publishRobstness(self.robPub_collGlobalPathObs, rob)
+			t_pub = timeit.default_timer()
+			rospy.logwarn('collGlobalPathObs Computation time[s]: dist={:0.8f}, rtamt={:0.8f}, publish={:0.8f}'.format(t_dist-t_start, t_rtamt-t_dist, t_pub-t_rtamt))
+		else:
+			data = [[rospy.Time.now().to_sec(), 1.0]] # default is 1m.
+			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+			publishRobstness(self.robPub_collGlobalPathObs, rob)
+		rospy.logwarn('data: {}'.format(data))
+		rospy.logwarn('Rob: {}'.format(rob))
 
 
 	#TODO: Becuase of stereoCam dist tooks time, separately called.

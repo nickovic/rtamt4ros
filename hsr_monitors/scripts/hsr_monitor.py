@@ -116,7 +116,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoDynamicObs_gt.name = 'collEgoDynamicObs_gt'
 		self.spec_collEgoDynamicObs_gt.declare_var('distEgoDynamicObs_gt', 'float')
 		self.spec_collEgoDynamicObs_gt.set_var_io_type('distEgoDynamicObs_gt', 'input')
-		self.spec_collEgoDynamicObs_gt.spec = 'always [0,3] (distEgoDynamicObs_gt > 0.05)'
+		self.spec_collEgoDynamicObs_gt.spec = 'always [0,10] (eventually[0,5](distEgoDynamicObs_gt > 0.05))'
 		self.robPub_collEgoDynamicObs_gt = rospy.Publisher(robTopicPrefix+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
@@ -222,7 +222,7 @@ class HSR_STL_monitor(object):
 		self.spec_collEgoDynamicObs.name = 'collEgoDynamicObs'
 		self.spec_collEgoDynamicObs.declare_var('distEgoDynamicObs', 'float')
 		self.spec_collEgoDynamicObs.set_var_io_type('distEgoDynamicObs', 'input')
-		self.spec_collEgoDynamicObs.spec = 'always [0,3] (distEgoDynamicObs > 0.2)'
+		self.spec_collEgoDynamicObs.spec = 'always [0,10] (eventually[0,5](distEgoDynamicObs > 0.05))'
 		self.robPub_collEgoDynamicObs = rospy.Publisher(robTopicPrefix+self.spec_collEgoDynamicObs.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area: /global_pose /static_obstacle_map_ref
@@ -339,7 +339,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrBodyVel.name = 'referrBodyVel'
 		self.spec_referrBodyVel.declare_var('referrBodyVel', 'float')
 		self.spec_referrBodyVel.set_var_io_type('referrBodyVel', 'input')
-		self.spec_referrBodyVel.spec = 'always [0,3] (referrBodyVel < 0.1)'
+		self.spec_referrBodyVel.spec = 'always [0,5] (referrBodyVel < 0.1)'
 		self.robPub_referrBodyVel = rospy.Publisher(robTopicPrefix+self.spec_referrBodyVel.name, FloatStamped, queue_size=10)
 		self.robQue_referrBodyVel = RobQue(self.spec_referrBodyVel.name)
 
@@ -349,7 +349,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrWheelVelL.name = 'referrWheelVelL'
 		self.spec_referrWheelVelL.declare_var('referrWheelVelL', 'float')
 		self.spec_referrWheelVelL.set_var_io_type('referrWheelVelL', 'input')
-		self.spec_referrWheelVelL.spec = 'always [0,3] (referrWheelVelL < 0.1)'
+		self.spec_referrWheelVelL.spec = 'always [0,5] (referrWheelVelL < 0.1)'
 		self.robPub_referrWheelVelL = rospy.Publisher(robTopicPrefix+self.spec_referrWheelVelL.name, FloatStamped, queue_size=10)
 		self.robQue_referrWheelVelL = RobQue(self.spec_referrWheelVelL.name)
 
@@ -357,7 +357,7 @@ class HSR_STL_monitor(object):
 		self.spec_referrWheelVelR.name = 'referrWheelVelR'
 		self.spec_referrWheelVelR.declare_var('referrWheelVelR', 'float')
 		self.spec_referrWheelVelR.set_var_io_type('referrWheelVelR', 'input')
-		self.spec_referrWheelVelR.spec = 'always [0,3] (referrWheelVelR < 0.1)'
+		self.spec_referrWheelVelR.spec = 'always [0,5] (referrWheelVelR < 0.1)'
 		self.robPub_referrWheelVelR = rospy.Publisher(robTopicPrefix+self.spec_referrWheelVelR.name, FloatStamped, queue_size=10)
 		self.robQue_referrWheelVelR = RobQue(self.spec_referrWheelVelR.name)
 

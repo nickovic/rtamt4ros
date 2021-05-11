@@ -4,15 +4,20 @@
 
 import rospy
 import numpy
+import tf
 import sensor_msgs.point_cloud2
+import timeit
 
 from std_msgs.msg import String
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
-from geometry_msgs.msg import PoseStamped, Pose, Twist, Point32
+from geometry_msgs.msg import PoseStamped, Pose, Twist, Point32, Vector3
 
 from shapelyLib import *
+
+import matplotlib.pyplot as plt
+
 
 # ROS data conversion -----
 def orientation2angular(orientation):
@@ -55,19 +60,31 @@ def odometry2PoseStamped(odometry):
 
 
 def occupancyGridData2StaticMap(occupancyGrid):
-	staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width)
+	#t_start = timeit.default_timer()
+	staticMap = numpy.asarray(occupancyGrid.data, dtype=numpy.int8).reshape(occupancyGrid.info.height, occupancyGrid.info.width) #TODO: numpy.asarray(occupancyGrid.data, dtype=numpy.int8) takes 150msec
+	#rospy.logwarn('{:.8f}'.format(timeit.default_timer()-t_start))
+	staticMap = numpy.transpose(staticMap)
 	return staticMap
 
 
 def mapids2mapCoordination(mapIds, occupancyGrid):
 	if mapIds.shape == (2,):        #for 1 id case
 		mapIds = numpy.array([mapIds])
+
 	pointsGridCoordinations = mapIds*occupancyGrid.info.resolution
-	#TODO condider TF!
 	pointsGridCoordinations = pointsGridCoordinations + [occupancyGrid.info.origin.position.x, occupancyGrid.info.origin.position.y]
+
 	if pointsGridCoordinations.shape == (1,2):     #for 1 id case
 		pointsGridCoordinations = pointsGridCoordinations[0]
 	return pointsGridCoordinations
+
+
+def occupancyGridData2PointList(occupancyGrid, threshold=0):
+	staticMap = occupancyGridData2StaticMap(occupancyGrid)
+	#obsIds = numpy.transpose(numpy.nonzero(staticMap))
+	obsIds = numpy.transpose(numpy.where(staticMap>threshold))
+	pointList = mapids2mapCoordination(obsIds, occupancyGrid)
+	return pointList
 
 
 # basic functions -----
@@ -96,7 +113,6 @@ def distPoseStamped2PoseStamped(poseStamped0, poseStamped1, extrapolation=False)
 	check = checkFrameId(poseStamped0, poseStamped1)
 
 	dist = distPoint2Point((poseStamped0.pose.position.x, poseStamped0.pose.position.y), (poseStamped1.pose.position.x, poseStamped1.pose.position.y))
-
 	stamp = stampSlector(poseStamped0, poseStamped1, extrapolation)
 
 	return dist, stamp
@@ -136,77 +152,46 @@ def distPoseStamped2Path(poseStamped, path, extrapolation=False):
 	return dist, stamp
 
 
-def distPoints2Path(points, path):
-	# just thinking 2D (x,y)
-	pathDists = []
-	# TODO just thinking 2D
-	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
-	for point in points:
-		dist = distPoint2LineString(point, pathList)
-		pathDists.append(dist)
-	pathDists = numpy.array(pathDists)
-	pathDist = numpy.min(pathDists)
-	return pathDist
-
-
-# def distsPoseStamped2PointCloud2(poseStamped, pointCloud2, extrapolation=False):
-# 	check = checkFrameId(poseStamped, pointCloud2)
-
-# 	points_gen = sensor_msgs.point_cloud2.read_points(pointCloud2)
-# 	# TODO just thinking 2D
-# 	points_list = numpy.array([(i[0], i[1])for i in points_gen])
-# 	dists = distPoints2Point(points_list, [poseStamped.pose.position.x, poseStamped.pose.position.y])
-
-# 	stamp = stampSlector(poseStamped, pointCloud2, extrapolation)
-# 	return dists, stamp
-
-
-def distsPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation=False):
+def distPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation=False, threshold=0):
 	check = checkFrameId(poseStamped, occupancyGrid)
 
 	point = (poseStamped.pose.position.x, poseStamped.pose.position.y)
-
-	staticMap = occupancyGridData2StaticMap(occupancyGrid)
-	obsIds = numpy.transpose(numpy.nonzero(staticMap))
-	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
-	dists = distPoints2Point(mapPoints, point)
+	mapPoints = occupancyGridData2PointList(occupancyGrid, threshold)
+	dist = distMultiPoint2Point(mapPoints, point)
 
 	stamp = stampSlector(poseStamped, occupancyGrid, extrapolation)
-	return dists, stamp
+	return dist, stamp
 
 
-def distsOdometry2OccupancyGrid(odometry, occupancyGrid, extrapolation=False):
+def distOdometry2OccupancyGrid(odometry, occupancyGrid, extrapolation=False, threshold=0):
 	check = checkFrameId(odometry, occupancyGrid)
 
 	poseStamped = odometry2PoseStamped(odometry)
-	dists, stamp = distsPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation)
+	dist, stamp = distPoseStamped2OccupancyGrid(poseStamped, occupancyGrid, extrapolation, threshold)
 
-	return dists, stamp
+	return dist, stamp
 
 
-def distsPath2OccupancyGrid(path, occupancyGrid, extrapolation=False):
+def distPath2OccupancyGrid(path, occupancyGrid, extrapolation=False, threshold=0):
 	check = checkFrameId(path, occupancyGrid)
 
-	staticMap = occupancyGridData2StaticMap(occupancyGrid)
-	obsIds = numpy.transpose(numpy.nonzero(staticMap))
-	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
-	dists = distPoints2Path(mapPoints, path)
+	mapPoints = occupancyGridData2PointList(occupancyGrid, threshold)
+	pathList = [(iPoseStamped.pose.position.x, iPoseStamped.pose.position.y) for iPoseStamped in path.poses]
+	dist = distMultiPoint2LineString(mapPoints, pathList)
 
 	stamp = stampSlector(path, occupancyGrid, extrapolation)
-	return dists, stamp
+	return dist, stamp
 
 
-def distsPointCloud2OccupancyGrid(pointCloud, occupancyGrid, extrapolation=False):
+def distPointCloud2OccupancyGrid(pointCloud, occupancyGrid, extrapolation=False, threshold=0):
 	check = checkFrameId(pointCloud, occupancyGrid)
 
-	staticMap = occupancyGridData2StaticMap(occupancyGrid)
-	obsIds = numpy.transpose(numpy.nonzero(staticMap))
-	mapPoints = mapids2mapCoordination(obsIds, occupancyGrid)
-	point_list = [ (i.x, i.y) for i in pointCloud.points]
-	dists = distPoints2Points(numpy.array(point_list), numpy.array(mapPoints))
+	mapPoints = occupancyGridData2PointList(occupancyGrid, threshold)
+	LiderPoints = [ (i.x, i.y) for i in pointCloud.points]
+	dist = distMultiPoint2MultiPoint(LiderPoints, mapPoints)
 
 	stamp = stampSlector(pointCloud, occupancyGrid, extrapolation)
-	return dists, stamp
+	return dist, stamp
 
 
 def occupancyGridPlot(ax, occupancyGrid):

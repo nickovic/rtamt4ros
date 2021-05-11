@@ -22,6 +22,7 @@ import logging
 import copy
 import Queue
 import matplotlib.pyplot as plt
+import timeit
 
 import rospy
 import tf
@@ -92,8 +93,6 @@ class BoolStamped(object):
 class HSR_STL_monitor(object):
 	def __init__(self):
 
-		robTopicName = '/rtamt/'
-
 		# listener of tf
 		self.tfListener = tf.TransformListener()
 
@@ -103,21 +102,22 @@ class HSR_STL_monitor(object):
 		# STL settings
 		# Load the spec from STL file
 		# 1) system -----
+		robTopicPrefix = '/rtamt/system/'
 		# collision with obstacle (Ground Truth): /hsrb/odom_ground_truth /static_distance_map_ref
 		self.spec_collEgoObs_gt = rtamt.STLDenseTimeSpecification()
 		self.spec_collEgoObs_gt.name = 'collEgoObs_gt'
 		self.spec_collEgoObs_gt.declare_var('distEgoObs_gt', 'float')
 		self.spec_collEgoObs_gt.set_var_io_type('distEgoObs_gt', 'input')
-		self.spec_collEgoObs_gt.spec = 'always [0,1] (distEgoObs_gt >= 0.1)'
-		self.robPub_collEgoObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
+		self.spec_collEgoObs_gt.spec = 'always [0,3] (distEgoObs_gt > 0.3)'
+		self.robPub_collEgoObs_gt = rospy.Publisher(robTopicPrefix+self.spec_collEgoObs_gt.name, FloatStamped, queue_size=10)
 
 		# colliosion with agents (Ground Truth): /hsrb/odom_ground_truth /dynamic_obstacle_map_ref
 		self.spec_collEgoDynamicObs_gt = rtamt.STLDenseTimeSpecification()
 		self.spec_collEgoDynamicObs_gt.name = 'collEgoDynamicObs_gt'
 		self.spec_collEgoDynamicObs_gt.declare_var('distEgoDynamicObs_gt', 'float')
 		self.spec_collEgoDynamicObs_gt.set_var_io_type('distEgoDynamicObs_gt', 'input')
-		self.spec_collEgoDynamicObs_gt.spec = 'always [0,1] (distEgoDynamicObs_gt >= 0.1)'
-		self.robPub_collEgoDynamicObs_gt = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
+		self.spec_collEgoDynamicObs_gt.spec = 'always [0,10] (eventually[0,5](distEgoDynamicObs_gt > 0.05))'
+		self.robPub_collEgoDynamicObs_gt = rospy.Publisher(robTopicPrefix+self.spec_collEgoDynamicObs_gt.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area (Ground Truth): /hsrb/odom_ground_truth /static_obstacle_map_ref
 		# TODO: use always eventually
@@ -125,16 +125,18 @@ class HSR_STL_monitor(object):
 		self.spec_avoidProhibitArea_gt.name = 'avoidProhibitArea_gt'
 		self.spec_avoidProhibitArea_gt.declare_var('distEgoProhibitArea_gt', 'float')
 		self.spec_avoidProhibitArea_gt.set_var_io_type('distEgoProhibitArea_gt', 'input')
-		self.spec_avoidProhibitArea_gt.spec = 'always [0,1] (distEgoProhibitArea_gt >= 0.1)'
-		self.robPub_avoidProhibitArea_gt = rospy.Publisher(robTopicName+self.spec_avoidProhibitArea_gt.name, FloatStamped, queue_size=10)
+		self.spec_avoidProhibitArea_gt.spec = 'always [0,3] (distEgoProhibitArea_gt > 0.2)'
+		self.robPub_avoidProhibitArea_gt = rospy.Publisher(robTopicPrefix+self.spec_avoidProhibitArea_gt.name, FloatStamped, queue_size=10)
 
 		# reach goal (Ground Truth): /hsrb/odom_ground_truth /goal
 		self.spec_reachEgoGoal_gt = rtamt.STLDenseTimeSpecification()
 		self.spec_reachEgoGoal_gt.name = 'reachEgoGoal_gt'
 		self.spec_reachEgoGoal_gt.declare_var('distEgoGoal_gt', 'float')
 		self.spec_reachEgoGoal_gt.set_var_io_type('distEgoGoal_gt', 'input')
-		self.spec_reachEgoGoal_gt.spec = 'eventually [0,1] (distEgoGoal_gt <= 0.1)'
-		self.robPub_reachEgoGoal_gt = rospy.Publisher(robTopicName+self.spec_reachEgoGoal_gt.name, FloatStamped, queue_size=10)
+		self.spec_reachEgoGoal_gt.declare_var('moveTask', 'float')
+		self.spec_reachEgoGoal_gt.set_var_io_type('moveTask', 'input')
+		self.spec_reachEgoGoal_gt.spec = 'always[0,50]( moveTask > 0.5 -> eventually [0,30] (distEgoGoal_gt < 0.5))'
+		self.robPub_reachEgoGoal_gt = rospy.Publisher(robTopicPrefix+self.spec_reachEgoGoal_gt.name, FloatStamped, queue_size=10)
 		self.robQue_reachEgoGoal_gt = RobQue(self.spec_reachEgoGoal_gt.name)
 
 		try:
@@ -152,37 +154,38 @@ class HSR_STL_monitor(object):
 
 
 		# 2) perception -----
+		robTopicPrefix = '/rtamt/perception/'
 		# localization error (Ground Truth): /hsrb/odom_ground_truth /global_pose
 		self.spec_errLoc = rtamt.STLDenseTimeSpecification()
 		self.spec_errLoc.name = 'errLoc'
 		self.spec_errLoc.declare_var('errLoc', 'float')
 		self.spec_errLoc.set_var_io_type('errLoc', 'input')
-		self.spec_errLoc.spec = 'always [0,1] (errLoc >= 0.1)'
-		self.robPub_errLoc = rospy.Publisher(robTopicName+self.spec_errLoc.name, FloatStamped, queue_size=10)
+		self.spec_errLoc.spec = 'always [0,3] (errLoc < 0.1)'
+		self.robPub_errLoc = rospy.Publisher(robTopicPrefix+self.spec_errLoc.name, FloatStamped, queue_size=10)
 
 		# odometer error (Ground Truth): /hsrb/odom_ground_truth /hsrb/wheel_odom
 		self.spec_errWheelOdom = rtamt.STLDenseTimeSpecification()
 		self.spec_errWheelOdom.name = 'errWheelOdom'
 		self.spec_errWheelOdom.declare_var('errWheelOdom', 'float')
 		self.spec_errWheelOdom.set_var_io_type('errWheelOdom', 'input')
-		self.spec_errWheelOdom.spec = 'always [0,1] (errWheelOdom >= 0.1)'
-		self.robPub_errWheelOdom = rospy.Publisher(robTopicName+self.spec_errWheelOdom.name, FloatStamped, queue_size=10)
+		self.spec_errWheelOdom.spec = 'always [0,3] (errWheelOdom < 0.1)'
+		self.robPub_errWheelOdom = rospy.Publisher(robTopicPrefix+self.spec_errWheelOdom.name, FloatStamped, queue_size=10)
 
 		# localization error LiDAR (Ground Truth): /hsrb/odom_ground_truth /hsrb/laser_odom
 		self.spec_errLaserOdom = rtamt.STLDenseTimeSpecification()
 		self.spec_errLaserOdom.name = 'errLaserOdom'
 		self.spec_errLaserOdom.declare_var('errLaserOdom', 'float')
 		self.spec_errLaserOdom.set_var_io_type('errLaserOdom', 'input')
-		self.spec_errLaserOdom.spec = 'always [0,1] (errLaserOdom >= 0.1)'
-		self.robPub_errLaserOdom = rospy.Publisher(robTopicName+self.spec_errLaserOdom.name, FloatStamped, queue_size=10)
+		self.spec_errLaserOdom.spec = 'always [0,3] (errLaserOdom < 0.1)'
+		self.robPub_errLaserOdom = rospy.Publisher(robTopicPrefix+self.spec_errLaserOdom.name, FloatStamped, queue_size=10)
 
 		# LiDAR error (Grand Truth): hsrb/base_scan /static_distance_map_ref
 		self.spec_errLidar = rtamt.STLDenseTimeSpecification()
 		self.spec_errLidar.name = 'errLidar'
 		self.spec_errLidar.declare_var('errLidar', 'float')
 		self.spec_errLidar.set_var_io_type('errLidar', 'input')
-		self.spec_errLidar.spec = 'always [0,1] (errLidar >= 0.1)'
-		self.robPub_errLidar = rospy.Publisher(robTopicName+self.spec_errLidar.name, FloatStamped, queue_size=10)
+		self.spec_errLidar.spec = 'always [0,3] (errLidar < 0.1)'
+		self.robPub_errLidar = rospy.Publisher(robTopicPrefix+self.spec_errLidar.name, FloatStamped, queue_size=10)
 
 		# StereoCamera error (Ground Truth): /hsrb/head_rgbd_sensor/depth_registered/rectified_points <Gazebo3dshape>
 		# this time we can skipt it. too much implimentation effort.
@@ -205,21 +208,22 @@ class HSR_STL_monitor(object):
 
 
 		# 3) planner -----
+		robTopicPrefix = '/rtamt/planner/'
 		# collision with obstacle map: /global_pose /static_distance_map_ref
 		self.spec_collEgoObs = rtamt.STLDenseTimeSpecification()
 		self.spec_collEgoObs.name = 'collEgoObs'
 		self.spec_collEgoObs.declare_var('distEgoObs', 'float')
 		self.spec_collEgoObs.set_var_io_type('distEgoObs', 'input')
-		self.spec_collEgoObs.spec = 'always [0,1] (distEgoObs >= 0.1)'
-		self.robPub_collEgoObs = rospy.Publisher(robTopicName+self.spec_collEgoObs.name, FloatStamped, queue_size=10)
+		self.spec_collEgoObs.spec = 'always [0,3] (distEgoObs > 0.2)'
+		self.robPub_collEgoObs = rospy.Publisher(robTopicPrefix+self.spec_collEgoObs.name, FloatStamped, queue_size=10)
 
 		# colliosion with agents: /global_pose /dynamic_obstacle_map_ref
 		self.spec_collEgoDynamicObs = rtamt.STLDenseTimeSpecification()
 		self.spec_collEgoDynamicObs.name = 'collEgoDynamicObs'
 		self.spec_collEgoDynamicObs.declare_var('distEgoDynamicObs', 'float')
 		self.spec_collEgoDynamicObs.set_var_io_type('distEgoDynamicObs', 'input')
-		self.spec_collEgoDynamicObs.spec = 'always [0,1] (distEgoDynamicObs >= 0.1)'
-		self.robPub_collEgoDynamicObs = rospy.Publisher(robTopicName+self.spec_collEgoDynamicObs.name, FloatStamped, queue_size=10)
+		self.spec_collEgoDynamicObs.spec = 'always [0,10] (eventually[0,5](distEgoDynamicObs > 0.05))'
+		self.robPub_collEgoDynamicObs = rospy.Publisher(robTopicPrefix+self.spec_collEgoDynamicObs.name, FloatStamped, queue_size=10)
 
 		# avoid prohibit area: /global_pose /static_obstacle_map_ref
 		# TODO: always(distEgoObs < e -> eventuraly bumper_sensor == True)
@@ -227,16 +231,16 @@ class HSR_STL_monitor(object):
 		self.spec_avoidEgoProhibitArea.name = 'avoidEgoProhibitArea'
 		self.spec_avoidEgoProhibitArea.declare_var('distEgoProhibitArea', 'float')
 		self.spec_avoidEgoProhibitArea.set_var_io_type('distEgoProhibitArea', 'input')
-		self.spec_avoidEgoProhibitArea.spec = 'always [0,1] (distEgoProhibitArea >= 0.1)'
-		self.robPub_avoidEgoProhibitArea = rospy.Publisher(robTopicName+self.spec_avoidEgoProhibitArea.name, FloatStamped, queue_size=10)
+		self.spec_avoidEgoProhibitArea.spec = 'always [0,3] (distEgoProhibitArea >= 0.2)'
+		self.robPub_avoidEgoProhibitArea = rospy.Publisher(robTopicPrefix+self.spec_avoidEgoProhibitArea.name, FloatStamped, queue_size=10)
 
 		# collision with obstacle LiDAR: hsrb/base_scan
 		self.spec_collLidar = rtamt.STLDenseTimeSpecification()
 		self.spec_collLidar.name = 'collLidar'
 		self.spec_collLidar.declare_var('distLidar', 'float')
 		self.spec_collLidar.set_var_io_type('distLidar', 'input')
-		self.spec_collLidar.spec = 'always [0,1] (distLidar >= 0.2)'
-		self.robPub_collLidar = rospy.Publisher(robTopicName+self.spec_collLidar.name, FloatStamped, queue_size=10)
+		self.spec_collLidar.spec = 'always [0,3] (distLidar > 0.2)'
+		self.robPub_collLidar = rospy.Publisher(robTopicPrefix+self.spec_collLidar.name, FloatStamped, queue_size=10)
 		self.robQue_collLidar = RobQue(self.spec_collLidar.name)
 
 		# collision with obstacle StereoCamera: /hsrb/head_rgbd_sensor/depth_registered/rectified_points
@@ -244,8 +248,8 @@ class HSR_STL_monitor(object):
 		self.spec_collStereoCamera.name = 'collStereoCamera'
 		self.spec_collStereoCamera.declare_var('distStereoCamera', 'float')
 		self.spec_collStereoCamera.set_var_io_type('distStereoCamera', 'input')
-		self.spec_collStereoCamera.spec = 'always [0,1] (distStereoCamera >= 0.2)'
-		self.robPub_collStereoCamera = rospy.Publisher(robTopicName+self.spec_collStereoCamera.name, FloatStamped, queue_size=10)
+		self.spec_collStereoCamera.spec = 'always [0,3] (distStereoCamera > 0.2)'
+		self.robPub_collStereoCamera = rospy.Publisher(robTopicPrefix+self.spec_collStereoCamera.name, FloatStamped, queue_size=10)
 		self.robQue_collStereoCamera = RobQue(self.spec_collStereoCamera.name)
 
 		# collision with obstacle Bumper: /hsrb/base_b_bumper_sensor, /hsrb/base_f_bumper_sensor
@@ -253,16 +257,16 @@ class HSR_STL_monitor(object):
 		self.spec_collBumperFront.name = 'collBumperFront'
 		self.spec_collBumperFront.declare_var('bumperFront', 'float')
 		self.spec_collBumperFront.set_var_io_type('bumperFront', 'input')
-		self.spec_collBumperFront.spec = 'always [0,1] (bumperFront <= 0.5)'
-		self.robPub_collBumperFront = rospy.Publisher(robTopicName+self.spec_collBumperFront.name, FloatStamped, queue_size=10)
+		self.spec_collBumperFront.spec = 'always [0,3] (bumperFront < 0.5)'
+		self.robPub_collBumperFront = rospy.Publisher(robTopicPrefix+self.spec_collBumperFront.name, FloatStamped, queue_size=10)
 		self.robQue_collBumperFront = RobQue(self.spec_collBumperFront.name)
 
 		self.spec_collBumperBack = rtamt.STLDenseTimeSpecification()
 		self.spec_collBumperBack.name = 'collBbumperBack'
 		self.spec_collBumperBack.declare_var('bumperBack', 'float')
 		self.spec_collBumperBack.set_var_io_type('bumperBack', 'input')
-		self.spec_collBumperBack.spec = 'always [0,1] (bumperBack <= 0.5 )'
-		self.robPub_collBumperBack = rospy.Publisher(robTopicName+self.spec_collBumperBack.name, FloatStamped, queue_size=10)
+		self.spec_collBumperBack.spec = 'always [0,3] (bumperBack < 0.5 )'
+		self.robPub_collBumperBack = rospy.Publisher(robTopicPrefix+self.spec_collBumperBack.name, FloatStamped, queue_size=10)
 		self.robQue_collBumperBack = RobQue(self.spec_collBumperBack.name)
 
 		# collision with obstacle GlobalPath: /base_local_path /static_distance_map_ref
@@ -270,8 +274,8 @@ class HSR_STL_monitor(object):
 		self.spec_collGlobalPathObs.name = 'collGlobalPathObs'
 		self.spec_collGlobalPathObs.declare_var('distGlobalPathObs', 'float')
 		self.spec_collGlobalPathObs.set_var_io_type('distGlobalPathObs', 'input')
-		self.spec_collGlobalPathObs.spec = '(distGlobalPathObs >= 0.2)'
-		self.robPub_collGlobalPathObs = rospy.Publisher(robTopicName+self.spec_collGlobalPathObs.name, FloatStamped, queue_size=10)
+		self.spec_collGlobalPathObs.spec = '(distGlobalPathObs > 0.1)'
+		self.robPub_collGlobalPathObs = rospy.Publisher(robTopicPrefix+self.spec_collGlobalPathObs.name, FloatStamped, queue_size=10)
 		self.robQue_collGlobalPathObs = RobQue(self.spec_collGlobalPathObs.name)
 
 		# reach goal GlobalPath: /base_local_path /goal
@@ -279,8 +283,8 @@ class HSR_STL_monitor(object):
 		self.spec_reachGlobalPathGoal.name = 'reachGlobalPathGoal'
 		self.spec_reachGlobalPathGoal.declare_var('distGlobalPathGoal', 'float')
 		self.spec_reachGlobalPathGoal.set_var_io_type('distGlobalPathGoal', 'input')
-		self.spec_reachGlobalPathGoal.spec = '(distGlobalPathGoal <= 0.1)'
-		self.robPub_reachGlobalPathGoal = rospy.Publisher(robTopicName+self.spec_reachGlobalPathGoal.name, FloatStamped, queue_size=10)
+		self.spec_reachGlobalPathGoal.spec = '(distGlobalPathGoal < 0.1)'
+		self.robPub_reachGlobalPathGoal = rospy.Publisher(robTopicPrefix+self.spec_reachGlobalPathGoal.name, FloatStamped, queue_size=10)
 		self.robQue_reachGlobalPathGoal = RobQue(self.spec_reachGlobalPathGoal.name)
 
 		# reach goal: /global_pose /goal
@@ -288,8 +292,8 @@ class HSR_STL_monitor(object):
 		self.spec_reachEgoGoal.name = 'reachEgoGoal'
 		self.spec_reachEgoGoal.declare_var('distEgoGoal', 'float')
 		self.spec_reachEgoGoal.set_var_io_type('distEgoGoal', 'input')
-		self.spec_reachEgoGoal.spec = 'eventually [0,1] (distEgoGoal <= 0.1)'
-		self.robPub_reachEgoGoal = rospy.Publisher(robTopicName+self.spec_reachEgoGoal.name, FloatStamped, queue_size=10)
+		self.spec_reachEgoGoal.spec = 'eventually [0,30] (distEgoGoal < 0.5)'
+		self.robPub_reachEgoGoal = rospy.Publisher(robTopicPrefix+self.spec_reachEgoGoal.name, FloatStamped, queue_size=10)
 		self.robQue_reachEgoGoal = RobQue(self.spec_reachEgoGoal.name)
 
 		try:
@@ -319,14 +323,15 @@ class HSR_STL_monitor(object):
 
 
 		# 4) controller -----
+		robTopicPrefix = '/rtamt/controller/'
 		# TODO: perhaps we had better to check Squared distance.
 		# ref global path: /base_local_path /global_pose
 		self.spec_referrLocGlobalPath = rtamt.STLDenseTimeSpecification()
 		self.spec_referrLocGlobalPath.name = 'referrLocGlobalPath'
 		self.spec_referrLocGlobalPath.declare_var('referrLocGlobalPath', 'float')
 		self.spec_referrLocGlobalPath.set_var_io_type('referrLocGlobalPath', 'input')
-		self.spec_referrLocGlobalPath.spec = 'always [0,1] (referrLocGlobalPath <= 0.1)'
-		self.robPub_referrLocGlobalPath = rospy.Publisher(robTopicName+self.spec_referrLocGlobalPath.name, FloatStamped, queue_size=10)
+		self.spec_referrLocGlobalPath.spec = 'always [0,7] (eventually [0, 5] (referrLocGlobalPath < 0.1))'
+		self.robPub_referrLocGlobalPath = rospy.Publisher(robTopicPrefix+self.spec_referrLocGlobalPath.name, FloatStamped, queue_size=10)
 		self.robQue_referrLocGlobalPath = RobQue(self.robPub_referrLocGlobalPath.name)
 
 		# ref body control: /hsrb/command_velocity /base_velocity
@@ -334,8 +339,8 @@ class HSR_STL_monitor(object):
 		self.spec_referrBodyVel.name = 'referrBodyVel'
 		self.spec_referrBodyVel.declare_var('referrBodyVel', 'float')
 		self.spec_referrBodyVel.set_var_io_type('referrBodyVel', 'input')
-		self.spec_referrBodyVel.spec = 'always [0,1] (referrBodyVel <= 0.1)'
-		self.robPub_referrBodyVel = rospy.Publisher(robTopicName+self.spec_referrBodyVel.name, FloatStamped, queue_size=10)
+		self.spec_referrBodyVel.spec = 'always [0,7] (eventually [0, 5] (referrBodyVel < 0.1))'
+		self.robPub_referrBodyVel = rospy.Publisher(robTopicPrefix+self.spec_referrBodyVel.name, FloatStamped, queue_size=10)
 		self.robQue_referrBodyVel = RobQue(self.spec_referrBodyVel.name)
 
 		# ref wheel motor control: /hsrb/omni_base_controller/internal_state
@@ -344,16 +349,16 @@ class HSR_STL_monitor(object):
 		self.spec_referrWheelVelL.name = 'referrWheelVelL'
 		self.spec_referrWheelVelL.declare_var('referrWheelVelL', 'float')
 		self.spec_referrWheelVelL.set_var_io_type('referrWheelVelL', 'input')
-		self.spec_referrWheelVelL.spec = 'always [0,1] (referrWheelVelL <= 0.1)'
-		self.robPub_referrWheelVelL = rospy.Publisher(robTopicName+self.spec_referrWheelVelL.name, FloatStamped, queue_size=10)
+		self.spec_referrWheelVelL.spec = 'always [0,7] (eventually [0, 5] (referrWheelVelL < 0.1))'
+		self.robPub_referrWheelVelL = rospy.Publisher(robTopicPrefix+self.spec_referrWheelVelL.name, FloatStamped, queue_size=10)
 		self.robQue_referrWheelVelL = RobQue(self.spec_referrWheelVelL.name)
 
 		self.spec_referrWheelVelR = rtamt.STLDenseTimeSpecification()
 		self.spec_referrWheelVelR.name = 'referrWheelVelR'
 		self.spec_referrWheelVelR.declare_var('referrWheelVelR', 'float')
 		self.spec_referrWheelVelR.set_var_io_type('referrWheelVelR', 'input')
-		self.spec_referrWheelVelR.spec = 'always [0,1] (referrWheelVelR <= 0.1)'
-		self.robPub_referrWheelVelR = rospy.Publisher(robTopicName+self.spec_referrWheelVelR.name, FloatStamped, queue_size=10)
+		self.spec_referrWheelVelR.spec = 'always [0,7] (eventually [0, 5] (referrWheelVelR < 0.1))'
+		self.robPub_referrWheelVelR = rospy.Publisher(robTopicPrefix+self.spec_referrWheelVelR.name, FloatStamped, queue_size=10)
 		self.robQue_referrWheelVelR = RobQue(self.spec_referrWheelVelR.name)
 
 		try:
@@ -485,14 +490,6 @@ class HSR_STL_monitor(object):
 			publishRobstness(self.robPub_reachGlobalPathGoal, rob)
 			self.robQue_reachGlobalPathGoal.putRob(rob)
 
-		if self.map != []:
-			dists, stamp = distsPath2OccupancyGrid(self.globalPath, self.map, True)
-			distGlobalPathObs = numpy.min(dists)
-			data = [[stamp.to_sec(), distGlobalPathObs]]
-			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
-			publishRobstness(self.robPub_collGlobalPathObs, rob)
-			self.robQue_collGlobalPathObs.putRob(rob)
-
 
 	def baseVel_ref_callback(self, twist):
 		self.baseVel_ref = twist
@@ -525,33 +522,36 @@ class HSR_STL_monitor(object):
 	def monitor_system_callback(self, event):
 		# 1) system -----
 		if self.loc_gt != [] and self.map != []:
-			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.map, True)
-			distEgoObs_gt = min(dists)
+			distEgoObs_gt, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.map, True)
 			data = [[stamp.to_sec(), distEgoObs_gt]]
 			rob = self.spec_collEgoObs_gt.update(['distEgoObs_gt',data])
 			publishRobstness(self.robPub_collEgoObs_gt, rob)
 			print_rob(rob, self.spec_collEgoObs_gt.name)
 		if self.loc_gt != [] and self.dynamicObsMap != []:
-			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.dynamicObsMap, True)
-			distEgoDynamicObs_gt = min(dists)
+			distEgoDynamicObs_gt, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.dynamicObsMap, True, 3)
 			data = [[stamp.to_sec(), distEgoDynamicObs_gt]]
 			rob = self.spec_collEgoDynamicObs_gt.update(['distEgoDynamicObs_gt',data])
 			publishRobstness(self.robPub_collEgoDynamicObs_gt, rob)
 			print_rob(rob, self.spec_collEgoDynamicObs_gt.name)
 		if self.loc_gt != [] and self.prohibitMap != []:
-			dists, stamp = distsOdometry2OccupancyGrid(self.loc_gt, self.prohibitMap, True)
-			distEgoStaticObs_gt = min(dists)
+			distEgoStaticObs_gt, stamp = distOdometry2OccupancyGrid(self.loc_gt, self.prohibitMap, True)
 			data = [[stamp.to_sec(), distEgoStaticObs_gt]]
 			rob = self.spec_avoidProhibitArea_gt.update(['distEgoProhibitArea_gt',data])
 			publishRobstness(self.robPub_avoidProhibitArea_gt, rob)
 			print_rob(rob, self.spec_avoidProhibitArea_gt.name)
+
 		if self.loc_gt != [] and self.goal != []:
 			distEgoGoal_gt, stamp = distPoseStamped2Odometry(self.goal, self.loc_gt, True)
-			data = [[stamp.to_sec(), distEgoGoal_gt]]
-			rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', data])
-			publishRobstness(self.robPub_reachEgoGoal_gt, rob)
-			print_rob(rob, self.spec_reachEgoGoal_gt.name)
-
+			distData = [[rospy.Time.now().to_sec(), distEgoGoal_gt]] # here current time is input.
+			eventData = [[rospy.Time.now().to_sec(), 1.0]]
+		else:
+			distData = [[rospy.Time.now().to_sec(), 0.0]] # here current time is input.
+			eventData = [[rospy.Time.now().to_sec(), 0.0]]
+		rob = self.spec_reachEgoGoal_gt.update(['distEgoGoal_gt', distData, 'moveTask', eventData])
+		publishRobstness(self.robPub_reachEgoGoal_gt, rob)
+		print_rob(rob, self.spec_reachEgoGoal_gt.name)
+		rospy.logwarn('data: {}'.format(['distEgoGoal_gt', distData, 'moveTask', eventData]))
+		rospy.logwarn('Rob: {}'.format(rob))
 
 	def monitor_perception_callback(self, event):
 		# 2) perception -----
@@ -590,9 +590,11 @@ class HSR_STL_monitor(object):
 			publishRobstness(self.robPub_errLaserOdom, rob)
 			print_rob(rob, self.spec_errLaserOdom.name)
 
+
 	#TODO: Becuase of distsPointCloud2OccupancyGrid tooks time, separately called. Maybe map filter is needed.
 	def monitor_perception_callback_temp(self, event):
 		if self.map != [] and self.lidar:
+			t_start = timeit.default_timer()
 			liderPointCloud2 = self.lp.projectLaser(self.lidar)
 			lidarPointCloud = pointCloud22PointCloud(liderPointCloud2)
 			while not rospy.is_shutdown():
@@ -601,33 +603,37 @@ class HSR_STL_monitor(object):
 					break
 				except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
 					continue
-			dists, stamp = distsPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
-			errLidar = numpy.average(dists)
+			t_convert = timeit.default_timer()
+			errLidar, stamp = distPointCloud2OccupancyGrid(lidarPointCloud_frame_map, self.map, True)
+			t_dist = timeit.default_timer()
 			data = [[stamp.to_sec(), errLidar]]
 			rob = self.spec_errLidar.update(['errLidar', data])
+			t_rtamt = timeit.default_timer()
 			publishRobstness(self.robPub_errLidar, rob)
 			print_rob(rob, self.spec_errLidar.name)
+
+			#rospy.logwarn('errLidar Computation time[s]: convert={:0.8f}, dist={:0.8f}, rtamt={:0.8f}'.format(t_convert-t_start, t_dist-t_convert, t_rtamt-t_dist))
 
 
 	def monitor_planner_callback(self, event):
 		# 3) planner -----
 		if self.loc != [] and self.map:
-			dists, stamp = distsPoseStamped2OccupancyGrid(self.loc, self.map)
-			distEgoObs = min(dists)
+			distEgoObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.map, True)
 			data = [[stamp.to_sec(), distEgoObs]]
 			rob = self.spec_collEgoObs.update(['distEgoObs',data])
+			publishRobstness(self.robPub_collEgoObs, rob)
 			print_rob(rob, self.spec_collEgoObs.name)
 		if self.loc != [] and self.dynamicObsMap:
-			dists, stamp = distsPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap)
-			distEgoDynamicObs = min(dists)
+			distEgoDynamicObs, stamp = distPoseStamped2OccupancyGrid(self.loc, self.dynamicObsMap, True, 3)
 			data = [[stamp.to_sec(), distEgoDynamicObs]]
 			rob = self.spec_collEgoDynamicObs.update(['distEgoDynamicObs',data])
+			publishRobstness(self.robPub_collEgoDynamicObs, rob)
 			print_rob(rob, self.spec_collEgoDynamicObs.name)
 		if self.loc != [] and self.prohibitMap:
-			dists, stamp = distsPoseStamped2OccupancyGrid(self.loc, self.prohibitMap)
-			distEgoProhibitArea = min(dists)
+			distEgoProhibitArea, stamp = distPoseStamped2OccupancyGrid(self.loc, self.prohibitMap, True)
 			data = [[stamp.to_sec(), distEgoProhibitArea]]
 			rob = self.spec_avoidEgoProhibitArea.update(['distEgoProhibitArea',data])
+			publishRobstness(self.robPub_avoidEgoProhibitArea, rob)
 			print_rob(rob, self.spec_avoidEgoProhibitArea.name)
 		if self.lidar !=[]:
 			distLidar = min(self.lidar.ranges)
@@ -654,19 +660,42 @@ class HSR_STL_monitor(object):
 			publishRobstness(self.robPub_collBumperBack, rob)
 			print_rob(rob, self.spec_collBumperBack.name)
 
+		if self.globalPath != [] and self.map != []:
+			t_start = timeit.default_timer()
+			distGlobalPathObs, stamp = distPath2OccupancyGrid(self.globalPath, self.map, True)
+			t_dist = timeit.default_timer()
+			data = [[rospy.Time.now().to_sec(), distGlobalPathObs]] # here current time is input.
+			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+			t_rtamt = timeit.default_timer()
+			publishRobstness(self.robPub_collGlobalPathObs, rob)
+			t_pub = timeit.default_timer()
+			#rospy.logwarn('collGlobalPathObs Computation time[s]: dist={:0.8f}, rtamt={:0.8f}, publish={:0.8f}'.format(t_dist-t_start, t_rtamt-t_dist, t_pub-t_rtamt))
+		else:
+			data = [[rospy.Time.now().to_sec(), 1.0]] # default is 1m.
+			rob = self.spec_collGlobalPathObs.update(['distGlobalPathObs', data])
+			publishRobstness(self.robPub_collGlobalPathObs, rob)
+		#rospy.logwarn('data: {}'.format(data))
+		#rospy.logwarn('Rob: {}'.format(rob))
+
 
 	#TODO: Becuase of stereoCam dist tooks time, separately called.
 	def monitor_planner_callback_temp(self, event):
-		rospy.loginfo('here')
+		rospy.logwarn('here')
+
 		if self.stereoCam != []:
+			t_start = timeit.default_timer()
 			points_gen = sensor_msgs.point_cloud2.read_points(self.stereoCam, field_names = ("x", "y", "z"), skip_nans=True)
-			points_list = numpy.array([i for i in points_gen])
-			dists = distPoints2Point(numpy.array(points_list), numpy.array([0.0,0.0,0.0]))
-			dist = min(dists)
-			data = [[self.stereoCam.header.stamp.to_sec(), dist]]
+			stereo_points = numpy.array([i for i in points_gen])
+			t_convert = timeit.default_timer()
+			distStereoCamera = distMultiPoint2Point(numpy.array(stereo_points), numpy.array([0.0,0.0,0.0]))
+			t_dist = timeit.default_timer()
+			data = [[self.stereoCam.header.stamp.to_sec(), distStereoCamera]]
 			rob = self.spec_collStereoCamera.update(['distStereoCamera', data])
+			t_rtamt = timeit.default_timer()
 			publishRobstness(self.robPub_collStereoCamera, rob)
 			print_rob(rob, self.spec_collStereoCamera.name)
+
+			rospy.logwarn('collStereoCamera Computation time[s]: convert={:0.8f}, dist={:0.8f}, rtamt={:0.8f}'.format(t_convert-t_start, t_dist-t_convert, t_rtamt-t_dist))
 
 
 	def monitor_controller_callback(self, event):
@@ -709,9 +738,9 @@ if __name__ == '__main__':
 		hsr_stl_monitor = HSR_STL_monitor()
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_system_callback)
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_perception_callback)
-		rospy.Timer(rospy.Duration(5.0), hsr_stl_monitor.monitor_perception_callback_temp) #TODO: remove this
+		#rospy.Timer(rospy.Duration(1.0), hsr_stl_monitor.monitor_perception_callback_temp) #TODO: remove this
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_planner_callback)
-		rospy.Timer(rospy.Duration(3.0), hsr_stl_monitor.monitor_planner_callback_temp) #TODO: remove this. The loop does not work.
+		#rospy.Timer(rospy.Duration(1.0), hsr_stl_monitor.monitor_planner_callback_temp) #TODO: remove this. The loop does not work.
 		rospy.Timer(rospy.Duration(1.0/float(args.freq[0])), hsr_stl_monitor.monitor_controller_callback)
 		rospy.spin()
 	except rospy.ROSInterruptException:

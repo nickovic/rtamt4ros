@@ -1,6 +1,6 @@
 import numpy
 from numpy.linalg import norm
-from shapely.geometry import Polygon, LineString, Point
+from shapely.geometry import Polygon, LineString, Point, MultiPoint
 from scipy import signal, interpolate
 
 
@@ -43,32 +43,23 @@ def posSizeRect2Poly(rectPos, rectSize):
     return polyRect
 
 
-def distPoints2Point(points, point):
-    if points.shape == (2,) or points.shape == (3,):        #for 1 id case
-        points = numpy.array([points])
-    dists = points - numpy.array(point)
-    dists = numpy.square(dists)
-    dists = numpy.sum(dists,axis=1)
-    dists = numpy.sqrt(dists)
-    if dists.shape == (1,1):     #for 1 id case
-        dists = dists[0]
-    return dists
+def distMultiPoint2Point(multiPoint, point):
+    if not type(multiPoint) is MultiPoint:
+        multiPoint = MultiPoint(multiPoint)
+    if not type(point) is Point:
+        point = Point(point)
+    dist = point.distance(multiPoint)
+    return dist
 
 
-def distPoints2Points(targetPoints, points):
+def distMultiPoint2MultiPoint(multiPoint0, multiPoint1):
     # just thinking 2D (x,y)
-    if targetPoints.shape == (2,):        #for 1 id case
-        targetPoints = numpy.array([targetPoints])
-    if points.shape == (2,):        #for 1 id case
-        points = numpy.array([points])
-
-    dists = []
-    for point in targetPoints:
-        tDists = distPoints2Point(points, point)
-        dist = min(tDists)
-        dists.append(dist)
-    dists = numpy.array(dists)
-    return dists
+    if not type(multiPoint0) is MultiPoint:
+        multiPoint0 = MultiPoint(multiPoint0)
+    if not type(multiPoint1) is MultiPoint:
+        multiPoint1 = MultiPoint(multiPoint1)
+    dist = multiPoint0.distance(multiPoint1)
+    return dist
 
 
 def distPoint2Point(point1, point2):
@@ -113,7 +104,7 @@ def distTraj2Rect(rectPos, rectSize, trajX, trajY):
     return distTraj
 
 
-# implimenting!
+# TODO: Finihs this
 def distLineStr2Po(poly, line):
     #defining sigined distance
     dist = poly.exterior.distance(line)
@@ -122,6 +113,7 @@ def distLineStr2Po(poly, line):
     return dist
 
 
+# TODO: Finihs this
 def distLineStr2R(rectPos, rectSize, line):
     polyRect = posSizeRect2Poly(rectPos, rectSize)
     dist = polyRect.exterior.distance(line)
@@ -134,6 +126,15 @@ def distPoint2LineString(point, lineString):
     if not type(lineString) is LineString:
         lineString = LineString(lineString)
     dist = lineString.distance(point)
+    return dist
+
+
+def distMultiPoint2LineString(multiPoint, lineString):
+    if not type(multiPoint) is MultiPoint:
+        multiPoint = MultiPoint(multiPoint)
+    if not type(lineString) is LineString:
+        lineString = LineString(lineString)
+    dist = lineString.distance(multiPoint)
     return dist
 
 

@@ -9,7 +9,7 @@ import sensor_msgs.point_cloud2
 import timeit
 
 from std_msgs.msg import String
-from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
+#from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from sensor_msgs.msg import PointCloud2, PointCloud, LaserScan
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped, Pose, Twist, Point32, Vector3

@@ -42,7 +42,7 @@ Please refer [System all green case](#system-all-green-case) first.
 Then we may recode it.
 
 - all data
-  
+
     ```bash
     rosbag record -a -O <YOUR_ROSBAG_NAME.bag>
     ```
@@ -68,5 +68,11 @@ Then we may recode it.
 ### Viweing
 
 ```bash
-rqt_bag robot_bag.bag
+rqt_bag <YOUR_ROSBAG_NAME.bag>
+```
+
+example
+
+```bash
+rqt_bag "/rtamt/(.*)" -O $(rospack find hsr_monitors)/rosbag/system_all_green.bag
 ```

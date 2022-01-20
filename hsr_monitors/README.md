@@ -74,5 +74,5 @@ rqt_bag <YOUR_ROSBAG_NAME.bag>
 example
 
 ```bash
-rqt_bag "/rtamt/(.*)" -O $(rospack find hsr_monitors)/rosbag/system_all_green.bag
+rqt_bag $(rospack find hsr_monitors)/rosbag/system_all_green.bag
 ```

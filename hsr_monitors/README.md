@@ -67,6 +67,14 @@ Then we may recode it.
 
 ### Viweing
 
+If ros is not called.
+
+```bash
+roscore
+```
+
+In different terminal
+
 ```bash
 rqt_bag <YOUR_ROSBAG_NAME.bag>
 ```
@@ -74,5 +82,8 @@ rqt_bag <YOUR_ROSBAG_NAME.bag>
 example
 
 ```bash
+cd <YOUR_CATKIN_WORK_SPACE>
+catkin_make
+source devel/setup.sh
 rqt_bag $(rospack find hsr_monitors)/rosbag/system_all_green.bag
 ```

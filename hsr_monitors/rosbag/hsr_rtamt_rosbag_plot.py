@@ -20,11 +20,11 @@ bagName = 'system_all_green'
 #bagName = 'planner_fail'
 bag = rosbag.Bag( bagName + '.bag')
 #plt.rcParams.update({'font.size': 12})
-fig = plt.figure(figsize=(6, 4))
+fig = plt.figure(figsize=(6, 5))
 plt.xlim([0, 45])
 plt.ylim([-0.2, 1.0])
-plt.xlabel('Time [sec]')
-plt.ylabel('Robustness')
+plt.xlabel('Time [sec]', fontsize=18)
+plt.ylabel('Robustness', fontsize=18)
 plt.axhspan(-10, 0, color = 'pink', alpha = 0.5)
 linewidth = 3
 
@@ -42,6 +42,6 @@ plt.plot(times, values, linewidth=linewidth, label='controller')
 
 
 bag.close()
-plt.legend()
+plt.legend(fontsize=14)
 plt.savefig(bagName +'.pdf', bbox_inches='tight')
 plt.show()

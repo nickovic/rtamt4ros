@@ -43,5 +43,5 @@ plt.plot(times, values, linewidth=linewidth, label='controller')
 
 bag.close()
 plt.legend()
-plt.show()
 plt.savefig(bagName +'.pdf', bbox_inches='tight')
+plt.show()

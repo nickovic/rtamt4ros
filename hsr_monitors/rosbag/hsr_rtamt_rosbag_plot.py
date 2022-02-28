@@ -43,7 +43,7 @@ times, values = robMessgae2TimeValueList(bag, '/rtamt/planner/collGlobalPathObs'
 plt.plot(times, values, linewidth=linewidth, label='Planner')
 
 times, values = robMessgae2TimeValueList(bag, '/rtamt/controller/referrLocGlobalPath')
-plt.plot(times, values, linewidth=linewidth, label='controller')
+plt.plot(times, values, linewidth=linewidth, label='Controller')
 
 
 bag.close()

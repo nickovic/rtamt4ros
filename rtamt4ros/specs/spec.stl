@@ -1,11 +1,18 @@
+// name
+specification spec_x
+
+// imports
 from rtamt_msgs.msg import FloatStamped
 
-// subscribe from system pkg
-input FloatStamped a
-@ topic(a, rtamt/a)
-input FloatStamped b
-@ topic(b, rtamt/b)
-output FloatStamped c
-@ topic(c, rtamt/c)
+// variable declarations
+input FloatStamped req
+output FloatStamped gnt
+output FloatStamped rob
 
-c.value = (a.value <= 1.0 and b.value <=1.0)
+// annotations
+@ topic(req, rtamt/req)
+@ topic(gnt, rtamt/gnt)
+@ topic(rob, rtamt/rob)
+
+// bfSTL property
+rob.value = G[0,10]((req.value >= 3) -> (F[0, 5] (gnt.value >= 3)))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import rospy
 import sys
 import argparse
@@ -13,7 +13,6 @@ def callback(data, args):
     spec.var_object_dict[var_name] = var
 
 
-
 def monitor(period_arg, unit_arg):
 
     period = int(period_arg[0])
@@ -25,11 +24,11 @@ def monitor(period_arg, unit_arg):
 
     spec.name = 'HandMadeMonitor'
     spec.import_module('rtamt_msgs.msg', 'FloatStamped')
-    spec.declare_var('a', 'FloatStamped')
-    spec.declare_var('c', 'FloatStamped')
-    spec.set_var_topic('a', 'rtamt/a')
-    spec.set_var_topic('c', 'rtamt/c')
-    spec.spec = 'c.value = a.value<=2'
+    spec.declare_var('req', 'FloatStamped')
+    spec.declare_var('gnt', 'FloatStamped')
+    spec.set_var_topic('req', 'rtamt/req')
+    spec.set_var_topic('gnt', 'rtamt/gnt')
+    spec.spec = 'gnt.value = req.value<=2'
 
     try:
         spec.parse()
@@ -42,14 +41,14 @@ def monitor(period_arg, unit_arg):
     rospy.loginfo('Initialized the node STLMonitor')
 
     # Advertise the node as a publisher to the topic defined by the out var of the spec
-    var_object = spec.get_var_object(spec.out_var)
+    var_object = spec.get_value(spec.out_var)
     topic = spec.var_topic_dict[spec.out_var]
     rospy.loginfo('Registering as publisher to topic {}'.format(topic))
     pub = rospy.Publisher(topic, var_object.__class__, queue_size=10)
 
     # For each var from the spec, subscribe to its topic
     for var_name in spec.free_vars:
-        var_object = spec.get_var_object(var_name)
+        var_object = spec.get_value(var_name)
         topic = spec.var_topic_dict[var_name]
         rospy.loginfo('Subscribing to topic ' + topic)
         rospy.Subscriber(topic, var_object.__class__, callback, [spec, var_name])
@@ -62,7 +61,7 @@ def monitor(period_arg, unit_arg):
     while not rospy.is_shutdown():
         var_name_object_list = []
         for var_name in spec.free_vars:
-            var_name_object = (var_name, spec.get_var_object(var_name))
+            var_name_object = (var_name, spec.get_value(var_name))
             var_name_object_list.append(var_name_object)
 
         # Evaluate the spec

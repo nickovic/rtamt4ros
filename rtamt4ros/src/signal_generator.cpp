@@ -22,9 +22,9 @@ int main(int argc, char** argv) {
 ros::init(argc, argv, "minimal_publisher_with_timer");
     ros::NodeHandle n;
     ros::Publisher publisher_a =
-            n.advertise<rtamt_msgs::FloatStamped>("rtamt/a", 1);
+            n.advertise<rtamt_msgs::FloatStamped>("rtamt/req", 1);
     ros::Publisher publisher_b =
-            n.advertise<rtamt_msgs::FloatStamped>("rtamt/b", 1);
+            n.advertise<rtamt_msgs::FloatStamped>("rtamt/gnt", 1);
 
     rtamt_msgs::FloatStamped message1;
     rtamt_msgs::FloatStamped message2;

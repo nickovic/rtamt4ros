@@ -19,7 +19,7 @@ def init_spec(period, unit):
     spec.set_var_topic('req', 'rtamt/req')
     spec.set_var_topic('gnt', 'rtamt/gnt')
     spec.set_var_topic('rob', 'rtamt/gnt')
-    spec.spec = 'rob.value = G[0,10](req.value >= 3) -> (F[0, 5] (gnt.value >= 3))'
+    spec.spec = 'rob.value = G[0,10]((req.value >= 3) -> (F[0, 5] (gnt.value >= 3)))'
 
     try:
         spec.parse()
@@ -63,6 +63,7 @@ def mon_update(spec, time_index):
     # spec.update is of the form
     # spec.update(time_index, [('a',aObject), ('b',bObject), ('c',cObject)])
     rob_msg = spec.update(time_index, var_name_object_list)
+    rospy.loginfo('Robustness: logical time: {0}, value: {1}'.format(rob_msg.header.seq, rob_msg.value))
 
     rob_msg.header.seq = time_index
     rob_msg.header.stamp = rospy.Time.now()

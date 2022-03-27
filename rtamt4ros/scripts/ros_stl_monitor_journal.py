@@ -62,12 +62,12 @@ def mon_update(spec, time_index):
     # Update the monitor
     # spec.update is of the form
     # spec.update(time_index, [('a',aObject), ('b',bObject), ('c',cObject)])
-    robustness_msg = spec.update(time_index, var_name_object_list)
+    rob_msg = spec.update(time_index, var_name_object_list)
 
-    robustness_msg.header.seq = time_index
-    robustness_msg.header.stamp = rospy.Time.now()
+    rob_msg.header.seq = time_index
+    rob_msg.header.stamp = rospy.Time.now()
 
-    return robustness_msg
+    return rob_msg
 
 
 def monitor(period, unit):
@@ -84,7 +84,7 @@ def monitor(period, unit):
     time_index = 0
     while not rospy.is_shutdown():
         rob_msg = mon_update(spec, time_index)
-        rospy.loginfo('Robustness: logical time: {0}, value: {1}'.format(rob_msg.header.seq, rob_msg.value))
+        #rospy.loginfo('Robustness: logical time: {0}, value: {1}'.format(rob_msg.header.seq, rob_msg.value))
         pub.publish(rob_msg)
         time_index += 1
 

@@ -61,7 +61,7 @@ def mon_update(spec, time_index):
 
     # Update the monitor
     # spec.update is of the form
-    # spec.update(time_index, [('a',aObject), ('b',bObject), ('c',cObject)])
+    # spec.update(time_index, [('a',aOb), ('b',bOb), ('c',cOb)])
     rob_msg = spec.update(time_index, var_name_object_list)
     rospy.loginfo('Robustness: logical time: {0}, value: {1}'.format(rob_msg.header.seq, rob_msg.value))
 

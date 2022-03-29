@@ -15,4 +15,4 @@ output FloatStamped rob
 @ topic(rob, rtamt/rob)
 
 // bfSTL property
-rob.value = G[0,10]((req.value >= 3) -> (F[0, 5] (gnt.value >= 3)))
+rob.value = G[0,10]((req.value>=3)->(F[0,5](gnt.value>=3)))

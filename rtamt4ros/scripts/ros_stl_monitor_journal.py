@@ -7,8 +7,7 @@ import rtamt
 
 
 def init_spec(period, unit):
-    spec = rtamt.STLDiscreteTimeSpecification()
-    #spec = rtamt.StlDiscreteTimeOnlineSpecificationCpp()
+    spec = rtamt.StlDiscreteTimeOnlineSpecificationCpp()
     spec.set_sampling_period(period, unit)
 
     spec.name = 'HandMadeMonitor'
@@ -19,7 +18,8 @@ def init_spec(period, unit):
     spec.set_var_topic('req', 'rtamt/req')
     spec.set_var_topic('gnt', 'rtamt/gnt')
     spec.set_var_topic('rob', 'rtamt/gnt')
-    spec.spec = 'rob.value = G[0,10]((req.value >= 3) -> (F[0, 5] (gnt.value >= 3)))'
+    spec.spec = \
+        'rob.value = G[0,10]((req.value >= 3)->(F[0,5](gnt.value >= 3)))'
 
     try:
         spec.parse()
@@ -61,7 +61,7 @@ def mon_update(spec, time_index):
 
     # Update the monitor
     # spec.update is of the form
-    # spec.update(time_index, [('a',aOb), ('b',bOb), ('c',cOb)])
+    # spec.update(time_index, [('a',aObj), ('b',bObj), ('c',cObj)])
     rob_msg = spec.update(time_index, var_name_object_list)
     rospy.loginfo('Robustness: logical time: {0}, value: {1}'.format(rob_msg.header.seq, rob_msg.value))
 
@@ -79,13 +79,11 @@ def monitor(period, unit):
     # Init subscriber and publisher
     pub = sub_and_pub(spec)
     # Set monitoring frequency
-    #rate = rospy.Rate(spec.get_sampling_frequency())
-    rate = rospy.Rate(1.0)
+    rate = rospy.Rate(spec.get_sampling_frequency())
     # Control loop
     time_index = 0
     while not rospy.is_shutdown():
         rob_msg = mon_update(spec, time_index)
-        #rospy.loginfo('Robustness: logical time: {0}, value: {1}'.format(rob_msg.header.seq, rob_msg.value))
         pub.publish(rob_msg)
         time_index += 1
 

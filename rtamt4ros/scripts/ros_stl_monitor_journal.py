@@ -19,7 +19,7 @@ def init_spec(period, unit):
     spec.set_var_topic('gnt', 'rtamt/gnt')
     spec.set_var_topic('rob', 'rtamt/gnt')
     spec.spec = \
-        'rob.value = G[0,10]((req.value>=3)->(F[0,5](gnt.value>= 3)))'
+        'rob.value = G[0,10]((req.value>=3)->(F[0,5](gnt.value>=3)))'
 
     try:
         spec.parse()

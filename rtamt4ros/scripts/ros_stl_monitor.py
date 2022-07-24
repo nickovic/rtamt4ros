@@ -5,6 +5,7 @@ import argparse
 import copy
 import rtamt
 
+
 def callback(data, args):
     spec = args[0]
     var_name = args[1]
@@ -13,16 +14,13 @@ def callback(data, args):
     spec.var_object_dict[var_name] = var
 
 
-
 def monitor(stl_arg, period_arg, unit_arg):
-
     period = int(period_arg[0])
     unit = unit_arg[0]
 
-
     filename = stl_arg[0]
 
-    spec = rtamt.STLDiscreteTimeSpecification()
+    spec = rtamt.StlDiscreteTimeSpecification()
     spec.set_sampling_period(period, unit)
     freq = spec.get_sampling_frequency()
 
@@ -39,17 +37,17 @@ def monitor(stl_arg, period_arg, unit_arg):
     rospy.loginfo('Initialized the node STLMonitor')
 
     # Advertise the node as a publisher to the topic defined by the out var of the spec
-    var_object = spec.get_var_object(spec.out_var)
+    val = spec.get_value(spec.out_var)
     topic = spec.var_topic_dict[spec.out_var]
     rospy.loginfo('Registering as publisher to topic {}'.format(topic))
-    pub = rospy.Publisher(topic, var_object.__class__, queue_size=10)
+    pub = rospy.Publisher(topic, val.__class__, queue_size=10)
 
     # For each var from the spec, subscribe to its topic
     for var_name in spec.free_vars:
-        var_object = spec.get_var_object(var_name)
+        val = spec.get_value(var_name)
         topic = spec.var_topic_dict[var_name]
         rospy.loginfo('Subscribing to topic ' + topic)
-        rospy.Subscriber(topic, var_object.__class__, callback, [spec, var_name])
+        rospy.Subscriber(topic, val.__class__, callback, [spec, var_name])
 
     # Set the frequency at which the monitor is evaluated
     rate = rospy.Rate(freq)
@@ -59,13 +57,11 @@ def monitor(stl_arg, period_arg, unit_arg):
     while not rospy.is_shutdown():
         var_name_object_list = []
         for var_name in spec.free_vars:
-            var_name_object = (var_name, spec.get_var_object(var_name))
+            var_name_object = (var_name, spec.get_value(var_name))
             var_name_object_list.append(var_name_object)
 
-        # Evaluate the spec
-        # spec.update is of the form
-        # spec.update(time_index, [('a',aObject), ('b',bObject), ('c',cObject)])
-        robustness_msg = spec.update(time_index, var_name_object_list)
+        spec.update(time_index, var_name_object_list)
+        robustness_msg = spec.get_value(var_name)
 
         robustness_msg.header.seq = time_index
         robustness_msg.header.stamp = rospy.Time.now()

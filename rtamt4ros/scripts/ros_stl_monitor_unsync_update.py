@@ -44,7 +44,7 @@ class Monitor(object):
                 self.b_subscriber = rospy.Subscriber('rtamt/b', FloatStamped, self.b_callback, queue_size=10)
 
                 # Advertise the node as a publisher to the topic defined by the out var of the spec
-                var_object = self.spec.get_var_object(self.spec.out_var)
+                var_object = self.spec.get_value(self.spec.out_var)
                 self.c_publisher = rospy.Publisher('rtamt/c', FloatStamped, queue_size=10)
 
                 # queue for rob
